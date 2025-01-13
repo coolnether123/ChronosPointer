@@ -121,7 +121,14 @@ namespace ChronosPointer
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
             //var pawns = PawnsFinder.AllMaps_FreeColonists.Where(p => p.timetable != null).ToList();
-            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount - Find.CurrentMap.mapPawns.AllPawns.Where(p => p.DevelopmentalStage == DevelopmentalStage.Baby && p.IsColonist).Count() * (PawnRowHeight + PawnRowGap);
+            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
+            int babyCount = 0;
+            if (babyList != null)
+                babyCount = babyList.Count;
+
+            float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
+                - babyCount)
+                * (PawnRowHeight + PawnRowGap);
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
 
@@ -235,7 +242,16 @@ namespace ChronosPointer
 
             //Find.ColonistBar.Entries[].map;
             //var pawns = PawnsFinder.AllMaps_FreeColonists.Where()
-            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount - Find.CurrentMap.mapPawns.AllPawns.Where(p => p.DevelopmentalStage == DevelopmentalStage.Baby && p.IsColonist).Count() * (PawnRowHeight + PawnRowGap);
+            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
+            int babyCount = 0;
+            if (babyList != null)
+                babyCount= babyList.Count;
+
+            Log.Message(babyList.Count);
+
+            float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
+                - babyCount)
+                * (PawnRowHeight + PawnRowGap);
 
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
