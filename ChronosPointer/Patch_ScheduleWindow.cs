@@ -120,9 +120,8 @@ namespace ChronosPointer
                          + currentHour * (HourBoxWidth + HourBoxGap);
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-           //var pawns = PawnsFinder.AllMaps_FreeColonists.Where(p => p.timetable != null).ToList();
-            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount * (PawnRowHeight + PawnRowGap);
-
+            //var pawns = PawnsFinder.AllMaps_FreeColonists.Where(p => p.timetable != null).ToList();
+            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount - Find.CurrentMap.mapPawns.AllPawns.Where(p => p.DevelopmentalStage == DevelopmentalStage.Baby && p.IsColonist).Count() * (PawnRowHeight + PawnRowGap);
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
 
@@ -232,11 +231,11 @@ namespace ChronosPointer
                 + PawnAreaTopOffset;
 
             // Calculate total rows
-           // var pawns = .Where(p => p.timetable != null).ToList();
-            
+            // var pawns = .Where(p => p.timetable != null).ToList();
+
             //Find.ColonistBar.Entries[].map;
             //var pawns = PawnsFinder.AllMaps_FreeColonists.Where()
-            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount * (PawnRowHeight + PawnRowGap);
+            float totalHeight = Find.CurrentMap.mapPawns.ColonistCount - Find.CurrentMap.mapPawns.AllPawns.Where(p => p.DevelopmentalStage == DevelopmentalStage.Baby && p.IsColonist).Count() * (PawnRowHeight + PawnRowGap);
 
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
