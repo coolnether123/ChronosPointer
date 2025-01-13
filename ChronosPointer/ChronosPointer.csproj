@@ -41,14 +41,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="dnlib">
-      <HintPath>packages\Krafs.Publicizer.2.3.0\build\net472\dnlib.dll</HintPath>
-    </Reference>
-    <Reference Include="Publicizer">
-      <HintPath>packages\Krafs.Publicizer.2.3.0\build\net472\Publicizer.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

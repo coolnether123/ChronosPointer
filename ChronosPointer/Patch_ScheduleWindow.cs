@@ -247,8 +247,6 @@ namespace ChronosPointer
             if (babyList != null)
                 babyCount= babyList.Count;
 
-            Log.Message(babyList.Count);
-
             float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
                 - babyCount)
                 * (PawnRowHeight + PawnRowGap);
