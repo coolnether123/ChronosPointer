@@ -4,3 +4,7 @@ D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj
 D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.csproj.CoreCompileInputs.cache
 D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Assemblies\ChronosPointer.dll
 D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.dll
+D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\Assemblies\ChronosPointer.dll
+D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.csproj.AssemblyReference.cache
+D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.csproj.CoreCompileInputs.cache
+D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.dll
