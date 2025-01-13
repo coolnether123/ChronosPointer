@@ -9,15 +9,17 @@ namespace ChronosPointer
         public bool enableArrow = true;
         public bool showHighlight = true;
         public bool showDayNightBar = true;
-        public bool showTimeTraceLine = true;
+        public bool showDayNightIndicator = true;
+        public bool useDynamicTimeTraceLine = true;
+        public bool showPawnLine = true;
+        public bool hollowHourHighlight = false;
 
         // Colors
-        public Color arrowColor = Color.grey;
+        public Color arrowColor = Color.red;
         public Color highlightColor = new Color(1f, 1f, 0f, 0.3f);
-        public Color topCursorColor = Color.white;
         public Color bottomCursorColor = Color.white;
-        public Color pawnBarColor = Color.cyan;
-        public Color dayNightBarColor = Color.blue;
+        public Color timeTraceColorDay = Color.black;
+        public Color timeTraceColorNight = Color.white;
 
         public override void ExposeData()
         {
@@ -26,14 +28,16 @@ namespace ChronosPointer
             Scribe_Values.Look(ref enableArrow, "enableArrow", true);
             Scribe_Values.Look(ref showHighlight, "showHighlight", true);
             Scribe_Values.Look(ref showDayNightBar, "showDayNightBar", true);
-            Scribe_Values.Look(ref showTimeTraceLine, "showTimeTraceLine", true);
+            Scribe_Values.Look(ref showDayNightIndicator, "showTimeTraceLine", true);
+            Scribe_Values.Look(ref useDynamicTimeTraceLine, "dynamicTimeTraceLine", true);
+            Scribe_Values.Look(ref showPawnLine, "showPawnLine", true);
+            Scribe_Values.Look(ref hollowHourHighlight, "hollowHourHighlight", false);
 
             Scribe_Values.Look(ref arrowColor, "arrowColor", Color.red);
             Scribe_Values.Look(ref highlightColor, "highlightColor", new Color(1f, 1f, 0f, 0.3f));
-            Scribe_Values.Look(ref topCursorColor, "topCursorColor", Color.white);
             Scribe_Values.Look(ref bottomCursorColor, "bottomCursorColor", Color.white);
-            Scribe_Values.Look(ref pawnBarColor, "pawnBarColor", Color.cyan);
-            Scribe_Values.Look(ref dayNightBarColor, "dayNightBarColor", Color.blue);
+            Scribe_Values.Look(ref timeTraceColorDay, "timeTraceColorDay", Color.black);
+            Scribe_Values.Look(ref timeTraceColorNight, "timeTraceColorNight", Color.white);
         }
 
         public void ResetToDefaults()
@@ -41,14 +45,17 @@ namespace ChronosPointer
             enableArrow = true;
             showHighlight = true;
             showDayNightBar = true;
-            showTimeTraceLine = true;
+            showDayNightIndicator = true;
+            useDynamicTimeTraceLine = true;
+            showPawnLine = true;
+            hollowHourHighlight = false;
 
+            // Colors
             arrowColor = Color.red;
             highlightColor = new Color(1f, 1f, 0f, 0.3f);
-            topCursorColor = Color.white;
             bottomCursorColor = Color.white;
-            pawnBarColor = Color.cyan;
-            dayNightBarColor = Color.blue;
+            timeTraceColorDay = Color.black;
+            timeTraceColorNight = Color.white;
         }
     }
 }

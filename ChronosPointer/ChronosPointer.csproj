@@ -42,11 +42,9 @@
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="dnlib">
-      <HintPath>packages\Krafs.Publicizer.2.3.0\build\net472\dnlib.dll</HintPath>
-    </Reference>
-    <Reference Include="Publicizer">
-      <HintPath>packages\Krafs.Publicizer.2.3.0\build\net472\Publicizer.dll</HintPath>
+    <Reference Include="0ColourPicker, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Assemblies\0ColourPicker.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
