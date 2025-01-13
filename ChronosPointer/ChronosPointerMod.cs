@@ -1,6 +1,9 @@
 using UnityEngine;
 using Verse;
 using RimWorld;
+using ColourPicker;
+using UnityEngine.UI;
+using System;
 
 namespace ChronosPointer
 {
@@ -12,11 +15,11 @@ namespace ChronosPointer
         public ChronosPointerMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<ChronosPointerSettings>();
-
             // Harmony patch
             var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
             harmony.PatchAll();
             Log.Message("ChronosPointer: Harmony patches applied via ChronosPointerMod constructor.");
+
         }
 
         public override string SettingsCategory()
@@ -28,7 +31,6 @@ namespace ChronosPointer
         {
             float height = 1000f;
             Rect viewRect = new Rect(0f, 0f, inRect.width - 16f, height);
-            Widgets.BeginScrollView(inRect, ref scrollPosition, viewRect);
 
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(viewRect);
@@ -39,43 +41,121 @@ namespace ChronosPointer
             }
             listingStandard.Gap(20f);
 
-            listingStandard.CheckboxLabeled("Enable Arrow", ref Settings.enableArrow);
-            listingStandard.CheckboxLabeled("Show Highlight", ref Settings.showHighlight);
-            listingStandard.CheckboxLabeled("Show Day/Night Bar", ref Settings.showDayNightBar);
-            listingStandard.CheckboxLabeled("Show Time Trace Line", ref Settings.showTimeTraceLine);
-            listingStandard.Gap(20f);
+            listingStandard.CheckboxLabeled("- Show Arrow", ref Settings.enableArrow);
+            listingStandard.CheckboxLabeled("- Show Day/Night Bar", ref Settings.showDayNightBar);
 
-            Settings.arrowColor = DrawColorSliders(listingStandard.GetRect(80), "Arrow Color", Settings.arrowColor);
+            //Gray out unapplicable settings
+            if (!Settings.showDayNightBar) GUI.color = Color.gray;
+            listingStandard.CheckboxLabeled("    Show Day/Night Bar Time Indicator", ref Settings.showDayNightIndicator);
+            GUI.color = Color.white;
+
+            if (!Settings.showDayNightIndicator || !Settings.showDayNightBar) GUI.color = Color.gray;
+            listingStandard.CheckboxLabeled("    Dynamic Day/Night Bar Cursor Color", ref Settings.useDynamicTimeTraceLine);
+            GUI.color = Color.white;
+
+            listingStandard.CheckboxLabeled("- Show Pawn Section Time Indicator", ref Settings.showPawnLine);
+            listingStandard.CheckboxLabeled("- Show Current Hour Highlight", ref Settings.showHighlight);
+            if (!Settings.showHighlight) GUI.color = Color.gray;
+            listingStandard.CheckboxLabeled("- Hollow Current Hour Highlight", ref Settings.hollowHourHighlight);
+            GUI.color = Color.white;
+           
+
+            listingStandard.Gap(25);
+
+            //If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
+            if (!Settings.enableArrow)
+            {
+                GUI.color = Color.gray;
+            }
+
+            //Arrow Color
+            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.arrowColor);
+            if (listingStandard.ButtonText("Change arrow color", "Tag"))
+                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.arrowColor, newColor =>
+                {
+                    Settings.arrowColor = newColor;
+
+                }));
             listingStandard.Gap(10f);
-            Settings.highlightColor = DrawColorSliders(listingStandard.GetRect(80), "Highlight Color", Settings.highlightColor);
+
+            //reset GUI color after to make sure the next color is the right color
+            GUI.color = Color.white;
+
+            //Day/Night bar day and night colors
+            if (!Settings.showDayNightBar)
+            {
+                GUI.color = Color.gray;
+            }
+            if (!Settings.showDayNightIndicator)
+            {
+                GUI.color = Color.gray;
+            }
+
+            //Day/Default
+            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorDay);
+            if (listingStandard.ButtonText("Change Time Trace Color" + (Settings.useDynamicTimeTraceLine ? " Day" : "")))
+                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorDay, newColor =>
+                {
+                    Settings.timeTraceColorDay = newColor;
+
+                }));
+
+            if (!Settings.useDynamicTimeTraceLine)
+            {
+                GUI.color = Color.gray;
+            }
+            if (!Settings.useDynamicTimeTraceLine) GUI.color = Color.gray;
+            
+            //Night
+            listingStandard.Gap(10f); Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorNight);
+            if (listingStandard.ButtonText("Change Time Trace Color Night"))
+                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorNight, newColor =>
+                {
+                    Settings.timeTraceColorNight = newColor;
+
+                }));
             listingStandard.Gap(10f);
-            Settings.topCursorColor = DrawColorSliders(listingStandard.GetRect(80), "Top Cursor Color", Settings.topCursorColor);
+
+            GUI.color = Color.white;
+            //Pawn cursor
+            if (!Settings.showPawnLine)
+            {
+                GUI.color = Color.gray;
+            }
+            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.bottomCursorColor);
+            if (listingStandard.ButtonText("Change pawn section time indicator color"))
+                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.bottomCursorColor, newColor =>
+                {
+                    Settings.bottomCursorColor = newColor;
+
+                }));
             listingStandard.Gap(10f);
-            Settings.bottomCursorColor = DrawColorSliders(listingStandard.GetRect(80), "Bottom Cursor Color", Settings.bottomCursorColor);
+            GUI.color = Color.white;
+
+            if (!Settings.showHighlight)
+            {
+                GUI.color = Color.gray;
+            }
+
+            //Current hour highlight
+            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.highlightColor);
+            if (listingStandard.ButtonText("Change current-hour color"))
+                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.highlightColor, newColor =>
+                {
+                    Settings.highlightColor = newColor;
+
+                }));
             listingStandard.Gap(10f);
-            Settings.pawnBarColor = DrawColorSliders(listingStandard.GetRect(80), "Pawn Bar Color", Settings.pawnBarColor);
-            listingStandard.Gap(10f);
-            Settings.dayNightBarColor = DrawColorSliders(listingStandard.GetRect(80), "Day/Night Bar Color", Settings.dayNightBarColor);
+
+            GUI.color = Color.white;
+
+         
+
 
             listingStandard.End();
-            Widgets.EndScrollView();
 
-            Settings.Write();
+
         }
 
-        private Color DrawColorSliders(Rect rect, string label, Color color)
-        {
-            Widgets.Label(rect, label);
-            rect.y += 20f;
-            rect.height = 20f;
-
-            color.r = Widgets.HorizontalSlider(rect, color.r, 0f, 1f, false, $"R: {color.r:F2}");
-            rect.y += 25f;
-            color.g = Widgets.HorizontalSlider(rect, color.g, 0f, 1f, false, $"G: {color.g:F2}");
-            rect.y += 25f;
-            color.b = Widgets.HorizontalSlider(rect, color.b, 0f, 1f, false, $"B: {color.b:F2}");
-
-            return color;
-        }
     }
 }

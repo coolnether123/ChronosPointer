@@ -3,6 +3,7 @@ using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 using Verse;
 
 namespace ChronosPointer
@@ -12,7 +13,7 @@ namespace ChronosPointer
     public static class Patch_ScheduleWindow
     {
         // Where the schedule grid starts
-        private const float BaseOffsetX = 228f;
+        private const float BaseOffsetX = 202f;
         private const float BaseOffsetY = 40f;
 
         // Each hour cell
@@ -42,6 +43,10 @@ namespace ChronosPointer
                 if (ChronosPointerMod.Settings.showDayNightBar)
                 {
                     DrawDayNightBar(fillRect);
+                    if (ChronosPointerMod.Settings.showDayNightIndicator)
+                    {
+                        DrawTimeTraceLine(fillRect);
+                    }
                 }
 
                 // 2) Highlight bar
@@ -53,13 +58,12 @@ namespace ChronosPointer
                 // 3) Arrow and time-trace
                 if (ChronosPointerMod.Settings.enableArrow)
                 {
-                    if (ChronosPointerMod.Settings.showTimeTraceLine)
-                    {
-                        DrawTimeTraceLine(fillRect);
-                    }
                     DrawArrowTexture(fillRect);
+                }
 
-                    // 4) Full-height vertical line
+                // 4) Full-height vertical line
+                if (ChronosPointerMod.Settings.showPawnLine)
+                {
                     DrawFullHeightCursor(fillRect);
                 }
             }
@@ -133,7 +137,10 @@ namespace ChronosPointer
             totalHeight -= PawnAreaBottomTrim;
 
             Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
-            Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
+            if (ChronosPointerMod.Settings.hollowHourHighlight)
+                Widgets.DrawBoxSolidWithOutline(highlightRect, new Color(0, 0, 0, 0), ChronosPointerMod.Settings.highlightColor, 2);
+            else
+                Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
         }
         #endregion
 
@@ -158,10 +165,12 @@ namespace ChronosPointer
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)(currentHourF * 2500));
 
             // Determine the color of the line based on the sunlight
-            Color lineColor = (sunlight >= 0.7f) ? Color.black : Color.white;
+            Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (sunlight >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight;
 
             // 2 px wide
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
+
+           
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
         #endregion
@@ -182,7 +191,7 @@ namespace ChronosPointer
             // The line's X (center of arrow)
             float arrowCenterX = fillRect.x + BaseOffsetX
                                 + currentHour * (HourBoxWidth + HourBoxGap)
-                                + hourProgress * HourBoxWidth + 1;
+                                + hourProgress * HourBoxWidth + 1f;
 
             // The top of the day/night bar
             float barTopY = fillRect.y + BaseOffsetY + 4;
@@ -196,7 +205,7 @@ namespace ChronosPointer
             float arrowRectX = arrowCenterX - (arrowWidth / 2f);
 
             // Changes the arrow up or down. up is -
-            float arrowRectY = barTopY - arrowHeight - 4f;
+            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f);
 
             // Build the rect
             Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
@@ -210,7 +219,9 @@ namespace ChronosPointer
 
             // Draw the arrow
             GUI.color = ChronosPointerMod.Settings.arrowColor;
-            GUI.DrawTexture(arrowRect, ChronosPointerTextures.ArrowTexture);
+            ;
+            
+            GUI.DrawTexture(arrowRect.ScaledBy((!ChronosPointerMod.Settings.showDayNightBar ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
 
             // Restore matrix & color
             GUI.matrix = oldMatrix;

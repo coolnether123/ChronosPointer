@@ -20,5 +20,6 @@ namespace ChronosPointer
                 Log.Message($"ChronosPointer: Loaded arrow texture ({ArrowTexture.width}x{ArrowTexture.height}).");
             }
         }
+
     }
 }
