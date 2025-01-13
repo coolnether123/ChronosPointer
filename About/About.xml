@@ -3,7 +3,7 @@
   <name>Chronos Pointer</name>
   <author>CoolNether123</author>
   <supportedVersions>
-    <li>1.5.4297</li>
+    <li>1.5</li>
   </supportedVersions>
   <packageId>CoolNether123.ChronosPointer</packageId>
   <description>
@@ -35,5 +35,4 @@
     <li>Ludeon.RimWorld</li>
     <li>brrainz.harmony</li>
   </loadAfter>
-  <version>1.0.0</version>
 </ModMetaData>
