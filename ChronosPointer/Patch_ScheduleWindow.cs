@@ -147,7 +147,7 @@ namespace ChronosPointer
 
         private static int IncidentHappening()
         {
-            int incident = 5;
+            int incident = 0;
 
             // Check for solar flare all yellow
             bool isSolarFlare = Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef);
