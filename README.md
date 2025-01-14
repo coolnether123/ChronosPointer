@@ -16,3 +16,18 @@ Enhances the schedule panel with dynamic time indicators for improved colony man
   All features can be toggled and customized in the mod settings, allowing you to tailor the experience to your liking.
   
 This mod requires [Harmony](https://steamcommunity.com/workshop/filedetails/?id=2009463077).
+
+<h2>DLC/Mods Compatibility</h2>
+
+<h3>DLC</h3>
+
+[Royalty](https://rimworldgame.com/royalty/) - Unknown<br>
+[Ideology](https://rimworldgame.com/ideology/) - Unknown, probably not.<br>
+[Biotech](https://rimworldgame.com/biotech/) - Supported<br>
+[Anomaly](https://rimworldgame.com/anomaly/) - Unknown<br>
+
+<h3>Mods</h3>
+
+[Reading Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=3367570241&searchtext=Schedule+cursor) - Native<br>
+[Zone To Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=2436086611&searchtext=Zone+to+schedule) - Native<br>
+[Custom Schedules](https://steamcommunity.com/sharedfiles/filedetails/?id=2717694491) - Unsupported<br>
