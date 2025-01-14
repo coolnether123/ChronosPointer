@@ -405,5 +405,22 @@ namespace ChronosPointer
             }
         }
     }
+    
+    [HarmonyPatch(typeof(MainTabWindow_PawnTable))]
+    [HarmonyPatch("Notify_PawnsChanged")]
+    public static class Patch_ScheduleWindowPawnUpdated
+    {
+        [HarmonyPostfix]
+        public static void Postfix(MainTabWindow_PawnTable __instance)
+        {
+            if (__instance is MainTabWindow_Schedule)
+            {
+
+                Log.Message("Pawns updated");
+                Patch_ScheduleWindow.dayNightColorsCalculated = false;
+                Patch_ScheduleWindow.pawnCountCalculated = false;
+            }
+        }
+    }
 
 }
