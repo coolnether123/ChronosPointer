@@ -18,7 +18,7 @@ namespace ChronosPointer
             // Harmony patch
             var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
             harmony.PatchAll();
-            Log.Message("ChronosPointer: Harmony patches applied via ChronosPointerMod constructor.");
+            //Log.Message("ChronosPointer: Harmony patches applied via ChronosPointerMod constructor.");
 
         }
 

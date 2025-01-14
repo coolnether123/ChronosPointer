@@ -15,6 +15,7 @@ namespace ChronosPointer
     [HarmonyPatch("DoWindowContents")]
     public static class Patch_ScheduleWindow
     {
+        #region Values
         // Where the schedule grid starts
         private static float BaseOffsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
         private const float BaseOffsetY = 40f;
@@ -49,24 +50,31 @@ namespace ChronosPointer
 
         // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
-
-        // Timer for color animation
-        private static float animationTimer = 0f;
-        private static float animationDuration = 2f; // 2 seconds duration
-        private static Color[] initialColors = new Color[24];
-        private static Color targetColor = new Color(0.5f, 0f, 0.5f, 0.5f);
         
         //cached number of pawns for the full height and highlight bars
         private static int pawnCount = 0;
+
+        // Custom Schedules (continued) mod ID
+        private const string customSchedulesModId = "Mysterius.CustomSchedules";
+        #endregion
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (Find.CurrentMap == null) return;
 
-            
+
             try
             {
+                // Check if the "Custom Schedules (continued)" mod is active
+                bool isModActive = ModLister.AllInstalledMods.Any(mod =>
+                    mod.Active && mod.PackageId.Equals(customSchedulesModId, StringComparison.OrdinalIgnoreCase));
+
+                if (isModActive)
+                {
+                    Log.Message("Custom Schedules (continued) mod is active schedule window will have overlap");
+                }
+
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -137,7 +145,7 @@ namespace ChronosPointer
                 Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
             }
         }
-
+        #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
         {
             
@@ -163,7 +171,7 @@ namespace ChronosPointer
                     default:
                         
                         float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                        Log.Message("At hour " + hour + " sunlight == " + sunlight);
+                        //Log.Message("At hour " + hour + " sunlight == " + sunlight);
                         dayNightColors[hour] = GetColorForSunlight(sunlight);
                         break;
                 }
@@ -262,6 +270,7 @@ namespace ChronosPointer
             else
                 Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
         }
+        #endregion
 
         #region Time Trace Line
 
@@ -358,6 +367,7 @@ namespace ChronosPointer
         }
         #endregion
 
+        #region Full Height Cursor
         private static void DrawFullHeightCursor(Rect fillRect, int pawnCount)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
@@ -392,7 +402,9 @@ namespace ChronosPointer
         // Method to reset the flag when the scheduler is closed
         
     }
+    #endregion
 
+        #region Harmony Patches
     [HarmonyPatch(typeof(Window))]
     [HarmonyPatch("PostClose")]
     public static class Patch_ScheduleWindowClose
@@ -403,7 +415,7 @@ namespace ChronosPointer
             if (__instance is MainTabWindow_Schedule)
             {
 
-                Log.Message("Scheduler closed");
+                //Log.Message("Scheduler closed");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
             }
@@ -420,11 +432,12 @@ namespace ChronosPointer
             if (__instance is MainTabWindow_Schedule)
             {
 
-                Log.Message("Pawns updated");
+                //Log.Message("Pawns updated");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
             }
         }
     }
+    #endregion
 
 }
