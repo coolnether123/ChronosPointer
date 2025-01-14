@@ -15,7 +15,7 @@ namespace ChronosPointer
     public static class Patch_ScheduleWindow
     {
         // Where the schedule grid starts
-        private const float BaseOffsetX = 228f;
+        private static float BaseOffsetX = ModsConfig.BiotechActive ? 228f : 202f;
         private const float BaseOffsetY = 40f;
 
         // Each hour cell
