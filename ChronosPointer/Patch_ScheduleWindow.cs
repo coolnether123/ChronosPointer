@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
@@ -31,6 +33,24 @@ namespace ChronosPointer
         private const float PawnAreaTopOffset = 16f;
         private const float PawnAreaBottomTrim = 2f;
 
+        // Define the SolarFlare condition if not available
+        private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
+
+        // Flag to track if the day/night colors have been calculated
+        private static bool dayNightColorsCalculated = false;
+
+        // Array to store the colors for each hour
+        private static Color[] dayNightColors = new Color[24];
+
+        // Add a static variable to store the last known map
+        private static Map lastKnownMap = null;
+
+        // Timer for color animation
+        private static float animationTimer = 0f;
+        private static float animationDuration = 2f; // 2 seconds duration
+        private static Color[] initialColors = new Color[24];
+        private static Color targetColor = new Color(0.5f, 0f, 0.5f, 0.5f);
+
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
@@ -38,10 +58,34 @@ namespace ChronosPointer
 
             try
             {
+                int incident = IncidentHappening();
+                // Check if the current map has changed
+                if (Find.CurrentMap != lastKnownMap)
+                {
+                    // Reset the flag and update the last known map
+                    dayNightColorsCalculated = false;
+                    lastKnownMap = Find.CurrentMap;
+                }
+
                 // 1) Day/Night Bar
                 if (ChronosPointerMod.Settings.showDayNightBar)
                 {
-                    DrawDayNightBar(fillRect);
+                    if (!dayNightColorsCalculated || incident > 0)
+                    {
+                        CalculateDayNightColors(incident);
+                        
+                    }
+                        DrawDayNightBar(fillRect, dayNightColors);
+                    if (incident == 5)
+                    {
+                        Color[] Aurora = dayNightColors;
+                        Color newColor = new Color(0.5f, Mathf.Abs(Mathf.Sin(Time.time)), 0.5f, Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f);
+                        for (int hour = 0; hour < 24; hour++)
+                        {
+                            Aurora[hour] = newColor;
+                        }
+                        DrawDayNightBar(fillRect, Aurora);
+                    }
                 }
 
                 // 2) Highlight bar
@@ -69,8 +113,76 @@ namespace ChronosPointer
             }
         }
 
-        #region Day/Night Bar
-        private static void DrawDayNightBar(Rect fillRect)
+        private static void CalculateDayNightColors(int incident)
+        {
+            Log.Message("incident " + incident);
+            for (int hour = 0; hour < 24; hour++)
+            {
+                switch (incident)
+                {
+                    case 1: // Solar Flare
+                        dayNightColors[hour] = Color.yellow;
+                        break;
+                    case 2: // Eclipse
+                        dayNightColors[hour] = new Color(0f, 0f, 0.5f);  // Deep Blue
+                        break;
+                    case 3: // Toxic Fallout
+                        Color tingeGreen = dayNightColors[hour];
+                        dayNightColors[hour] = new Color(tingeGreen.r, tingeGreen.g * 1.6f, tingeGreen.b);
+                        break;
+                    case 4: // Volcanic Winter
+                        Color darker = dayNightColors[hour];
+                        dayNightColors[hour] = new Color(darker.r * 0.5f, darker.g * 0.5f, darker.b * 0.5f);
+                        break;
+                    default:
+                        
+                        float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
+                        Log.Message("At hour " + hour + " sunlight == " + sunlight);
+                        dayNightColors[hour] = GetColorForSunlight(sunlight);
+                        break;
+                }
+            }
+        }
+
+        private static int IncidentHappening()
+        {
+            int incident = 5;
+
+            // Check for solar flare all yellow
+            bool isSolarFlare = Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef);
+            //bool isSolarFlare = false;
+            // Check for eclipse all dark blue
+            bool isEclipse = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Eclipse);
+            // Green tinge
+            bool isToxicFallout = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.ToxicFallout);
+            bool isVolcanicWinter = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter);
+            bool isAurora = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora);
+
+            if (isSolarFlare == true)
+            {
+                incident = 1;
+            }
+            else if (isEclipse == true)
+            {
+                incident = 2;
+            }
+            else if (isToxicFallout == true)
+            {
+                incident = 3;
+            }
+            else if (isVolcanicWinter == true)
+            {
+                incident = 4;
+            }
+            else if (isAurora == true)
+            {
+                incident = 5;
+            }
+
+            return incident;
+        }
+
+        private static void DrawDayNightBar(Rect fillRect, Color[] colors)
         {
             float baseX = fillRect.x + BaseOffsetX;
             float baseY = fillRect.y + BaseOffsetY;
@@ -80,20 +192,18 @@ namespace ChronosPointer
                 float hourX = baseX + hour * (HourBoxWidth + HourBoxGap);
                 Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
 
-                float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                Color c = GetColorForSunlight(sunlight);
-                Widgets.DrawBoxSolid(hourRect, c);
+                Widgets.DrawBoxSolid(hourRect, colors[hour]);
             }
-        }
 
+        }
         private static Color GetColorForSunlight(float sunlight)
         {
             // Deep night
-            if (sunlight < 0.15f)
+            if (sunlight == 0f)
                 return new Color(0f, 0f, 0.5f);  // Deep Blue
 
             // Dawn/Dusk
-            if (sunlight < 0.3f)
+            if (sunlight < 0.35f)
                 return new Color(0.5f, 0.5f, 1f); // Light Blue
 
             // Sunrise/Sunset
@@ -103,14 +213,6 @@ namespace ChronosPointer
             // Full daylight
             return Color.yellow;
         }
-        #endregion
-
-        #region Highlight
-        /// <summary>
-        /// Yellow highlight with top/bottom trim so it doesn't slip off.
-        /// Top offset: PawnAreaTopOffset (16 px).
-        /// Bottom trim: PawnAreaBottomTrim (6 px).
-        /// </summary>
         private static void DrawHighlight(Rect fillRect)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
@@ -120,7 +222,6 @@ namespace ChronosPointer
                          + currentHour * (HourBoxWidth + HourBoxGap);
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-            //var pawns = PawnsFinder.AllMaps_FreeColonists.Where(p => p.timetable != null).ToList();
             var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
             int babyCount = 0;
             if (babyList != null)
@@ -135,7 +236,6 @@ namespace ChronosPointer
             Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
             Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
         }
-        #endregion
 
         #region Time Trace Line
         /// <summary>
@@ -164,13 +264,7 @@ namespace ChronosPointer
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
-        #endregion
 
-        #region Arrow Texture
-        /// <summary>
-        /// Draws the arrow texture, rotated 90 degrees to point downward,
-        /// hovering just above the time trace line.
-        /// </summary>
         private static void DrawArrowTexture(Rect fillRect)
         {
             if (ChronosPointerTextures.ArrowTexture == null) return;
@@ -218,11 +312,6 @@ namespace ChronosPointer
         }
         #endregion
 
-        #region Full-Height Cursor
-        /// <summary>
-        /// White vertical line across pawns, with the same top offset & bottom trim as highlight.
-        /// So it's not 10 px too tall.
-        /// </summary>
         private static void DrawFullHeightCursor(Rect fillRect)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
@@ -237,15 +326,10 @@ namespace ChronosPointer
             float cursorY = fillRect.y + BaseOffsetY + BarHeight
                 + PawnAreaTopOffset;
 
-            // Calculate total rows
-            // var pawns = .Where(p => p.timetable != null).ToList();
-
-            //Find.ColonistBar.Entries[].map;
-            //var pawns = PawnsFinder.AllMaps_FreeColonists.Where()
             var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
             int babyCount = 0;
             if (babyList != null)
-                babyCount= babyList.Count;
+                babyCount = babyList.Count;
 
             float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
                 - babyCount)
@@ -263,6 +347,11 @@ namespace ChronosPointer
 
             Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
         }
-        #endregion
+
+        // Method to reset the flag when the scheduler is closed
+        public static void OnSchedulerClosed()
+        {
+            dayNightColorsCalculated = false;
+        }
     }
 }
