@@ -107,25 +107,29 @@ namespace ChronosPointer
                         DrawDayNightTimeIndicator(fillRect);
                     }
                 }
-
-                // 2) Highlight bar
-                if (ChronosPointerMod.Settings.showHighlight)
-                {
-                    
-
-                    DrawHighlight(fillRect, pawnCount);
-                }
-
-                // 3) Arrow and time-trace
+                // 2) Arrow and time-trace
                 if (ChronosPointerMod.Settings.enableArrow)
                 {
                     DrawArrowTexture(fillRect);
                 }
 
-                // 4) Full-height vertical line
-                if (ChronosPointerMod.Settings.showPawnLine)
+                //Don't draw the pawn bars if there are no pawns
+                if (pawnCount > 0)
                 {
-                    DrawFullHeightCursor(fillRect, pawnCount);
+
+                    // 3) Highlight bar
+                    if (ChronosPointerMod.Settings.showHighlight)
+                    {
+
+
+                        DrawHighlight(fillRect, pawnCount);
+                    }
+
+                    // 4) Full-height vertical line
+                    if (ChronosPointerMod.Settings.showPawnLine)
+                    {
+                        DrawFullHeightCursor(fillRect, pawnCount);
+                    }
                 }
             }
             catch (Exception e)
