@@ -21,10 +21,10 @@ This mod requires [Harmony](https://steamcommunity.com/workshop/filedetails/?id=
 
 <h3>DLC</h3>
 
-[Royalty](https://rimworldgame.com/royalty/) - Unknown, probably<br>
-[Ideology](https://rimworldgame.com/ideology/) - Unknown, probably not.<br>
+[Royalty](https://rimworldgame.com/royalty/) - Likely<br>
+[Ideology](https://rimworldgame.com/ideology/) - Hopefully (don't own it so can't test but it should if it changes the schedule window in the same way Biotech does).<br>
 [Biotech](https://rimworldgame.com/biotech/) - Supported<br>
-[Anomaly](https://rimworldgame.com/anomaly/) - Unknown, probably<br>
+[Anomaly](https://rimworldgame.com/anomaly/) - Likely<br>
 
 <h3>Mods</h3>
 
