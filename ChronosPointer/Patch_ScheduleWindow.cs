@@ -15,7 +15,7 @@ namespace ChronosPointer
     public static class Patch_ScheduleWindow
     {
         // Where the schedule grid starts
-        private const float BaseOffsetX = 202f;
+        private const float BaseOffsetX = 228f;
         private const float BaseOffsetY = 40f;
 
         // Each hour cell
@@ -116,6 +116,7 @@ namespace ChronosPointer
 
         private static void CalculateDayNightColors(int incident)
         {
+            
             Log.Message("incident " + incident);
             for (int hour = 0; hour < 24; hour++)
             {
@@ -187,6 +188,9 @@ namespace ChronosPointer
         {
             float baseX = fillRect.x + BaseOffsetX;
             float baseY = fillRect.y + BaseOffsetY;
+
+            Log.Message("baseX " + baseX);
+            Log.Message("baseY " + baseY);
 
             for (int hour = 0; hour < 24; hour++)
             {
