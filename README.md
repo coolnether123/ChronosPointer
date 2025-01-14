@@ -21,10 +21,10 @@ This mod requires [Harmony](https://steamcommunity.com/workshop/filedetails/?id=
 
 <h3>DLC</h3>
 
-[Royalty](https://rimworldgame.com/royalty/) - Unknown<br>
+[Royalty](https://rimworldgame.com/royalty/) - Unknown, probably<br>
 [Ideology](https://rimworldgame.com/ideology/) - Unknown, probably not.<br>
 [Biotech](https://rimworldgame.com/biotech/) - Supported<br>
-[Anomaly](https://rimworldgame.com/anomaly/) - Unknown<br>
+[Anomaly](https://rimworldgame.com/anomaly/) - Unknown, probably<br>
 
 <h3>Mods</h3>
 
