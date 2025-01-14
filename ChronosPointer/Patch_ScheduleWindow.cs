@@ -88,6 +88,11 @@ namespace ChronosPointer
                         DrawDayNightBar(fillRect, Aurora);
 
                     }
+
+                    if(ChronosPointerMod.Settings.showDayNightIndicator)
+                    {
+                        DrawDayNightTimeIndicator(fillRect);
+                    }
                 }
 
                 // 2) Highlight bar
@@ -249,7 +254,7 @@ namespace ChronosPointer
         /// <summary>
         /// A small vertical line in the day/night bar, 2px wide for visibility.
         /// </summary>
-        private static void DrawTimeTraceLine(Rect fillRect)
+        private static void DrawDayNightTimeIndicator(Rect fillRect)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
