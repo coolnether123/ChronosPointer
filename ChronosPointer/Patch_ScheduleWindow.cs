@@ -4,6 +4,7 @@ using System.IO.IsolatedStorage;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
+using RimWorld.QuestGen;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 using Verse;
@@ -38,7 +39,10 @@ namespace ChronosPointer
         private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
 
         // Flag to track if the day/night colors have been calculated
-        private static bool dayNightColorsCalculated = false;
+        public static bool dayNightColorsCalculated = false;
+
+        // Flag to track if the pawn count has been calculated
+        public static bool pawnCountCalculated = false;
 
         // Array to store the colors for each hour
         private static Color[] dayNightColors = new Color[24];
@@ -51,20 +55,29 @@ namespace ChronosPointer
         private static float animationDuration = 2f; // 2 seconds duration
         private static Color[] initialColors = new Color[24];
         private static Color targetColor = new Color(0.5f, 0f, 0.5f, 0.5f);
+        
+        //cached number of pawns for the full height and highlight bars
+        private static int pawnCount = 0;
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (Find.CurrentMap == null) return;
 
+            
             try
             {
                 int incident = IncidentHappening();
+
+                if (!pawnCountCalculated)
+                    pawnCount = GetPawnCount();
+
                 // Check if the current map has changed
                 if (Find.CurrentMap != lastKnownMap)
                 {
                     // Reset the flag and update the last known map
                     dayNightColorsCalculated = false;
+                    pawnCountCalculated = false;
                     lastKnownMap = Find.CurrentMap;
                 }
 
@@ -98,7 +111,9 @@ namespace ChronosPointer
                 // 2) Highlight bar
                 if (ChronosPointerMod.Settings.showHighlight)
                 {
-                    DrawHighlight(fillRect);
+                    
+
+                    DrawHighlight(fillRect, pawnCount);
                 }
 
                 // 3) Arrow and time-trace
@@ -110,7 +125,7 @@ namespace ChronosPointer
                 // 4) Full-height vertical line
                 if (ChronosPointerMod.Settings.showPawnLine)
                 {
-                    DrawFullHeightCursor(fillRect);
+                    DrawFullHeightCursor(fillRect, pawnCount);
                 }
             }
             catch (Exception e)
@@ -149,6 +164,7 @@ namespace ChronosPointer
                         break;
                 }
             }
+            dayNightColorsCalculated = true;
         }
 
         private static int IncidentHappening()
@@ -194,9 +210,6 @@ namespace ChronosPointer
             float baseX = fillRect.x + BaseOffsetX;
             float baseY = fillRect.y + BaseOffsetY;
 
-            Log.Message("baseX " + baseX);
-            Log.Message("baseY " + baseY);
-
             for (int hour = 0; hour < 24; hour++)
             {
                 float hourX = baseX + hour * (HourBoxWidth + HourBoxGap);
@@ -223,7 +236,7 @@ namespace ChronosPointer
             // Full daylight
             return Color.yellow;
         }
-        private static void DrawHighlight(Rect fillRect)
+        private static void DrawHighlight(Rect fillRect, int pawnCount)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
@@ -232,16 +245,12 @@ namespace ChronosPointer
                          + currentHour * (HourBoxWidth + HourBoxGap);
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
-            int babyCount = 0;
-            if (babyList != null)
-                babyCount = babyList.Count;
-
-            float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
-                - babyCount)
-                * (PawnRowHeight + PawnRowGap);
+            
+            float totalHeight =  pawnCount  * (PawnRowHeight + PawnRowGap);
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
+
+            
 
             Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
             if (ChronosPointerMod.Settings.hollowHourHighlight)
@@ -251,6 +260,22 @@ namespace ChronosPointer
         }
 
         #region Time Trace Line
+
+        static int GetPawnCount()
+        {
+            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
+            int babyCount = 0;
+            if (babyList != null)
+                babyCount = babyList.Count;
+
+            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
+                - babyCount);
+
+            pawnCountCalculated = true;
+
+            return totalHeight;
+        }
+
         /// <summary>
         /// A small vertical line in the day/night bar, 2px wide for visibility.
         /// </summary>
@@ -329,7 +354,7 @@ namespace ChronosPointer
         }
         #endregion
 
-        private static void DrawFullHeightCursor(Rect fillRect)
+        private static void DrawFullHeightCursor(Rect fillRect, int pawnCount)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
@@ -343,13 +368,7 @@ namespace ChronosPointer
             float cursorY = fillRect.y + BaseOffsetY + BarHeight
                 + PawnAreaTopOffset;
 
-            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
-            int babyCount = 0;
-            if (babyList != null)
-                babyCount = babyList.Count;
-
-            float totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
-                - babyCount)
+            float totalHeight = pawnCount
                 * (PawnRowHeight + PawnRowGap);
 
             // Trim from bottom
@@ -365,10 +384,26 @@ namespace ChronosPointer
             Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
         }
 
+
         // Method to reset the flag when the scheduler is closed
-        public static void OnSchedulerClosed()
+        
+    }
+
+    [HarmonyPatch(typeof(Window))]
+    [HarmonyPatch("PostClose")]
+    public static class Patch_ScheduleWindowClose
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Window __instance)
         {
-            dayNightColorsCalculated = false;
+            if (__instance is MainTabWindow_Schedule)
+            {
+
+                Log.Message("Scheduler closed");
+                Patch_ScheduleWindow.dayNightColorsCalculated = false;
+                Patch_ScheduleWindow.pawnCountCalculated = false;
+            }
         }
     }
+
 }
