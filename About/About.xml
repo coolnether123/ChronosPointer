@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>Chronos Pointer</name>
-  <author>CoolNether123</author>
+  <author>CoolNether123, TreadTheDawnGames, ZManJim</author>
   <supportedVersions>
     <li>1.5</li>
   </supportedVersions>
@@ -12,10 +12,10 @@
     Features:
     - Day/Night Tracker: A bar above the hour numbers in the schedule window, visually representing day and night cycles.
     - Dynamic Arrow: Moves in real-time, precisely indicating the current hour and minute.
-    - Time Trace Line: A small line at the arrow’s tip, spanning the width of the day/night tracker, tracing the passage of time.
+    - Day/Night Indicator: A small line at the arrow’s tip, spanning the width of the day/night tracker, tracing the passage of time.
     - Full-Height Time Indicator: A vertical line spanning all pawns' schedules, moving in sync with the arrow to show the current time for all colonists at once.
     - Customizable Colors: Adjust colors for the arrow, highlight, cursors, and bars to suit your preference.
-    - Adjustable Positions: Fine-tune the position and size of various elements for optimal visibility.
+    - Incident Interactions: The Day/Night Tracker updates its color based on the map state for current events such as Solar Flare/Eclipse, and Auroras.
 
     This mod provides an intuitive and visually appealing way to track time in RimWorld, making it easier to manage colonist schedules and activities throughout the day and night cycle.
 
@@ -32,7 +32,7 @@
     </li>
   </modDependencies>
   <loadAfter>
-    <li>Ludeon.RimWorld</li>
     <li>brrainz.harmony</li>
+    <li>Ludeon.RimWorld</li>
   </loadAfter>
 </ModMetaData>
