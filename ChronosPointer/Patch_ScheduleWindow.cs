@@ -17,7 +17,7 @@ namespace ChronosPointer
     {
         #region Values
         // Where the schedule grid starts
-        private static float BaseOffsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
+        private static float BaseOffsetX = CalculateBaseOffsetX();
         private const float BaseOffsetY = 40f;
 
         // Each hour cell
@@ -55,7 +55,11 @@ namespace ChronosPointer
         private static int pawnCount = 0;
 
         // Custom Schedules (continued) mod ID
-        private const string customSchedulesModId = "Mysterius.CustomSchedules";
+        // Change the single string to an array of strings
+        private static readonly string[] customSchedulesModIds = new string[]
+        {
+            "Mysterius.CustomSchedules"
+        };
         #endregion
 
         [HarmonyPostfix]
@@ -66,13 +70,23 @@ namespace ChronosPointer
 
             try
             {
-                // Check if the "Custom Schedules (continued)" mod is active
-                bool isModActive = ModLister.AllInstalledMods.Any(mod =>
-                    mod.Active && mod.PackageId.Equals(customSchedulesModId, StringComparison.OrdinalIgnoreCase));
-
-                if (isModActive)
+                // Iterate over each mod ID and check if it's active
+                foreach (var modId in customSchedulesModIds)
                 {
-                    Log.Message("Custom Schedules (continued) mod is active schedule window will have overlap");
+                    bool isModActive = ModLister.AllInstalledMods.Any(mod =>
+                        mod.Active && mod.PackageId.Equals(modId, StringComparison.OrdinalIgnoreCase));
+
+                    if (isModActive)
+                    {
+                        // Trigger specific fixes based on the active mod
+                        switch (modId)
+                        {
+                            case "Mysterius.CustomSchedules":
+
+                                ApplyFixForMysteriusCustomSchedules();
+                                break;
+                        }
+                    }
                 }
 
                 int incident = IncidentHappening();
@@ -145,11 +159,35 @@ namespace ChronosPointer
                 Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
             }
         }
+
+        #region Compatability Patches
+        private static float CalculateBaseOffsetX()
+        {
+            float offsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
+
+            // Check specifically for the "defaults.1trickPwnyta" mod
+            if (ModLister.AllInstalledMods.Any(mod => mod.Active && mod.PackageId.Equals("defaults.1trickPwnyta", StringComparison.OrdinalIgnoreCase)))
+            {
+                offsetX += 36f;
+            }
+
+            return offsetX;
+        }
+
+        // Define methods for specific fixes
+        private static void ApplyFixForMysteriusCustomSchedules()
+        {
+            // Implement the fix logic for Mysterius.CustomSchedules
+            Log.Error("Custom Schedules (continued) is Active. Chronos Pointer will have overlap");
+        }
+        #endregion
+
+
         #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
         {
             
-            Log.Message("incident " + incident);
+            //Log.Message("incident " + incident);
             for (int hour = 0; hour < 24; hour++)
             {
                 switch (incident)
