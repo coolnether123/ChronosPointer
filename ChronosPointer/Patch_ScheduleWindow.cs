@@ -36,7 +36,7 @@ namespace ChronosPointer
         public static Rect UseMeForTheXYPosOfDayNightBar;
 
         // Where the schedule grid starts
-        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
+        private static float BaseOffsetX = 0f;// CalculateBaseOffsetX();
         private const float BaseOffsetY = 40;
 
         // Each hour cell
