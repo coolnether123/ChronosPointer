@@ -438,8 +438,14 @@ namespace ChronosPointer
                 + hourProgress * HourBoxWidth
                 + 1f; // Shift 1px to the right
 
-            // Adjust cursorX to center the thickness
+            // Ensure cursorThickness is an even number
             float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
+            if (cursorThickness % 2 != 0)
+            {
+                cursorThickness += 1f; // Adjust to the next even number
+            }
+
+            // Adjust cursorX to center the thickness
             cursorX -= cursorThickness / 2f;
 
             // Top offset to match highlight
@@ -455,7 +461,7 @@ namespace ChronosPointer
             Rect cursorRect = new Rect(
                 cursorX,
                 cursorY,
-                cursorThickness, // Use the setting for width
+                cursorThickness, // Use the adjusted even thickness
                 totalHeight
             );
 

@@ -5,6 +5,17 @@ namespace ChronosPointer
 {
     public class ChronosPointerSettings : ModSettings
     {
+
+        public float cursorThickness = 2f; // Default thickness
+
+        // Method to ensure cursorThickness is always an even number
+        public void ValidateCursorThickness()
+        {
+            if (cursorThickness % 2 != 0)
+            {
+                cursorThickness += 1f; // Adjust to the next even number
+            }
+        }
         // Toggles
         public bool enableArrow = true;
         public bool showHighlight = true;
@@ -14,8 +25,6 @@ namespace ChronosPointer
         public bool showPawnLine = true;
         public bool hollowHourHighlight = false;
 
-
-        public float cursorThickness = 2f; // Default thickness
 
         // Colors
         public Color arrowColor = Color.red;
@@ -42,6 +51,9 @@ namespace ChronosPointer
             Scribe_Values.Look(ref timeTraceColorDay, "timeTraceColorDay", Color.black);
             Scribe_Values.Look(ref timeTraceColorNight, "timeTraceColorNight", Color.white);
             Scribe_Values.Look(ref cursorThickness, "cursorThickness", 2f);
+
+            // Validate cursorThickness after loading
+            ValidateCursorThickness();
         }
 
         public void ResetToDefaults()
@@ -61,6 +73,9 @@ namespace ChronosPointer
             bottomCursorColor = Color.white;
             timeTraceColorDay = Color.black;
             timeTraceColorNight = Color.white;
+
+            // Validate cursorThickness after resetting
+            ValidateCursorThickness();
         }
     }
 }

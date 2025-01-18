@@ -60,14 +60,14 @@ namespace ChronosPointer
             listingStandard.CheckboxLabeled("- Hollow Current Hour Highlight", ref Settings.hollowHourHighlight);
             GUI.color = Color.white;
 
-
             listingStandard.Gap(25);
 
             // Add a slider for cursor thickness
             if (Settings.showPawnLine)
             {
                 listingStandard.Label($"Pawn Section Time Indicator Thickness: {Settings.cursorThickness:F1}");
-                Settings.cursorThickness = listingStandard.Slider(Settings.cursorThickness, 1f, 10f);
+                float newThickness = listingStandard.Slider(Settings.cursorThickness, 2f, 10f);
+                Settings.cursorThickness = Mathf.Round(newThickness / 2f) * 2f; // Round to nearest even number
             }
 
             //If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
@@ -157,12 +157,7 @@ namespace ChronosPointer
 
             GUI.color = Color.white;
 
-
-
-
             listingStandard.End();
-
-
         }
 
     }
