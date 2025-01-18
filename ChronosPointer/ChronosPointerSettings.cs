@@ -14,6 +14,9 @@ namespace ChronosPointer
         public bool showPawnLine = true;
         public bool hollowHourHighlight = false;
 
+
+        public float cursorThickness = 2f; // Default thickness
+
         // Colors
         public Color arrowColor = Color.red;
         public Color highlightColor = new Color(1f, 1f, 0f, 0.3f);
@@ -38,6 +41,7 @@ namespace ChronosPointer
             Scribe_Values.Look(ref bottomCursorColor, "bottomCursorColor", Color.white);
             Scribe_Values.Look(ref timeTraceColorDay, "timeTraceColorDay", Color.black);
             Scribe_Values.Look(ref timeTraceColorNight, "timeTraceColorNight", Color.white);
+            Scribe_Values.Look(ref cursorThickness, "cursorThickness", 2f);
         }
 
         public void ResetToDefaults()
@@ -49,6 +53,7 @@ namespace ChronosPointer
             useDynamicTimeTraceLine = true;
             showPawnLine = true;
             hollowHourHighlight = false;
+            cursorThickness = 2f;
 
             // Colors
             arrowColor = Color.red;

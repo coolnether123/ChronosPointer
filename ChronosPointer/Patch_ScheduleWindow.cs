@@ -412,9 +412,15 @@ namespace ChronosPointer
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
+            // Calculate cursorX consistently with other elements and shift 1px to the right
             float cursorX = fillRect.x + BaseOffsetX
                 + currentHour * (HourBoxWidth + HourBoxGap)
-                + hourProgress * HourBoxWidth;
+                + hourProgress * HourBoxWidth
+                + 1f; // Shift 1px to the right
+
+            // Adjust cursorX to center the thickness
+            float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
+            cursorX -= cursorThickness / 2f;
 
             // Top offset to match highlight
             float cursorY = fillRect.y + BaseOffsetY + BarHeight
@@ -429,7 +435,7 @@ namespace ChronosPointer
             Rect cursorRect = new Rect(
                 cursorX,
                 cursorY,
-                2f, // Default width
+                cursorThickness, // Use the setting for width
                 totalHeight
             );
 
@@ -438,7 +444,7 @@ namespace ChronosPointer
 
 
         // Method to reset the flag when the scheduler is closed
-        
+
     }
     #endregion
 

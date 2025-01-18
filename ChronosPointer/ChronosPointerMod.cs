@@ -10,6 +10,7 @@ namespace ChronosPointer
     public class ChronosPointerMod : Mod
     {
         public static ChronosPointerSettings Settings;
+        public static float cursorThickness = 2f; // Default thickness
         private Vector2 scrollPosition = Vector2.zero;
 
         public ChronosPointerMod(ModContentPack content) : base(content)
@@ -24,7 +25,7 @@ namespace ChronosPointer
 
         public override string SettingsCategory()
         {
-            return "Chronos Cursor";
+            return "Chronos Pointer";
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
@@ -58,9 +59,16 @@ namespace ChronosPointer
             if (!Settings.showHighlight) GUI.color = Color.gray;
             listingStandard.CheckboxLabeled("- Hollow Current Hour Highlight", ref Settings.hollowHourHighlight);
             GUI.color = Color.white;
-           
+
 
             listingStandard.Gap(25);
+
+            // Add a slider for cursor thickness
+            if (Settings.showPawnLine)
+            {
+                listingStandard.Label($"Pawn Section Time Indicator Thickness: {Settings.cursorThickness:F1}");
+                Settings.cursorThickness = listingStandard.Slider(Settings.cursorThickness, 1f, 10f);
+            }
 
             //If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
             if (!Settings.enableArrow)
@@ -105,7 +113,7 @@ namespace ChronosPointer
                 GUI.color = Color.gray;
             }
             if (!Settings.useDynamicTimeTraceLine) GUI.color = Color.gray;
-            
+
             //Night
             listingStandard.Gap(10f); Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorNight);
             if (listingStandard.ButtonText("Change Time Trace Color Night"))
@@ -149,7 +157,7 @@ namespace ChronosPointer
 
             GUI.color = Color.white;
 
-         
+
 
 
             listingStandard.End();
