@@ -11,14 +11,33 @@ using Verse;
 
 namespace ChronosPointer
 {
+    [HarmonyPatch(typeof(PawnColumnWorker_Timetable))]
+    [HarmonyPatch("DoCell")]
+    public static class Patch_DayNightPositionGetter
+    {
+        static bool hasRect = false;
+        [HarmonyPostfix]
+        public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
+        {
+            if (!hasRect)
+            {
+                hasRect = true;
+            Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
+            Log.Message(rect.ToString());
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
     public static class Patch_ScheduleWindow
     {
         #region Values
+        public static Rect UseMeForTheXYPosOfDayNightBar;
+
         // Where the schedule grid starts
-        private static float BaseOffsetX = CalculateBaseOffsetX();
-        private const float BaseOffsetY = 40f;
+        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
+        private const float BaseOffsetY = 40;
 
         // Each hour cell
         private const float HourBoxWidth = 19f;
@@ -67,6 +86,7 @@ namespace ChronosPointer
         {
             if (Find.CurrentMap == null) return;
 
+            fillRect = UseMeForTheXYPosOfDayNightBar;
 
             try
             {
@@ -88,7 +108,7 @@ namespace ChronosPointer
                         }
                     }
                 }
-
+                Log.Message("Running");
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -452,7 +472,7 @@ namespace ChronosPointer
         {
             if (__instance is MainTabWindow_Schedule)
             {
-
+                Log.Message("Window closed");
                 //Log.Message("Scheduler closed");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
@@ -469,7 +489,7 @@ namespace ChronosPointer
         {
             if (__instance is MainTabWindow_Schedule)
             {
-
+                Log.Message("Pawns changed");
                 //Log.Message("Pawns updated");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
