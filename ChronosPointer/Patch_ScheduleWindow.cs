@@ -11,14 +11,33 @@ using Verse;
 
 namespace ChronosPointer
 {
+    [HarmonyPatch(typeof(PawnColumnWorker_Timetable))]
+    [HarmonyPatch("DoCell")]
+    public static class Patch_DayNightPositionGetter
+    {
+        static bool hasRect = false;
+        [HarmonyPostfix]
+        public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
+        {
+            if (!hasRect)
+            {
+                hasRect = true;
+                Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
+                Log.Message(rect.ToString());
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
     public static class Patch_ScheduleWindow
     {
         #region Values
+        public static Rect UseMeForTheXYPosOfDayNightBar;
+
         // Where the schedule grid starts
-        private static float BaseOffsetX = CalculateBaseOffsetX();
-        private const float BaseOffsetY = 40f;
+        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
+        private const float BaseOffsetY = 40;
 
         // Each hour cell
         private const float HourBoxWidth = 19f;
@@ -50,7 +69,7 @@ namespace ChronosPointer
 
         // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
-        
+
         //cached number of pawns for the full height and highlight bars
         private static int pawnCount = 0;
 
@@ -67,6 +86,7 @@ namespace ChronosPointer
         {
             if (Find.CurrentMap == null) return;
 
+            fillRect = UseMeForTheXYPosOfDayNightBar;
 
             try
             {
@@ -88,7 +108,7 @@ namespace ChronosPointer
                         }
                     }
                 }
-
+                Log.Message("Running");
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -109,9 +129,9 @@ namespace ChronosPointer
                     if (!dayNightColorsCalculated || incident > 0)
                     {
                         CalculateDayNightColors(incident);
-                        
+
                     }
-                        DrawDayNightBar(fillRect, dayNightColors);
+                    DrawDayNightBar(fillRect, dayNightColors);
                     if (incident == 5)
                     {
                         Color[] Aurora = dayNightColors;
@@ -124,7 +144,7 @@ namespace ChronosPointer
 
                     }
 
-                    if(ChronosPointerMod.Settings.showDayNightIndicator)
+                    if (ChronosPointerMod.Settings.showDayNightIndicator)
                     {
                         DrawDayNightTimeIndicator(fillRect);
                     }
@@ -186,7 +206,7 @@ namespace ChronosPointer
         #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
         {
-            
+
             //Log.Message("incident " + incident);
             for (int hour = 0; hour < 24; hour++)
             {
@@ -207,7 +227,7 @@ namespace ChronosPointer
                         dayNightColors[hour] = new Color(darker.r * 0.5f, darker.g * 0.5f, darker.b * 0.5f);
                         break;
                     default:
-                        
+
                         float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
                         //Log.Message("At hour " + hour + " sunlight == " + sunlight);
                         dayNightColors[hour] = GetColorForSunlight(sunlight);
@@ -295,12 +315,12 @@ namespace ChronosPointer
                          + currentHour * (HourBoxWidth + HourBoxGap);
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-            
-            float totalHeight =  pawnCount  * (PawnRowHeight + PawnRowGap);
+
+            float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
 
-            
+
 
             Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
             if (ChronosPointerMod.Settings.hollowHourHighlight)
@@ -352,7 +372,7 @@ namespace ChronosPointer
             // 2 px wide
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
 
-           
+
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
 
@@ -396,7 +416,7 @@ namespace ChronosPointer
             // Draw the arrow
             GUI.color = ChronosPointerMod.Settings.arrowColor;
             ;
-            
+
             GUI.DrawTexture(arrowRect.ScaledBy((!ChronosPointerMod.Settings.showDayNightBar ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
 
             // Restore matrix & color
@@ -412,15 +432,9 @@ namespace ChronosPointer
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
-            // Calculate cursorX consistently with other elements and shift 1px to the right
             float cursorX = fillRect.x + BaseOffsetX
                 + currentHour * (HourBoxWidth + HourBoxGap)
-                + hourProgress * HourBoxWidth
-                + 1f; // Shift 1px to the right
-
-            // Adjust cursorX to center the thickness
-            float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
-            cursorX -= cursorThickness / 2f;
+                + hourProgress * HourBoxWidth;
 
             // Top offset to match highlight
             float cursorY = fillRect.y + BaseOffsetY + BarHeight
@@ -435,7 +449,7 @@ namespace ChronosPointer
             Rect cursorRect = new Rect(
                 cursorX,
                 cursorY,
-                cursorThickness, // Use the setting for width
+                2f, // Default width
                 totalHeight
             );
 
@@ -448,7 +462,7 @@ namespace ChronosPointer
     }
     #endregion
 
-        #region Harmony Patches
+    #region Harmony Patches
     [HarmonyPatch(typeof(Window))]
     [HarmonyPatch("PostClose")]
     public static class Patch_ScheduleWindowClose
@@ -458,14 +472,14 @@ namespace ChronosPointer
         {
             if (__instance is MainTabWindow_Schedule)
             {
-
+                Log.Message("Window closed");
                 //Log.Message("Scheduler closed");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
             }
         }
     }
-    
+
     [HarmonyPatch(typeof(MainTabWindow_PawnTable))]
     [HarmonyPatch("Notify_PawnsChanged")]
     public static class Patch_ScheduleWindowPawnUpdated
@@ -475,7 +489,7 @@ namespace ChronosPointer
         {
             if (__instance is MainTabWindow_Schedule)
             {
-
+                Log.Message("Pawns changed");
                 //Log.Message("Pawns updated");
                 Patch_ScheduleWindow.dayNightColorsCalculated = false;
                 Patch_ScheduleWindow.pawnCountCalculated = false;
