@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {}
+    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\chronosPointer\\ChronosPointer.csproj": {}
   },
   "projects": {
-    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {
+    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\chronosPointer\\ChronosPointer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+        "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\chronosPointer\\ChronosPointer.csproj",
         "projectName": "ChronosPointer",
-        "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+        "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\chronosPointer\\ChronosPointer.csproj",
         "packagesPath": "C:\\Users\\optim\\.nuget\\packages\\",
-        "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\obj\\",
+        "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\chronosPointer\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
         "UsingMicrosoftNETSdk": false,

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.IsolatedStorage;
+
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.QuestGen;
 using UnityEngine;
-using UnityEngine.Experimental.GlobalIllumination;
+
 using Verse;
 
 namespace ChronosPointer
@@ -108,7 +108,14 @@ namespace ChronosPointer
                         }
                     }
                 }
-                Log.Message("Running");
+                // Example of conditional compilation
+#if RIMWORLD_1_5
+                // Code specific to RimWorld 1.5
+                Log.Message("Running on RimWorld 1.5");
+#else
+                // Code specific to RimWorld 1.4
+                Log.Message("Running on RimWorld 1.4");
+#endif
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -334,16 +341,26 @@ namespace ChronosPointer
 
         static int GetPawnCount()
         {
-            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
+            //var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
             int babyCount = 0;
-            if (babyList != null)
-                babyCount = babyList.Count;
-
-            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
-                - babyCount);
-
+        
+            // Check if the method exists and is accessible
+            var methodInfo = Find.CurrentMap.mapPawns.GetType().GetMethod("SpawnedBabiesInFaction");
+            if (methodInfo != null)
+            {
+                var babyList = methodInfo.Invoke(Find.CurrentMap.mapPawns, new object[] { Find.FactionManager.OfPlayer }) as List<Pawn>;
+                if (babyList != null)
+                    babyCount = babyList.Count;
+            }
+            else
+            {
+                Log.Warning("SpawnedBabiesInFaction method not found. Skipping baby count.");
+            }
+        
+            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount - babyCount);
+        
             pawnCountCalculated = true;
-
+        
             return totalHeight;
         }
 
