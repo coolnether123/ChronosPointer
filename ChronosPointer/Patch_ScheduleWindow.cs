@@ -354,7 +354,9 @@ namespace ChronosPointer
 
             // Check if the method exists and is accessible
 
-            var field = __instance.GetType().GetField("Pawns", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            
 
             if (field == null)
             {
