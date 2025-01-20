@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.QuestGen;
@@ -19,12 +20,16 @@ namespace ChronosPointer
         [HarmonyPostfix]
         public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
         {
+            Log.Message("Code gets here");
+
             if (!hasRect)
             {
                 hasRect = true;
                 Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
                 Log.Message(rect.ToString());
             }
+            Log.Message("and here");
+
         }
     }
 
@@ -90,6 +95,7 @@ namespace ChronosPointer
 
             try
             {
+
                 // Iterate over each mod ID and check if it's active
                 foreach (var modId in customSchedulesModIds)
                 {
@@ -110,8 +116,9 @@ namespace ChronosPointer
                 }
                 int incident = IncidentHappening();
 
-                if (!pawnCountCalculated)
-                    pawnCount = GetPawnCount();
+
+                //if (!pawnCountCalculated)
+                pawnCount = GetPawnCount(__instance);
 
                 // Check if the current map has changed
                 if (Find.CurrentMap != lastKnownMap)
@@ -332,25 +339,35 @@ namespace ChronosPointer
 
         #region Time Trace Line
 
-        static int GetPawnCount()
+        static int GetPawnCount(MainTabWindow_Schedule __instance)
         {
             //var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
             int babyCount = 0;
-        
+
+            if (__instance == null)
+            {
+                Log.Error("Instance is null!");
+                return 0;
+            }
+
+            //babies that are held do not count as spawned, but do still count as pawns. So when a mother breastfeeds her baby, the pawn highlight bar is off by the number of breastfed babies.
+
             // Check if the method exists and is accessible
-            var methodInfo = Find.CurrentMap.mapPawns.GetType().GetMethod("SpawnedBabiesInFaction");
-            if (methodInfo != null)
+
+            var field = __instance.GetType().GetField("Pawns", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (field == null)
             {
-                var babyList = methodInfo.Invoke(Find.CurrentMap.mapPawns, new object[] { Find.FactionManager.OfPlayer }) as List<Pawn>;
-                if (babyList != null)
-                    babyCount = babyList.Count;
+                Log.Error("Field is null!");
+                return 0;
             }
-            else
+            var pawnsIEnumerable = field.GetValue(__instance) as IEnumerable<Pawn>;
+            if (pawnsIEnumerable == null)
             {
-                Log.Warning("SpawnedBabiesInFaction method not found. Skipping baby count.");
+                Log.Error("pawnsIEnum is null!");
+                return 0;
             }
-        
-            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount - babyCount);
+            int totalHeight = pawnsIEnumerable.Count(); 
         
             pawnCountCalculated = true;
         
@@ -433,7 +450,7 @@ namespace ChronosPointer
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
         }
-        #endregion
+#endregion
 
         #region Full Height Cursor
         private static void DrawFullHeightCursor(Rect fillRect, int pawnCount)
@@ -483,7 +500,7 @@ namespace ChronosPointer
 
     }
     #endregion
-
+/*
     #region Harmony Patches
     [HarmonyPatch(typeof(Window))]
     [HarmonyPatch("PostClose")]
@@ -517,7 +534,7 @@ namespace ChronosPointer
                 Patch_ScheduleWindow.pawnCountCalculated = false;
             }
         }
-    }
-    #endregion
+    }*/
+    //#endregion
 
 }

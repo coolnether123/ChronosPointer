@@ -1,0 +1,5 @@
+C:\Users\CASPI\Desktop\ChronosPointer\1.5\Assemblies\ChronosPointer.dll
+C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.AssemblyReference.cache
+C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.CoreCompileInputs.cache
+C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.CopyComplete
+C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.dll

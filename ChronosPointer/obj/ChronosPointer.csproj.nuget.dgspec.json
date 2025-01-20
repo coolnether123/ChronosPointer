@@ -1,26 +1,21 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {}
+    "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {}
   },
   "projects": {
-    "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {
+    "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+        "projectUniqueName": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
         "projectName": "ChronosPointer",
-        "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
-        "packagesPath": "C:\\Users\\optim\\.nuget\\packages\\",
-        "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\obj\\",
+        "projectPath": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+        "packagesPath": "C:\\Users\\CASPI\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
-        "UsingMicrosoftNETSdk": false,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\optim\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\CASPI\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -34,11 +29,6 @@
           "net472": {
             "projectReferences": {}
           }
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -52,7 +42,7 @@
             },
             "Krafs.Rimworld.Ref": {
               "target": "Package",
-              "version": "[1.3.3389, )"
+              "version": "[1.5.4297, )"
             },
             "Lib.Harmony": {
               "target": "Package",
