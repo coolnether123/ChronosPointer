@@ -35,6 +35,20 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5|AnyCPU'">
+    <OutputPath>..\1.5\Assemblies\</OutputPath>
+    <DefineConstants>rw_1_5</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.3|AnyCPU'">
+    <OutputPath>..\1.3\Assemblies\</OutputPath>
+    <DefineConstants>rw_1_3</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4|AnyCPU'">
+    <OutputPath>..\1.4\Assemblies\</OutputPath>
+    <DefineConstants>rw_1_4</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
@@ -49,16 +63,15 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.3.3389</Version>
+      <Version>1.5.4297</Version>
     </PackageReference>
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0ColourPicker, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\0ColourPicker.dll</HintPath>
+    <Reference Include="0ColourPicker">
+      <HintPath>..\1.5\Assemblies\0ColourPicker.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

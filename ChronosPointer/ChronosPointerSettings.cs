@@ -55,7 +55,6 @@ namespace ChronosPointer
             // Validate cursorThickness after loading
             ValidateCursorThickness();
         }
-
         public void ResetToDefaults()
         {
             enableArrow = true;
