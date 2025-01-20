@@ -17,7 +17,7 @@ namespace ChronosPointer
             {
                 Log.Warning("ChronosPointer: Could not load arrow texture from UI/Widgets/ArrowRight.");
             }
-            
+
         }
     }
 }

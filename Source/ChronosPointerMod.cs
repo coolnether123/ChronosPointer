@@ -2,8 +2,6 @@ using UnityEngine;
 using Verse;
 using RimWorld;
 using ColourPicker;
-using UnityEngine.UI;
-using System;
 
 namespace ChronosPointer
 {
@@ -34,7 +32,6 @@ namespace ChronosPointer
 
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(viewRect);
-
 
             if (listingStandard.ButtonText("Reset to Default"))
             {

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
-using RimWorld.QuestGen;
 using UnityEngine;
-
 using Verse;
+using PawnTableGrouped;
 
 namespace ChronosPointer
 {
@@ -38,24 +36,23 @@ namespace ChronosPointer
         public static Rect UseMeForTheXYPosOfDayNightBar;
 
         // Where the schedule grid starts
-        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
-        private const float BaseOffsetY = 40;
+        public static float BaseOffsetX = 1f;
+        public static float BaseOffsetY = 40;
 
         // Each hour cell
-        private const float HourBoxWidth = 19f;
-        private const float HourBoxGap = 2f;
+        public static float HourBoxWidth = 19f;
+        public static float HourBoxGap = 2f;
 
         // Pawn row
-        private const float PawnRowHeight = 28f; // user wants 28f
-        private const float PawnRowGap = 2f;
+        public static float PawnRowHeight = 28f;
+        public static float PawnRowGap = 2f;
 
         // Day/night bar
-        private const float BarHeight = 10f;
+        public static float BarHeight = 10f;
 
         // Extra offsets for highlight & line so they don’t slip off top/bottom
-        // (Adjust to taste if you see they still slip a bit.)
-        private const float PawnAreaTopOffset = 16f;
-        private const float PawnAreaBottomTrim = 2f;
+        public static float PawnAreaTopOffset = 16f;
+        public static float PawnAreaBottomTrim = 2f;
 
         // Define the SolarFlare condition if not available
         private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
@@ -76,111 +73,118 @@ namespace ChronosPointer
         private static int pawnCount = 0;
 
         // Custom Schedules (continued) mod ID
-        // Change the single string to an array of strings
         private static readonly string[] customSchedulesModIds = new string[]
         {
-            "Mysterius.CustomSchedules"
+            "Mysterius.CustomSchedules",
+            "name.krypt.rimworld.pawntablegrouped"
         };
         #endregion
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
+            // Schedule the patch to be applied later, ensuring proper initialization
+            LongEventHandler.ExecuteWhenFinished(() =>
+            {
+                try
+                {
+                    ApplyPatches(__instance, fillRect);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"ChronosPointer: Error in scheduled patch - {e.Message}\n{e.StackTrace}");
+                }
+            });
+        }
+
+        public static void ApplyPatches(MainTabWindow_Schedule __instance, Rect fillRect)
+        {
             if (Find.CurrentMap == null) return;
 
             fillRect = UseMeForTheXYPosOfDayNightBar;
 
-            try
+            // Iterate over each mod ID and check if it's active
+            foreach (var modId in customSchedulesModIds)
             {
+                bool isModActive = ModLister.AllInstalledMods.Any(mod =>
+                    mod.Active && mod.PackageId.Equals(modId, StringComparison.OrdinalIgnoreCase));
 
-                // Iterate over each mod ID and check if it's active
-                foreach (var modId in customSchedulesModIds)
+                if (isModActive)
                 {
-                    bool isModActive = ModLister.AllInstalledMods.Any(mod =>
-                        mod.Active && mod.PackageId.Equals(modId, StringComparison.OrdinalIgnoreCase));
-
-                    if (isModActive)
+                    // Trigger specific fixes based on the active mod
+                    switch (modId)
                     {
-                        // Trigger specific fixes based on the active mod
-                        switch (modId)
-                        {
-                            case "Mysterius.CustomSchedules":
-
-                                ApplyFixForMysteriusCustomSchedules();
-                                break;
-                        }
-                    }
-                }
-                int incident = IncidentHappening();
-
-
-                //if (!pawnCountCalculated)
-                pawnCount = GetPawnCount(__instance);
-
-                // Check if the current map has changed
-                if (Find.CurrentMap != lastKnownMap)
-                {
-                    // Reset the flag and update the last known map
-                    dayNightColorsCalculated = false;
-                    pawnCountCalculated = false;
-                    lastKnownMap = Find.CurrentMap;
-                }
-
-                // 1) Day/Night Bar
-                if (ChronosPointerMod.Settings.showDayNightBar)
-                {
-                    if (!dayNightColorsCalculated || incident > 0)
-                    {
-                        CalculateDayNightColors(incident);
-
-                    }
-                    DrawDayNightBar(fillRect, dayNightColors);
-                    if (incident == 5)
-                    {
-                        Color[] Aurora = dayNightColors;
-                        Color newColor = new Color(0.5f, Mathf.Abs(Mathf.Sin(Time.time)), 0.5f, Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f);
-                        for (int hour = 0; hour < 24; hour++)
-                        {
-                            Aurora[hour] = newColor;
-                        }
-                        DrawDayNightBar(fillRect, Aurora);
-
-                    }
-
-                    if (ChronosPointerMod.Settings.showDayNightIndicator)
-                    {
-                        DrawDayNightTimeIndicator(fillRect);
-                    }
-                }
-                // 2) Arrow and time-trace
-                if (ChronosPointerMod.Settings.enableArrow)
-                {
-                    DrawArrowTexture(fillRect);
-                }
-
-                //Don't draw the pawn bars if there are no pawns
-                if (pawnCount > 0)
-                {
-
-                    // 3) Highlight bar
-                    if (ChronosPointerMod.Settings.showHighlight)
-                    {
-
-
-                        DrawHighlight(fillRect, pawnCount);
-                    }
-
-                    // 4) Full-height vertical line
-                    if (ChronosPointerMod.Settings.showPawnLine)
-                    {
-                        DrawFullHeightCursor(fillRect, pawnCount);
+                        case "Mysterius.CustomSchedules":
+                            ApplyFixForMysteriusCustomSchedules();
+                            break;
                     }
                 }
             }
-            catch (Exception e)
+            int incident = IncidentHappening();
+
+            pawnCount = GetPawnCount(__instance);
+
+            // Check if the current map has changed
+            if (Find.CurrentMap != lastKnownMap)
             {
-                Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
+                // Reset the flag and update the last known map
+                dayNightColorsCalculated = false;
+                pawnCountCalculated = false;
+                lastKnownMap = Find.CurrentMap;
             }
+
+            // 1) Day/Night Bar
+            if (ChronosPointerMod.Settings.showDayNightBar)
+            {
+                if (!dayNightColorsCalculated || incident > 0)
+                {
+                    CalculateDayNightColors(incident);
+
+                }
+                DrawDayNightBar(fillRect, dayNightColors);
+                if (incident == 5)
+                {
+                    Color[] Aurora = dayNightColors;
+                    Color newColor = new Color(0.5f, Mathf.Abs(Mathf.Sin(Time.time)), 0.5f, Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f);
+                    for (int hour = 0; hour < 24; hour++)
+                    {
+                        Aurora[hour] = newColor;
+                    }
+                    DrawDayNightBar(fillRect, Aurora);
+
+                }
+
+                if (ChronosPointerMod.Settings.showDayNightIndicator)
+                {
+                    DrawDayNightTimeIndicator(fillRect);
+                }
+            }
+            // 2) Arrow and time-trace
+            if (ChronosPointerMod.Settings.enableArrow)
+            {
+                DrawArrowTexture(fillRect);
+            }
+
+            //Don't draw the pawn bars if there are no pawns
+            if (pawnCount > 0)
+            {
+
+                // 3) Highlight bar
+                if (ChronosPointerMod.Settings.showHighlight)
+                {
+
+                    DrawHighlight(fillRect, pawnCount);
+                }
+
+                // 4) Full-height vertical line
+                if (ChronosPointerMod.Settings.showPawnLine)
+                {
+                    DrawFullHeightCursor(fillRect, pawnCount);
+                }
+            }
+
+            // Apply Grouped Pawns Lists patch
+            ChronosPointerPatches.ApplyPatches(fillRect);
         }
 
         #region Compatability Patches
@@ -204,7 +208,6 @@ namespace ChronosPointer
             Log.Error("Custom Schedules (continued) is Active. Chronos Pointer will have overlap");
         }
         #endregion
-
 
         #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
@@ -293,7 +296,7 @@ namespace ChronosPointer
         }
         private static Color GetColorForSunlight(float sunlight)
         {
-            
+
             // Deep night
             if (sunlight == 0f)
                 return new Color(0f, 0f, 0.5f);  // Deep Blue
@@ -318,7 +321,6 @@ namespace ChronosPointer
                          + currentHour * (HourBoxWidth + HourBoxGap);
             float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-
             float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
             // Trim from bottom
             totalHeight -= PawnAreaBottomTrim;
@@ -337,39 +339,92 @@ namespace ChronosPointer
 
         static int GetPawnCount(MainTabWindow_Schedule __instance)
         {
-            //var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
-            int babyCount = 0;
-
             if (__instance == null)
             {
                 Log.Error("Instance is null!");
                 return 0;
             }
 
-            //babies that are held do not count as spawned, but do still count as pawns. So when a mother breastfeeds her baby, the pawn highlight bar is off by the number of breastfed babies.
-
-            // Check if the method exists and is accessible
-
-            var field = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            
-
-            if (field == null)
+            // Check if the "Grouped Pawns Lists" mod is enabled for the Schedule table
+            if (ChronosPointerPatches.IsModEnabled("name.krypt.rimworld.pawntablegrouped"))
             {
-                Log.Error("Field is null!");
+                // Use reflection to get the private field "table" from the instance
+                var tableField = typeof(MainTabWindow_PawnTable).GetField("table", BindingFlags.Instance | BindingFlags.NonPublic);
+
+                if (tableField == null)
+                {
+                    Log.Error("Failed to get PawnTable field from MainTabWindow_Schedule.");
+                    return 0;
+                }
+
+                // Get the PawnTable instance from the field
+                var pawnTable = tableField.GetValue(__instance) as PawnTable;
+
+                // Ensure pawnTable is not null
+                if (pawnTable == null)
+                {
+                    Log.Error("Failed to get PawnTable instance from field.");
+                    return 0;
+                }
+
+                // Use reflection to get the "Implementation" property from the PawnTable
+                var groupedTable = (PawnTableGrouped.PawnTableGroupedImpl)pawnTable.GetType().GetProperty("Implementation", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(pawnTable);
+
+                if (groupedTable != null)
+                {
+                    Log.Message($"Grouped Table is found");
+                    // Use reflection to get the "model" field from the groupedTable
+                    var model = (PawnTableGrouped.PawnTableGroupedModel)ChronosPointerPatches.m_PawnTableGroupedImpl_model.GetValue(groupedTable);
+
+                    // Use reflection to invoke the "get_Groups" method to get the list of groups
+                    var groups = (List<PawnTableGrouped.PawnTableGroup>)ChronosPointerPatches.m_PawnTableGroupModel_get_Groups.Invoke(model, new object[] { });
+
+                    if (groups != null)
+                    {
+                        Log.Message($"Found Groups");
+                        int totalCount = 0;
+                        foreach (var group in groups)
+                        {
+                            Log.Message($"Checking group");
+                            // Use reflection to invoke the "get_IsExpanded" method to check if the group is expanded
+                            bool isExpanded = (bool)ChronosPointerPatches.m_PawnTableGroupModel_get_IsExpanded.Invoke(model, new object[] { group });
+                            if (isExpanded)
+                            {
+                                // Add the count of pawns in the group if it is expanded
+                                totalCount += group.Pawns.Count;
+                            }
+                        }
+                        return totalCount;
+                    }
+                    else
+                    {
+                        Log.Error($"Found NO Groups!!");
+                    }
+                }
+                else
+                {
+                    Log.Error($"Found NO groupedTable!!");
+                }
+            }
+
+            // Default behavior if "Grouped Pawns Lists" is not active or "Schedule" is not enabled in its settings
+            // Use reflection to get the "Pawns" property from the instance
+            var pawnsField = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (pawnsField == null)
+            {
+                Log.Error("Failed to get Pawns property from MainTabWindow_Schedule.");
                 return 0;
             }
-            var pawnsIEnumerable = field.GetValue(__instance) as IEnumerable<Pawn>;
+
+            // Get the IEnumerable<Pawn> from the Pawns property
+            var pawnsIEnumerable = pawnsField.GetValue(__instance) as IEnumerable<Pawn>;
             if (pawnsIEnumerable == null)
             {
-                Log.Error("pawnsIEnum is null!");
+                Log.Error("Failed to get Pawns as IEnumerable<Pawn>.");
                 return 0;
             }
-            int totalHeight = pawnsIEnumerable.Count(); 
-        
-            pawnCountCalculated = true;
-        
-            return totalHeight;
+
+            return pawnsIEnumerable.Count();
         }
 
         /// <summary>
@@ -397,7 +452,6 @@ namespace ChronosPointer
             // 2 px wide
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
 
-
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
 
@@ -415,7 +469,7 @@ namespace ChronosPointer
                                 + hourProgress * HourBoxWidth + 1f;
 
             // The top of the day/night bar
-            float barTopY = fillRect.y + BaseOffsetY + 4;
+            float barTopY = fillRect.y + BaseOffsetY;
 
             // Will rotate the arrow later
             float arrowWidth = 8f; // Default width
@@ -426,7 +480,7 @@ namespace ChronosPointer
             float arrowRectX = arrowCenterX - (arrowWidth / 2f);
 
             // Changes the arrow up or down. up is -
-            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f);
+            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f) - 28f;
 
             // Build the rect
             Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
@@ -448,7 +502,7 @@ namespace ChronosPointer
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
         }
-#endregion
+        #endregion
 
         #region Full Height Cursor
         private static void DrawFullHeightCursor(Rect fillRect, int pawnCount)
@@ -493,11 +547,107 @@ namespace ChronosPointer
             Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
         }
 
-
         // Method to reset the flag when the scheduler is closed
 
     }
     #endregion
+}
+namespace ChronosPointer
+{
+    public static class ChronosPointerPatches
+    {
+        // These fields and methods are now public static
+        public static FieldInfo m_PawnTableGroupedImpl_model = null;
+        public static MethodInfo m_PawnTableGroupModel_get_Groups = null;
+        public static MethodInfo m_PawnTableGroupModel_get_IsExpanded = null;
+        private static readonly BindingFlags AllFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
+        public static bool IsModEnabled(string packageId)
+        {
+            return ModLister.AllInstalledMods.Any(mod =>
+                mod.Active && mod.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
+        }
 
+        public static void ApplyPatches(Rect fillRect)
+        {
+            // Additional spacing for Grouped Pawns Lists mod
+            if (PawnTableGrouped.Mod.Settings.pawnTablesEnabled.Contains("Schedule"))
+            {
+                // Cache reflection info only if it has not been cached yet
+                if (m_PawnTableGroupedImpl_model == null)
+                {
+                    m_PawnTableGroupedImpl_model = AccessTools.Field(typeof(PawnTableGrouped.PawnTableGroupedImpl), "model");
+                }
+                if (m_PawnTableGroupModel_get_Groups == null)
+                {
+                    m_PawnTableGroupModel_get_Groups = AccessTools.PropertyGetter(typeof(PawnTableGrouped.PawnTableGroupedModel), "Groups");
+                }
+                if (m_PawnTableGroupModel_get_IsExpanded == null)
+                {
+                    m_PawnTableGroupModel_get_IsExpanded = AccessTools.Method(typeof(PawnTableGrouped.PawnTableGroupedModel), "IsExpanded");
+                }
+
+                // Get the active table without using MainButtonDefOf.Schedule
+                MainTabWindow_Schedule mainTabWindow = Find.WindowStack.WindowOfType<MainTabWindow_Schedule>();
+                if (mainTabWindow == null)
+                {
+                    Log.Error("ChronosPointer: Schedule tab is not open.");
+                    return; // Schedule tab is not open
+                }
+
+                // Get the PawnTable instance
+                var pawnTableField = typeof(MainTabWindow_PawnTable).GetField("table", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (pawnTableField == null)
+                {
+                    Log.Error("ChronosPointer: Could not find 'table' field in MainTabWindow_PawnTable.");
+                    return;
+                }
+
+                var pawnTable = pawnTableField.GetValue(mainTabWindow) as PawnTable;
+                if (pawnTable == null)
+                {
+                    Log.Error("ChronosPointer: Could not find PawnTable in MainTabWindow_Schedule.");
+                    return;
+                }
+
+                var groupedTable = pawnTable.GetType().GetProperty("Implementation", AllFlags)?.GetValue(pawnTable) as PawnTableGrouped.PawnTableGroupedImpl;
+                if (groupedTable == null)
+                {
+                    Log.Error("ChronosPointer: Could not find GroupedTable implementation.");
+                    return;
+                }
+
+                // Get groups and expanded groups
+                var model = m_PawnTableGroupedImpl_model.GetValue(groupedTable) as PawnTableGrouped.PawnTableGroupedModel;
+                if (model == null)
+                {
+                    Log.Error("ChronosPointer: Could not find PawnTableGroupedModel.");
+                    return;
+                }
+
+                var groups = m_PawnTableGroupModel_get_Groups.Invoke(model, new object[] { }) as List<PawnTableGrouped.PawnTableGroup>;
+                if (groups != null)
+                {
+                    ApplyGroupedPawnListsSpacing(fillRect, groups, model);
+                }
+            }
+        }
+
+        // Updated mod checker
+        private static bool IsModInstalled(string modName)
+        {
+            return LoadedModManager.RunningMods.Any(mod => mod.Name.Equals(modName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static void ApplyGroupedPawnListsSpacing(Rect fillRect, List<PawnTableGrouped.PawnTableGroup> groups, PawnTableGrouped.PawnTableGroupedModel model)
+        {
+            // Implement the logic for applying spacing to grouped pawn lists
+            // This is a placeholder implementation and should be replaced with actual logic
+            foreach (var group in groups)
+            {
+                // Example logic: Log the group count or another available property
+                Log.Message($"Applying spacing for group with {group.Pawns.Count()} pawns.");
+            }
+        }
+    }
 }
