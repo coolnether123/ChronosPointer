@@ -1,12 +1,19 @@
 {
   "version": 2,
-  "dgSpecHash": "CbqsMP70twiXN3dwZHWQ/wVNhsSG1dXw0MmMFQPTGLyrzQpnhRjrWfHKWqjwQr9K8hD9TDTu/x5NVSr3puqOxA==",
+  "dgSpecHash": "RV7ASjapKYI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+  "projectFilePath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\CASPI\\.nuget\\packages\\krafs.publicizer\\2.3.0\\krafs.publicizer.2.3.0.nupkg.sha512",
-    "C:\\Users\\CASPI\\.nuget\\packages\\krafs.rimworld.ref\\1.5.4297\\krafs.rimworld.ref.1.5.4297.nupkg.sha512",
-    "C:\\Users\\CASPI\\.nuget\\packages\\lib.harmony\\2.3.3\\lib.harmony.2.3.3.nupkg.sha512"
+    "C:\\Users\\optim\\.nuget\\packages\\krafs.publicizer\\2.3.0\\krafs.publicizer.2.3.0.nupkg.sha512",
+    "C:\\Users\\optim\\.nuget\\packages\\krafs.rimworld.ref\\1.5.4297\\krafs.rimworld.ref.1.5.4297.nupkg.sha512",
+    "C:\\Users\\optim\\.nuget\\packages\\lib.harmony\\2.3.3\\lib.harmony.2.3.3.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problem reading the cache file D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    }
+  ]
 }
