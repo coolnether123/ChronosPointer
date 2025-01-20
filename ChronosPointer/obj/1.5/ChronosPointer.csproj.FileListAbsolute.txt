@@ -3,3 +3,8 @@ C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.cspr
 C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.CoreCompileInputs.cache
 C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.CopyComplete
 C:\Users\CASPI\Desktop\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.dll
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\1.5\Assemblies\ChronosPointer.dll
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.AssemblyReference.cache
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.csproj.CoreCompileInputs.cache
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\1.5\ChronosP.6180E5FD.Up2Date
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\1.5\ChronosPointer.dll

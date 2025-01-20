@@ -70,9 +70,8 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0ColourPicker, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\0ColourPicker.dll</HintPath>
+    <Reference Include="0ColourPicker">
+      <HintPath>..\1.5\Assemblies\0ColourPicker.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

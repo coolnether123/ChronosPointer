@@ -769,20 +769,26 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\CASPI\\.nuget\\packages\\": {}
+    "C:\\Users\\optim\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+      "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
       "projectName": "ChronosPointer",
-      "projectPath": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
-      "packagesPath": "C:\\Users\\CASPI\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\CASPI\\Desktop\\ChronosPointer\\ChronosPointer\\obj\\",
+      "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\ChronosPointer.csproj",
+      "packagesPath": "C:\\Users\\optim\\.nuget\\packages\\",
+      "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\obj\\",
       "projectStyle": "PackageReference",
       "skipContentFileWrite": true,
+      "UsingMicrosoftNETSdk": false,
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\CASPI\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\optim\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -796,6 +802,11 @@
         "net472": {
           "projectReferences": {}
         }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -832,5 +843,13 @@
         "#import": []
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problem reading the cache file D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\ChronosPointer\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    }
+  ]
 }
