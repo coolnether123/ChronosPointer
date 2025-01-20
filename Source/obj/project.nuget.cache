@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "k5ygnHq51fruNGpP+mT9i3SSjGb/mH2eGDTQjG1d/DJRULi4GmzsO5GpjZX7CVLGK+KG1sc3Y1JudeE3XZVyxA==",
+  "success": true,
+  "projectFilePath": "D:\\Programs\\RimWorld1-5-4297Win64\\RimWorld1-5-4297Win64\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\CASPI\\.nuget\\packages\\krafs.publicizer\\2.3.0\\krafs.publicizer.2.3.0.nupkg.sha512",
+    "C:\\Users\\CASPI\\.nuget\\packages\\krafs.rimworld.ref\\1.3.3389\\krafs.rimworld.ref.1.3.3389.nupkg.sha512",
+    "C:\\Users\\CASPI\\.nuget\\packages\\lib.harmony\\2.3.3\\lib.harmony.2.3.3.nupkg.sha512"
+  ],
+  "logs": []
+}
