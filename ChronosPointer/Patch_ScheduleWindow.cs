@@ -108,14 +108,6 @@ namespace ChronosPointer
                         }
                     }
                 }
-                // Example of conditional compilation
-#if RIMWORLD_1_5
-                // Code specific to RimWorld 1.5
-                Log.Message("Running on RimWorld 1.5");
-#else
-                // Code specific to RimWorld 1.4
-                Log.Message("Running on RimWorld 1.4");
-#endif
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -188,7 +180,7 @@ namespace ChronosPointer
         }
 
         #region Compatability Patches
-        private static float CalculateBaseOffsetX()
+        /*private static float CalculateBaseOffsetX()
         {
             float offsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
 
@@ -199,7 +191,7 @@ namespace ChronosPointer
             }
 
             return offsetX;
-        }
+        }*/
 
         // Define methods for specific fixes
         private static void ApplyFixForMysteriusCustomSchedules()
@@ -236,7 +228,7 @@ namespace ChronosPointer
                     default:
 
                         float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                        //Log.Message("At hour " + hour + " sunlight == " + sunlight);
+                        Log.Message("At hour " + hour + " sunlight == " + sunlight);
                         dayNightColors[hour] = GetColorForSunlight(sunlight);
                         break;
                 }
@@ -298,6 +290,7 @@ namespace ChronosPointer
         }
         private static Color GetColorForSunlight(float sunlight)
         {
+            
             // Deep night
             if (sunlight == 0f)
                 return new Color(0f, 0f, 0.5f);  // Deep Blue

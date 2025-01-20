@@ -10,3 +10,4 @@ D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\Chro
 D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.dll
 D:\Programs\RimWorld1-5-4297Win64\RimWorld1-5-4297Win64\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosPointer.csproj.CopyComplete
 D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\ChronosPointer\obj\Debug\ChronosP.6180E5FD.Up2Date
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\1.3\Assemblies\ChronosPointer.dll

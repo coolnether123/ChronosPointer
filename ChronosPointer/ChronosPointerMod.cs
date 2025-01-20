@@ -30,10 +30,11 @@ namespace ChronosPointer
         public override void DoSettingsWindowContents(Rect inRect)
         {
             float height = 1000f;
-            Rect viewRect = new Rect(0f, 0f, inRect.width - 16f, height);
+            Rect viewRect = new Rect(0f, 30f, inRect.width - 16f, height);
 
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(viewRect);
+
 
             if (listingStandard.ButtonText("Reset to Default"))
             {
