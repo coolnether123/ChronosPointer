@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.IsolatedStorage;
+
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.QuestGen;
 using UnityEngine;
-using UnityEngine.Experimental.GlobalIllumination;
+
 using Verse;
 
 namespace ChronosPointer
@@ -108,7 +108,6 @@ namespace ChronosPointer
                         }
                     }
                 }
-                Log.Message("Running");
                 int incident = IncidentHappening();
 
                 if (!pawnCountCalculated)
@@ -181,7 +180,7 @@ namespace ChronosPointer
         }
 
         #region Compatability Patches
-        private static float CalculateBaseOffsetX()
+        /*private static float CalculateBaseOffsetX()
         {
             float offsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
 
@@ -192,7 +191,7 @@ namespace ChronosPointer
             }
 
             return offsetX;
-        }
+        }*/
 
         // Define methods for specific fixes
         private static void ApplyFixForMysteriusCustomSchedules()
@@ -229,7 +228,7 @@ namespace ChronosPointer
                     default:
 
                         float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                        //Log.Message("At hour " + hour + " sunlight == " + sunlight);
+                        Log.Message("At hour " + hour + " sunlight == " + sunlight);
                         dayNightColors[hour] = GetColorForSunlight(sunlight);
                         break;
                 }
@@ -291,6 +290,7 @@ namespace ChronosPointer
         }
         private static Color GetColorForSunlight(float sunlight)
         {
+            
             // Deep night
             if (sunlight == 0f)
                 return new Color(0f, 0f, 0.5f);  // Deep Blue
@@ -334,16 +334,26 @@ namespace ChronosPointer
 
         static int GetPawnCount()
         {
-            var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
+            //var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
             int babyCount = 0;
-            if (babyList != null)
-                babyCount = babyList.Count;
-
-            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount
-                - babyCount);
-
+        
+            // Check if the method exists and is accessible
+            var methodInfo = Find.CurrentMap.mapPawns.GetType().GetMethod("SpawnedBabiesInFaction");
+            if (methodInfo != null)
+            {
+                var babyList = methodInfo.Invoke(Find.CurrentMap.mapPawns, new object[] { Find.FactionManager.OfPlayer }) as List<Pawn>;
+                if (babyList != null)
+                    babyCount = babyList.Count;
+            }
+            else
+            {
+                Log.Warning("SpawnedBabiesInFaction method not found. Skipping baby count.");
+            }
+        
+            int totalHeight = (Find.CurrentMap.mapPawns.ColonistCount - babyCount);
+        
             pawnCountCalculated = true;
-
+        
             return totalHeight;
         }
 

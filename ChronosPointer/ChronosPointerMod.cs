@@ -20,7 +20,6 @@ namespace ChronosPointer
             var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
             harmony.PatchAll();
             //Log.Message("ChronosPointer: Harmony patches applied via ChronosPointerMod constructor.");
-
         }
 
         public override string SettingsCategory()
@@ -31,10 +30,11 @@ namespace ChronosPointer
         public override void DoSettingsWindowContents(Rect inRect)
         {
             float height = 1000f;
-            Rect viewRect = new Rect(0f, 0f, inRect.width - 16f, height);
+            Rect viewRect = new Rect(0f, 40f, inRect.width - 16f, height);
 
             Listing_Standard listingStandard = new Listing_Standard();
             listingStandard.Begin(viewRect);
+
 
             if (listingStandard.ButtonText("Reset to Default"))
             {
@@ -45,7 +45,7 @@ namespace ChronosPointer
             listingStandard.CheckboxLabeled("- Show Arrow", ref Settings.enableArrow);
             listingStandard.CheckboxLabeled("- Show Day/Night Bar", ref Settings.showDayNightBar);
 
-            //Gray out unapplicable settings
+            // Gray out unapplicable settings
             if (!Settings.showDayNightBar) GUI.color = Color.gray;
             listingStandard.CheckboxLabeled("    Show Day/Night Bar Time Indicator", ref Settings.showDayNightIndicator);
             GUI.color = Color.white;
@@ -70,26 +70,25 @@ namespace ChronosPointer
                 Settings.cursorThickness = Mathf.Round(newThickness / 2f) * 2f; // Round to nearest even number
             }
 
-            //If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
+            // If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
             if (!Settings.enableArrow)
             {
                 GUI.color = Color.gray;
             }
 
-            //Arrow Color
+            // Arrow Color
             Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.arrowColor);
             if (listingStandard.ButtonText("Change arrow color", "Tag"))
                 Find.WindowStack.Add(new Dialog_ColourPicker(Settings.arrowColor, newColor =>
                 {
                     Settings.arrowColor = newColor;
-
                 }));
             listingStandard.Gap(10f);
 
-            //reset GUI color after to make sure the next color is the right color
+            // Reset GUI color after to make sure the next color is the right color
             GUI.color = Color.white;
 
-            //Day/Night bar day and night colors
+            // Day/Night bar day and night colors
             if (!Settings.showDayNightBar)
             {
                 GUI.color = Color.gray;
@@ -99,13 +98,12 @@ namespace ChronosPointer
                 GUI.color = Color.gray;
             }
 
-            //Day/Default
+            // Day/Default
             Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorDay);
             if (listingStandard.ButtonText("Change Time Trace Color" + (Settings.useDynamicTimeTraceLine ? " Day" : "")))
                 Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorDay, newColor =>
                 {
                     Settings.timeTraceColorDay = newColor;
-
                 }));
 
             if (!Settings.useDynamicTimeTraceLine)
@@ -114,18 +112,17 @@ namespace ChronosPointer
             }
             if (!Settings.useDynamicTimeTraceLine) GUI.color = Color.gray;
 
-            //Night
+            // Night
             listingStandard.Gap(10f); Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorNight);
             if (listingStandard.ButtonText("Change Time Trace Color Night"))
                 Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorNight, newColor =>
                 {
                     Settings.timeTraceColorNight = newColor;
-
                 }));
             listingStandard.Gap(10f);
 
             GUI.color = Color.white;
-            //Pawn cursor
+            // Pawn cursor
             if (!Settings.showPawnLine)
             {
                 GUI.color = Color.gray;
@@ -135,7 +132,6 @@ namespace ChronosPointer
                 Find.WindowStack.Add(new Dialog_ColourPicker(Settings.bottomCursorColor, newColor =>
                 {
                     Settings.bottomCursorColor = newColor;
-
                 }));
             listingStandard.Gap(10f);
             GUI.color = Color.white;
@@ -145,13 +141,12 @@ namespace ChronosPointer
                 GUI.color = Color.gray;
             }
 
-            //Current hour highlight
+            // Current hour highlight
             Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.highlightColor);
             if (listingStandard.ButtonText("Change current-hour color"))
                 Find.WindowStack.Add(new Dialog_ColourPicker(Settings.highlightColor, newColor =>
                 {
                     Settings.highlightColor = newColor;
-
                 }));
             listingStandard.Gap(10f);
 
@@ -159,6 +154,5 @@ namespace ChronosPointer
 
             listingStandard.End();
         }
-
     }
 }
