@@ -283,7 +283,7 @@ namespace ChronosPointer
         private static void DrawDayNightBar(Rect fillRect, Color[] colors)
         {
             float baseX = fillRect.x + BaseOffsetX;
-            float baseY = fillRect.y + BaseOffsetY;
+            float baseY = fillRect.y + BaseOffsetY - 22f;
 
             for (int hour = 0; hour < 24; hour++)
             {
@@ -312,6 +312,7 @@ namespace ChronosPointer
             // Full daylight
             return Color.yellow;
         }
+
         private static void DrawHighlight(Rect fillRect, int pawnCount)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
@@ -332,25 +333,19 @@ namespace ChronosPointer
                 Widgets.DrawBoxSolidWithOutline(highlightRect, new Color(0, 0, 0, 0), ChronosPointerMod.Settings.highlightColor, 2);
             else
                 Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
+
         }
         #endregion
 
         #region Time Trace Line
 
-        static int GetPawnCount(MainTabWindow_Schedule __instance)
+        public static int GetPawnCount(MainTabWindow_Schedule __instance)
         {
-            if (__instance == null)
+            try
             {
-                Log.Error("Instance is null!");
-                return 0;
-            }
-
-            // Check if the "Grouped Pawns Lists" mod is enabled for the Schedule table
-            if (ChronosPointerPatches.IsModEnabled("name.krypt.rimworld.pawntablegrouped"))
-            {
-                // Use reflection to get the private field "table" from the instance
+                Log.Message($"pawnTable row height " + pawnTable.GetCachedHeaderHeight);
+                Log.Message("Attempting to get PawnTable instance.");
                 var tableField = typeof(MainTabWindow_PawnTable).GetField("table", BindingFlags.Instance | BindingFlags.NonPublic);
-
                 if (tableField == null)
                 {
                     Log.Error("Failed to get PawnTable field from MainTabWindow_Schedule.");
@@ -360,71 +355,72 @@ namespace ChronosPointer
                 // Get the PawnTable instance from the field
                 var pawnTable = tableField.GetValue(__instance) as PawnTable;
 
-                // Ensure pawnTable is not null
                 if (pawnTable == null)
                 {
                     Log.Error("Failed to get PawnTable instance from field.");
                     return 0;
                 }
+                Log.Message("PawnTable instance obtained successfully.");
+
 
                 // Use reflection to get the "Implementation" property from the PawnTable
-                var groupedTable = (PawnTableGrouped.PawnTableGroupedImpl)pawnTable.GetType().GetProperty("Implementation", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(pawnTable);
-
-                if (groupedTable != null)
+                var implementationProperty = pawnTable.GetType().GetProperty("Implementation", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (implementationProperty == null)
                 {
-                    Log.Message($"Grouped Table is found");
-                    // Use reflection to get the "model" field from the groupedTable
-                    var model = (PawnTableGrouped.PawnTableGroupedModel)ChronosPointerPatches.m_PawnTableGroupedImpl_model.GetValue(groupedTable);
-
-                    // Use reflection to invoke the "get_Groups" method to get the list of groups
-                    var groups = (List<PawnTableGrouped.PawnTableGroup>)ChronosPointerPatches.m_PawnTableGroupModel_get_Groups.Invoke(model, new object[] { });
-
-                    if (groups != null)
-                    {
-                        Log.Message($"Found Groups");
-                        int totalCount = 0;
-                        foreach (var group in groups)
-                        {
-                            Log.Message($"Checking group");
-                            // Use reflection to invoke the "get_IsExpanded" method to check if the group is expanded
-                            bool isExpanded = (bool)ChronosPointerPatches.m_PawnTableGroupModel_get_IsExpanded.Invoke(model, new object[] { group });
-                            if (isExpanded)
-                            {
-                                // Add the count of pawns in the group if it is expanded
-                                totalCount += group.Pawns.Count;
-                            }
-                        }
-                        return totalCount;
-                    }
-                    else
-                    {
-                        Log.Error($"Found NO Groups!!");
-                    }
+                    Log.Error("Failed to get 'Implementation' property from pawnTable.");
+                    return 0;
                 }
-                else
+
+                var groupedTable = implementationProperty.GetValue(pawnTable) as PawnTableGroupedImpl;
+                if (groupedTable == null)
                 {
-                    Log.Error($"Found NO groupedTable!!");
+                    Log.Error("Found NO groupedTable!!");
+                    //If grouped pawns lists is not enabled for this pawntable
+                    return 0;
+
                 }
+                Log.Message("Grouped Table is found.");
+
+
+                // Use reflection to get the "model" field from the groupedTable
+                var modelField = typeof(PawnTableGroupedImpl).GetField("model", BindingFlags.Instance | BindingFlags.NonPublic);
+
+                if (modelField == null)
+                {
+                    Log.Error("Failed to get 'model' field from groupedTable.");
+                    return 0;
+                }
+
+                var model = modelField.GetValue(groupedTable) as PawnTableGroupedModel;
+                if (model == null)
+                {
+                    Log.Error("Failed to get model from groupedTable.");
+                    return 0;
+                }
+
+                // Use reflection to get the "Groups" property from the model
+                var groupsProperty = typeof(PawnTableGroupedModel).GetProperty("Groups", BindingFlags.Instance | BindingFlags.Public);
+                if (groupsProperty == null)
+                {
+                    Log.Error("Failed to get 'Groups' property from model.");
+                    return 0;
+                }
+
+                var groups = groupsProperty.GetValue(model) as List<PawnTableGrouped.PawnTableGroup>;
+                if (groups == null)
+                {
+                    Log.Error("Failed to get groups from model.");
+                    return 0;
+                }
+                Log.Message("Groups obtained successfully.");
+
+                return groups.Sum(group => group.Pawns.Count());
             }
-
-            // Default behavior if "Grouped Pawns Lists" is not active or "Schedule" is not enabled in its settings
-            // Use reflection to get the "Pawns" property from the instance
-            var pawnsField = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (pawnsField == null)
+            catch (Exception ex)
             {
-                Log.Error("Failed to get Pawns property from MainTabWindow_Schedule.");
+                Log.Error($"ChronosPointer: Error in GetPawnCount - {ex.Message}");
                 return 0;
             }
-
-            // Get the IEnumerable<Pawn> from the Pawns property
-            var pawnsIEnumerable = pawnsField.GetValue(__instance) as IEnumerable<Pawn>;
-            if (pawnsIEnumerable == null)
-            {
-                Log.Error("Failed to get Pawns as IEnumerable<Pawn>.");
-                return 0;
-            }
-
-            return pawnsIEnumerable.Count();
         }
 
         /// <summary>
@@ -440,7 +436,7 @@ namespace ChronosPointer
                         + currentHour * (HourBoxWidth + HourBoxGap)
                         + hourProgress * HourBoxWidth;
 
-            float lineY = fillRect.y + BaseOffsetY;
+            float lineY = fillRect.y + BaseOffsetY - 22f;
             float lineHeight = BarHeight;
 
             // Get the sunlight value for the current hour
@@ -469,18 +465,19 @@ namespace ChronosPointer
                                 + hourProgress * HourBoxWidth + 1f;
 
             // The top of the day/night bar
-            float barTopY = fillRect.y + BaseOffsetY;
+            float barTopY = fillRect.y + BaseOffsetY - 22f;
+
 
             // Will rotate the arrow later
             float arrowWidth = 8f; // Default width
             float arrowHeight = 8f; // Default height
 
-            // Center the arrow horizontally on the line, 
+            // Center the arrow horizontally on the line,
             // so arrowRect.center.x = arrowCenterX
             float arrowRectX = arrowCenterX - (arrowWidth / 2f);
 
             // Changes the arrow up or down. up is -
-            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f) - 28f;
+            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f) - 14f; //Changed to match the daynight bar
 
             // Build the rect
             Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
@@ -551,103 +548,4 @@ namespace ChronosPointer
 
     }
     #endregion
-}
-namespace ChronosPointer
-{
-    public static class ChronosPointerPatches
-    {
-        // These fields and methods are now public static
-        public static FieldInfo m_PawnTableGroupedImpl_model = null;
-        public static MethodInfo m_PawnTableGroupModel_get_Groups = null;
-        public static MethodInfo m_PawnTableGroupModel_get_IsExpanded = null;
-        private static readonly BindingFlags AllFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
-        public static bool IsModEnabled(string packageId)
-        {
-            return ModLister.AllInstalledMods.Any(mod =>
-                mod.Active && mod.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public static void ApplyPatches(Rect fillRect)
-        {
-            // Additional spacing for Grouped Pawns Lists mod
-            if (PawnTableGrouped.Mod.Settings.pawnTablesEnabled.Contains("Schedule"))
-            {
-                // Cache reflection info only if it has not been cached yet
-                if (m_PawnTableGroupedImpl_model == null)
-                {
-                    m_PawnTableGroupedImpl_model = AccessTools.Field(typeof(PawnTableGrouped.PawnTableGroupedImpl), "model");
-                }
-                if (m_PawnTableGroupModel_get_Groups == null)
-                {
-                    m_PawnTableGroupModel_get_Groups = AccessTools.PropertyGetter(typeof(PawnTableGrouped.PawnTableGroupedModel), "Groups");
-                }
-                if (m_PawnTableGroupModel_get_IsExpanded == null)
-                {
-                    m_PawnTableGroupModel_get_IsExpanded = AccessTools.Method(typeof(PawnTableGrouped.PawnTableGroupedModel), "IsExpanded");
-                }
-
-                // Get the active table without using MainButtonDefOf.Schedule
-                MainTabWindow_Schedule mainTabWindow = Find.WindowStack.WindowOfType<MainTabWindow_Schedule>();
-                if (mainTabWindow == null)
-                {
-                    Log.Error("ChronosPointer: Schedule tab is not open.");
-                    return; // Schedule tab is not open
-                }
-
-                // Get the PawnTable instance
-                var pawnTableField = typeof(MainTabWindow_PawnTable).GetField("table", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (pawnTableField == null)
-                {
-                    Log.Error("ChronosPointer: Could not find 'table' field in MainTabWindow_PawnTable.");
-                    return;
-                }
-
-                var pawnTable = pawnTableField.GetValue(mainTabWindow) as PawnTable;
-                if (pawnTable == null)
-                {
-                    Log.Error("ChronosPointer: Could not find PawnTable in MainTabWindow_Schedule.");
-                    return;
-                }
-
-                var groupedTable = pawnTable.GetType().GetProperty("Implementation", AllFlags)?.GetValue(pawnTable) as PawnTableGrouped.PawnTableGroupedImpl;
-                if (groupedTable == null)
-                {
-                    Log.Error("ChronosPointer: Could not find GroupedTable implementation.");
-                    return;
-                }
-
-                // Get groups and expanded groups
-                var model = m_PawnTableGroupedImpl_model.GetValue(groupedTable) as PawnTableGrouped.PawnTableGroupedModel;
-                if (model == null)
-                {
-                    Log.Error("ChronosPointer: Could not find PawnTableGroupedModel.");
-                    return;
-                }
-
-                var groups = m_PawnTableGroupModel_get_Groups.Invoke(model, new object[] { }) as List<PawnTableGrouped.PawnTableGroup>;
-                if (groups != null)
-                {
-                    ApplyGroupedPawnListsSpacing(fillRect, groups, model);
-                }
-            }
-        }
-
-        // Updated mod checker
-        private static bool IsModInstalled(string modName)
-        {
-            return LoadedModManager.RunningMods.Any(mod => mod.Name.Equals(modName, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static void ApplyGroupedPawnListsSpacing(Rect fillRect, List<PawnTableGrouped.PawnTableGroup> groups, PawnTableGrouped.PawnTableGroupedModel model)
-        {
-            // Implement the logic for applying spacing to grouped pawn lists
-            // This is a placeholder implementation and should be replaced with actual logic
-            foreach (var group in groups)
-            {
-                // Example logic: Log the group count or another available property
-                Log.Message($"Applying spacing for group with {group.Pawns.Count()} pawns.");
-            }
-        }
-    }
 }
