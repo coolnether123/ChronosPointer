@@ -1,99 +1,104 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
-using RimWorld.QuestGen;
 using UnityEngine;
-
+using PawnTableGrouped;
 using Verse;
 
 namespace ChronosPointer
 {
+    /// <summary>
+    /// Patch_DayNightPositionGetter:
+    /// Simple patch to grab the rectangle from each PawnColumnWorker_Timetable cell,
+    /// so we can track the X/Y for drawing our bar above it.
+    /// </summary>
     [HarmonyPatch(typeof(PawnColumnWorker_Timetable))]
     [HarmonyPatch("DoCell")]
     public static class Patch_DayNightPositionGetter
     {
         static bool hasRect = false;
+
         [HarmonyPostfix]
         public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
         {
-
+            // The first time we see a Timetable cell, store the rect so that
+            // we know where to draw the Day/Night bar in Patch_ScheduleWindow
             if (!hasRect)
             {
                 hasRect = true;
                 Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
             }
-
         }
     }
 
+    /// <summary>
+    /// Patch_ScheduleWindow:
+    /// Main patch that intercepts MainTabWindow_Schedule.DoWindowContents, 
+    /// draws the day/night bar, highlight, etc.
+    /// Also references the *real* PawnTableGroupedModel from the constructor patch
+    /// (so that collapsing groups actually reduces the count).
+    /// </summary>
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
     public static class Patch_ScheduleWindow
     {
-        #region Values
+        #region Values / Fields
+
+        // This rect is captured from PawnColumnWorker_Timetable above
         public static Rect UseMeForTheXYPosOfDayNightBar;
 
-        // Where the schedule grid starts
-        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
-        private const float BaseOffsetY = 40;
-
-        // Each hour cell
-        private const float HourBoxWidth = 19f;
+        // Offsets & constants
+        private const float BaseOffsetY = 20f;  // Move day/night bar above numbers
+        private const float HourBoxWidth = 19f;  // Each hour cell matches pawn box width
         private const float HourBoxGap = 2f;
-
-        // Pawn row
-        private const float PawnRowHeight = 28f; // user wants 28f
+        private const float PawnRowHeight = 28f;  // user wants 28f
         private const float PawnRowGap = 2f;
-
-        // Day/night bar
         private const float BarHeight = 10f;
+        private const float PawnAreaTopOffset = 16f;  // extra offset for highlight
+        private const float PawnAreaBottomTrim = 2f;   // bottom trim for highlight
 
-        // Extra offsets for highlight & line so they don’t slip off top/bottom
-        // (Adjust to taste if you see they still slip a bit.)
-        private const float PawnAreaTopOffset = 16f;
-        private const float PawnAreaBottomTrim = 2f;
+        // Condition definitions
+        private static readonly GameConditionDef SolarFlareDef =
+            DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
 
-        // Define the SolarFlare condition if not available
-        private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
-
-        // Flag to track if the day/night colors have been calculated
-        public static bool dayNightColorsCalculated = false;
-
-        // Flag to track if the pawn count has been calculated
-        public static bool pawnCountCalculated = false;
-
-        // Array to store the colors for each hour
+        // We store day/night colors for 24 hours
         private static Color[] dayNightColors = new Color[24];
 
-        // Add a static variable to store the last known map
+        // Track if dayNightColors have been calculated
+        public static bool dayNightColorsCalculated = false;
+
+        // Track the last known map so we can reset the bar if the user changes maps
         private static Map lastKnownMap = null;
 
-        //cached number of pawns for the full height and highlight bars
+        // This is the final number of pawns we show highlight lines for
         private static int pawnCount = 0;
 
-        // Custom Schedules (continued) mod ID
-        // Change the single string to an array of strings
-        private static readonly string[] customSchedulesModIds = new string[]
+        // Example: custom schedules mod detection
+        private static readonly string[] customSchedulesModIds =
         {
             "Mysterius.CustomSchedules"
         };
+
         #endregion
+
+        #region Postfix Patch
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (Find.CurrentMap == null) return;
 
+            // Position the day/night bar using the rect captured from Timetable columns
             fillRect = UseMeForTheXYPosOfDayNightBar;
+            // Move up above the numbers
+            fillRect.y -= 18f;
 
             try
             {
-
-                // Iterate over each mod ID and check if it's active
+                // Check if any known "CustomSchedules" mods are active
                 foreach (var modId in customSchedulesModIds)
                 {
                     bool isModActive = ModLister.AllInstalledMods.Any(mod =>
@@ -101,76 +106,80 @@ namespace ChronosPointer
 
                     if (isModActive)
                     {
-                        // Trigger specific fixes based on the active mod
+                        // Trigger specific fix or log if needed
                         switch (modId)
                         {
                             case "Mysterius.CustomSchedules":
-
                                 ApplyFixForMysteriusCustomSchedules();
                                 break;
                         }
                     }
                 }
+
+                // Check for solar flare/eclipse/etc. (affect bar color)
                 int incident = IncidentHappening();
 
-
-                //if (!pawnCountCalculated)
+                // 1) Recalculate the pawn count from the real grouped model
                 pawnCount = GetPawnCount(__instance);
 
-                // Check if the current map has changed
+                // If the map changed, reset dayNightColors
                 if (Find.CurrentMap != lastKnownMap)
                 {
-                    // Reset the flag and update the last known map
                     dayNightColorsCalculated = false;
-                    pawnCountCalculated = false;
                     lastKnownMap = Find.CurrentMap;
                 }
 
-                // 1) Day/Night Bar
+                // ============== Begin drawing the Chronos Pointer UI ==============
+
+                // (A) Day/Night Bar
                 if (ChronosPointerMod.Settings.showDayNightBar)
                 {
                     if (!dayNightColorsCalculated || incident > 0)
                     {
                         CalculateDayNightColors(incident);
-
                     }
                     DrawDayNightBar(fillRect, dayNightColors);
+
+                    // Aurora overlay if incident=5
                     if (incident == 5)
                     {
                         Color[] Aurora = dayNightColors;
-                        Color newColor = new Color(0.5f, Mathf.Abs(Mathf.Sin(Time.time)), 0.5f, Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f);
+                        Color newColor = new Color(
+                            0.5f,
+                            Mathf.Abs(Mathf.Sin(Time.time)),
+                            0.5f,
+                            Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f
+                        );
                         for (int hour = 0; hour < 24; hour++)
                         {
                             Aurora[hour] = newColor;
                         }
                         DrawDayNightBar(fillRect, Aurora);
-
                     }
 
+                    // Optional small vertical line showing current time
                     if (ChronosPointerMod.Settings.showDayNightIndicator)
                     {
                         DrawDayNightTimeIndicator(fillRect);
                     }
                 }
-                // 2) Arrow and time-trace
+
+                // (B) Arrow texture
                 if (ChronosPointerMod.Settings.enableArrow)
                 {
                     DrawArrowTexture(fillRect);
                 }
 
-                //Don't draw the pawn bars if there are no pawns
+                // (C) If we actually have pawns, draw highlight bars & lines
                 if (pawnCount > 0)
                 {
-
-                    // 3) Highlight bar
+                    // (3) Highlight bar
                     if (ChronosPointerMod.Settings.showHighlight)
                     {
-
-
                         DrawHighlight(fillRect, pawnCount);
                     }
 
-                    // 4) Full-height vertical line
+                    // (4) Full-height cursor line
                     if (ChronosPointerMod.Settings.showPawnLine)
                     {
                         DrawFullHeightCursor(fillRect, pawnCount);
@@ -183,55 +192,168 @@ namespace ChronosPointer
             }
         }
 
-        #region Compatability Patches
-        /*private static float CalculateBaseOffsetX()
-        {
-            float offsetX = 202f + (ModsConfig.BiotechActive ? 26f : 0) + (ModsConfig.IdeologyActive ? 26f : 0);
-
-            // Check specifically for the "defaults.1trickPwnyta" mod
-            if (ModLister.AllInstalledMods.Any(mod => mod.Active && mod.PackageId.Equals("defaults.1trickPwnyta", StringComparison.OrdinalIgnoreCase)))
-            {
-                offsetX += 36f;
-            }
-
-            return offsetX;
-        }*/
-
-        // Define methods for specific fixes
-        private static void ApplyFixForMysteriusCustomSchedules()
-        {
-            // Implement the fix logic for Mysterius.CustomSchedules
-            Log.Error("Custom Schedules (continued) is Active. Chronos Pointer will have overlap");
-        }
         #endregion
 
+        #region Real PawnTableGroupedModel Lookup
 
-        #region Day/Night Bar
+        /// <summary>
+        /// Gets the visible pawn count from the *real* PawnTableGroupedModel
+        /// if PawnTableGrouped is active. Otherwise uses a fallback.
+        /// </summary>
+        public static int GetPawnCount(MainTabWindow_Schedule scheduleInstance)
+        {
+            if (scheduleInstance == null)
+            {
+                Log.Error("[ChronosPointer] GetPawnCount: scheduleInstance is null!");
+                return 0;
+            }
+
+            // 1) Reflect the private 'table' field from the base class MainTabWindow_PawnTable
+            Type baseType = scheduleInstance.GetType().BaseType; // => MainTabWindow_PawnTable
+            FieldInfo tableField = baseType.GetField("table", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (tableField == null)
+            {
+                Log.Error("[ChronosPointer] Could not find 'table' field in MainTabWindow_PawnTable!");
+                return 0;
+            }
+
+            // PawnTable used by the schedule
+            PawnTable pawnTable = tableField.GetValue(scheduleInstance) as PawnTable;
+            if (pawnTable == null)
+            {
+                Log.Error("[ChronosPointer] PawnTable is null from reflection?");
+                return 0;
+            }
+
+            // 2) Check if PawnTableGrouped mod is active
+            bool isGroupedModActive = ModLister.AllInstalledMods.Any(mod =>
+                mod.Active && mod.PackageId.Equals("name.krypt.rimworld.pawntablegrouped", StringComparison.OrdinalIgnoreCase));
+
+            if (isGroupedModActive)
+            {
+                // 3) See if we captured a real model for this PawnTable
+                if (Patch_PawnTableGroupedModel_Constructor.ActiveGroupedModels
+                    .TryGetValue(pawnTable, out PawnTableGroupedModel realModel))
+                {
+                    // If realModel has groups, sum only the expanded ones
+                    if (realModel.Groups != null && realModel.Groups.Count > 0)
+                    {
+                        int expandedCount = 0;
+                        foreach (var group in realModel.Groups)
+                        {
+                            if (group != null && realModel.IsExpanded(group))
+                            {
+                                expandedCount += group.Pawns?.Count ?? 0;
+                            }
+                        }
+                        // Debug:
+                        // Log.Message($"[ChronosPointer] Summed expanded groups => {expandedCount} pawns");
+                        return expandedCount;
+                    }
+                    else
+                    {
+                        // If no groups or null => fallback to direct table
+                        int directCount = pawnTable.PawnsListForReading.Count;
+                        // Log.Message($"[ChronosPointer] realModel has no groups => fallback {directCount}");
+                        return directCount;
+                    }
+                }
+                else
+                {
+                    // We didn't see a constructor call for this PawnTable => fallback
+                    int directCount = pawnTable.PawnsListForReading.Count;
+                    // Log.Message($"[ChronosPointer] No real model => fallback {directCount}");
+                    return directCount;
+                }
+            }
+            else
+            {
+                // PawnTableGrouped not active => fallback
+                return GetDefaultPawnCount(scheduleInstance);
+            }
+        }
+
+        /// <summary>
+        /// If the PawnTableGrouped mod is not active or we couldn't find a real model,
+        /// we reflect the 'Pawns' property on MainTabWindow_Schedule for a direct list.
+        /// </summary>
+        private static int GetDefaultPawnCount(MainTabWindow_Schedule __instance)
+        {
+            var pawnsProp = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (pawnsProp == null)
+            {
+                Log.Error("[ChronosPointer] GetDefaultPawnCount: 'Pawns' property is null!");
+                return 0;
+            }
+
+            var pawnsIEnumerable = pawnsProp.GetValue(__instance) as IEnumerable<Pawn>;
+            if (pawnsIEnumerable == null)
+            {
+                Log.Error("[ChronosPointer] pawnsIEnumerable is null in fallback!");
+                return 0;
+            }
+
+            return pawnsIEnumerable.Count();
+        }
+
+        #endregion
+
+        #region Mod-Specific Fixes & Utility
+
+        private static void ApplyFixForMysteriusCustomSchedules()
+        {
+            // Insert your fix logic if needed; right now we log a warning
+            Log.Error("Custom Schedules (continued) is Active. Overlap may occur.");
+        }
+
+        private static int IncidentHappening()
+        {
+            int incident = 0;
+            bool isSolarFlare = Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef);
+            bool isEclipse = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Eclipse);
+            bool isToxicFallout = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.ToxicFallout);
+            bool isVolcanicWinter = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter);
+            bool isAurora = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora);
+
+            if (isSolarFlare)
+                incident = 1;
+            else if (isEclipse)
+                incident = 2;
+            else if (isToxicFallout)
+                incident = 3;
+            else if (isVolcanicWinter)
+                incident = 4;
+            else if (isAurora)
+                incident = 5;
+
+            return incident;
+        }
+
+        /// <summary>
+        /// Rebuild dayNightColors array for all 24 hours, tinted by incident if needed.
+        /// </summary>
         private static void CalculateDayNightColors(int incident)
         {
-
             for (int hour = 0; hour < 24; hour++)
             {
                 switch (incident)
                 {
-                    case 1: // Solar Flare
-                        dayNightColors[hour] = Color.yellow;
+                    case 1:
+                        dayNightColors[hour] = Color.yellow; // solar flare
                         break;
-                    case 2: // Eclipse
-                        dayNightColors[hour] = new Color(0f, 0f, 0.5f);  // Deep Blue
+                    case 2:
+                        dayNightColors[hour] = new Color(0f, 0f, 0.5f); // eclipse
                         break;
-                    case 3: // Toxic Fallout
-                        Color tingeGreen = dayNightColors[hour];
-                        dayNightColors[hour] = new Color(tingeGreen.r, tingeGreen.g * 1.6f, tingeGreen.b);
+                    case 3:
+                        Color tinge = dayNightColors[hour];
+                        dayNightColors[hour] = new Color(tinge.r, tinge.g * 1.6f, tinge.b);
                         break;
-                    case 4: // Volcanic Winter
-                        Color darker = dayNightColors[hour];
-                        dayNightColors[hour] = new Color(darker.r * 0.5f, darker.g * 0.5f, darker.b * 0.5f);
+                    case 4:
+                        Color d = dayNightColors[hour];
+                        dayNightColors[hour] = new Color(d.r * 0.5f, d.g * 0.5f, d.b * 0.5f);
                         break;
                     default:
-
                         float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                        //Log.Message("[Chronos Pointer] At hour " + hour + " sunlight == " + sunlight);
                         dayNightColors[hour] = GetColorForSunlight(sunlight);
                         break;
                 }
@@ -239,141 +361,49 @@ namespace ChronosPointer
             dayNightColorsCalculated = true;
         }
 
-        private static int IncidentHappening()
+        /// <summary>
+        /// Simple day/night color logic from deep night to sunrise to midday
+        /// </summary>
+        private static Color GetColorForSunlight(float sunlight)
         {
-            int incident = 0;
+            // Deep night
+            if (sunlight == 0f)
+                return new Color(0f, 0f, 0.5f);
 
-            // Check for solar flare all yellow
-            bool isSolarFlare = Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef);
-            //bool isSolarFlare = false;
-            // Check for eclipse all dark blue
-            bool isEclipse = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Eclipse);
-            // Green tinge
-            bool isToxicFallout = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.ToxicFallout);
-            bool isVolcanicWinter = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter);
-            bool isAurora = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora);
+            // Dawn/Dusk
+            if (sunlight < 0.35f)
+                return new Color(0.5f, 0.5f, 1f);
 
-            if (isSolarFlare == true)
-            {
-                incident = 1;
-            }
-            else if (isEclipse == true)
-            {
-                incident = 2;
-            }
-            else if (isToxicFallout == true)
-            {
-                incident = 3;
-            }
-            else if (isVolcanicWinter == true)
-            {
-                incident = 4;
-            }
-            else if (isAurora == true)
-            {
-                incident = 5;
-            }
+            // Sunrise/Sunset
+            if (sunlight < 0.7f)
+                return new Color(1f, 0.5f, 0f);
 
-            return incident;
+            // Full daylight
+            return Color.yellow;
         }
 
+        #endregion
+
+        #region Drawing Extra
+
+        /// <summary>
+        /// Draw the day/night bar across 24 hours
+        /// </summary>
         private static void DrawDayNightBar(Rect fillRect, Color[] colors)
         {
-            float baseX = fillRect.x + BaseOffsetX;
+            float baseX = fillRect.x;
             float baseY = fillRect.y + BaseOffsetY;
 
             for (int hour = 0; hour < 24; hour++)
             {
                 float hourX = baseX + hour * (HourBoxWidth + HourBoxGap);
                 Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
-
                 Widgets.DrawBoxSolid(hourRect, colors[hour]);
             }
-
-        }
-        private static Color GetColorForSunlight(float sunlight)
-        {
-            
-            // Deep night
-            if (sunlight == 0f)
-                return new Color(0f, 0f, 0.5f);  // Deep Blue
-
-            // Dawn/Dusk
-            if (sunlight < 0.35f)
-                return new Color(0.5f, 0.5f, 1f); // Light Blue
-
-            // Sunrise/Sunset
-            if (sunlight < 0.7f)
-                return new Color(1f, 0.5f, 0f);   // Orange
-
-            // Full daylight
-            return Color.yellow;
-        }
-        private static void DrawHighlight(Rect fillRect, int pawnCount)
-        {
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
-            int currentHour = (int)currentHourF;
-
-            float colX = fillRect.x + BaseOffsetX
-                         + currentHour * (HourBoxWidth + HourBoxGap);
-            float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
-
-
-            float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
-            // Trim from bottom
-            totalHeight -= PawnAreaBottomTrim;
-
-
-
-            Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
-            if (ChronosPointerMod.Settings.hollowHourHighlight)
-                Widgets.DrawBoxSolidWithOutline(highlightRect, new Color(0, 0, 0, 0), ChronosPointerMod.Settings.highlightColor, 2);
-            else
-                Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
-        }
-        #endregion
-
-        #region Time Trace Line
-
-        static int GetPawnCount(MainTabWindow_Schedule __instance)
-        {
-            //var babyList = Find.CurrentMap.mapPawns.SpawnedBabiesInFaction(Find.FactionManager.OfPlayer).ToList();
-            int babyCount = 0;
-
-            if (__instance == null)
-            {
-                Log.Error("Instance is null!");
-                return 0;
-            }
-
-            //babies that are held do not count as spawned, but do still count as pawns. So when a mother breastfeeds her baby, the pawn highlight bar is off by the number of breastfed babies.
-
-            // Check if the method exists and is accessible
-
-            var field = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            
-
-            if (field == null)
-            {
-                Log.Error("Field is null!");
-                return 0;
-            }
-            var pawnsIEnumerable = field.GetValue(__instance) as IEnumerable<Pawn>;
-            if (pawnsIEnumerable == null)
-            {
-                Log.Error("pawnsIEnum is null!");
-                return 0;
-            }
-            int totalHeight = pawnsIEnumerable.Count(); 
-        
-            pawnCountCalculated = true;
-        
-            return totalHeight;
         }
 
         /// <summary>
-        /// A small vertical line in the day/night bar, 2px wide for visibility.
+        /// Small vertical indicator line on day/night bar showing current time
         /// </summary>
         private static void DrawDayNightTimeIndicator(Rect fillRect)
         {
@@ -381,26 +411,27 @@ namespace ChronosPointer
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
-            float lineX = fillRect.x + BaseOffsetX
-                        + currentHour * (HourBoxWidth + HourBoxGap)
+            float lineX = fillRect.x + currentHour * (HourBoxWidth + HourBoxGap)
                         + hourProgress * HourBoxWidth;
-
             float lineY = fillRect.y + BaseOffsetY;
             float lineHeight = BarHeight;
 
-            // Get the sunlight value for the current hour
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)(currentHourF * 2500));
 
-            // Determine the color of the line based on the sunlight
-            Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (sunlight >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight;
+            Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine
+                ? ChronosPointerMod.Settings.timeTraceColorDay
+                : (sunlight >= 0.7f
+                    ? ChronosPointerMod.Settings.timeTraceColorDay
+                    : ChronosPointerMod.Settings.timeTraceColorNight);
 
             // 2 px wide
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
-
-
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
 
+        /// <summary>
+        /// Arrow texture pointing downward at current time
+        /// </summary>
         private static void DrawArrowTexture(Rect fillRect)
         {
             if (ChronosPointerTextures.ArrowTexture == null) return;
@@ -409,95 +440,97 @@ namespace ChronosPointer
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
-            // The line's X (center of arrow)
-            float arrowCenterX = fillRect.x + BaseOffsetX
-                                + currentHour * (HourBoxWidth + HourBoxGap)
+            float arrowCenterX = fillRect.x + currentHour * (HourBoxWidth + HourBoxGap)
                                 + hourProgress * HourBoxWidth + 1f;
 
-            // The top of the day/night bar
             float barTopY = fillRect.y + BaseOffsetY + 4;
+            float arrowWidth = 8f;
+            float arrowHeight = 8f;
 
-            // Will rotate the arrow later
-            float arrowWidth = 8f; // Default width
-            float arrowHeight = 8f; // Default height
-
-            // Center the arrow horizontally on the line, 
-            // so arrowRect.center.x = arrowCenterX
             float arrowRectX = arrowCenterX - (arrowWidth / 2f);
+            float arrowRectY = barTopY - arrowHeight
+                - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f);
 
-            // Changes the arrow up or down. up is -
-            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f);
-
-            // Build the rect
             Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
 
-            // Save current matrix
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
 
-            // Rotate around center by +90 degrees to point downward
+            // Rotate 90 degrees around center, so arrow points downward
             GUIUtility.RotateAroundPivot(90f, arrowRect.center);
 
-            // Draw the arrow
             GUI.color = ChronosPointerMod.Settings.arrowColor;
-            ;
+            GUI.DrawTexture(
+                arrowRect.ScaledBy(
+                    (!ChronosPointerMod.Settings.showDayNightBar ? 2 : 1)
+                ),
+                ChronosPointerTextures.ArrowTexture
+            );
 
-            GUI.DrawTexture(arrowRect.ScaledBy((!ChronosPointerMod.Settings.showDayNightBar ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
-
-            // Restore matrix & color
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
         }
-#endregion
 
-        #region Full Height Cursor
+        /// <summary>
+        /// Draw a highlight rectangle for the current hour across all pawns
+        /// </summary>
+        private static void DrawHighlight(Rect fillRect, int pawnCount)
+        {
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            int currentHour = (int)currentHourF;
+
+            float colX = fillRect.x + currentHour * (HourBoxWidth + HourBoxGap);
+            float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
+
+            float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
+            totalHeight -= PawnAreaBottomTrim; // trim from bottom
+
+            Rect highlightRect = new Rect(colX, colY, HourBoxWidth, totalHeight);
+
+            if (ChronosPointerMod.Settings.hollowHourHighlight)
+            {
+                Widgets.DrawBoxSolidWithOutline(
+                    highlightRect,
+                    new Color(0, 0, 0, 0),
+                    ChronosPointerMod.Settings.highlightColor,
+                    2
+                );
+            }
+            else
+            {
+                Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
+            }
+        }
+
+        /// <summary>
+        /// Draw a full-height vertical line at current hour from top to bottom
+        /// </summary>
         private static void DrawFullHeightCursor(Rect fillRect, int pawnCount)
         {
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
-            // Calculate cursorX consistently with other elements and shift 1px to the right
-            float cursorX = fillRect.x + BaseOffsetX
-                + currentHour * (HourBoxWidth + HourBoxGap)
-                + hourProgress * HourBoxWidth
-                + 1f; // Shift 1px to the right
+            float cursorX = fillRect.x + currentHour * (HourBoxWidth + HourBoxGap)
+                + hourProgress * HourBoxWidth + 1f; // shift 1 px
 
-            // Ensure cursorThickness is an even number
             float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
+            // ensure even thickness
             if (cursorThickness % 2 != 0)
-            {
-                cursorThickness += 1f; // Adjust to the next even number
-            }
+                cursorThickness += 1f;
 
-            // Adjust cursorX to center the thickness
+            // center it
             cursorX -= cursorThickness / 2f;
 
-            // Top offset to match highlight
-            float cursorY = fillRect.y + BaseOffsetY + BarHeight
-                + PawnAreaTopOffset;
+            float cursorY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-            float totalHeight = pawnCount
-                * (PawnRowHeight + PawnRowGap);
-
-            // Trim from bottom
+            float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
             totalHeight -= PawnAreaBottomTrim;
 
-            Rect cursorRect = new Rect(
-                cursorX,
-                cursorY,
-                cursorThickness, // Use the adjusted even thickness
-                totalHeight
-            );
-
+            Rect cursorRect = new Rect(cursorX, cursorY, cursorThickness, totalHeight);
             Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
         }
 
-
-        // Method to reset the flag when the scheduler is closed
-
+        #endregion
     }
-    #endregion
-
-
 }

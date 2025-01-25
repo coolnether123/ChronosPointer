@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ChronosPointer</RootNamespace>
     <AssemblyName>ChronosPointer</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="Patch_PawnTableGroupedModel_Constructor.cs" />
     <Compile Include="Patch_ScheduleWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChronosPointerMod.cs" />
@@ -63,7 +64,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.3.3389</Version>
+      <Version>1.5.4297</Version>
     </PackageReference>
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.3</Version>
@@ -72,6 +73,10 @@
   <ItemGroup>
     <Reference Include="0ColourPicker">
       <HintPath>..\1.5\Assemblies\0ColourPicker.dll</HintPath>
+    </Reference>
+    <Reference Include="PawnTableGrouped.0, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\1.5\Assemblies\PawnTableGrouped.0.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
