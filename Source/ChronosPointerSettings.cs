@@ -26,6 +26,8 @@ namespace ChronosPointer
         public bool hollowHourHighlight = false;
 
 
+
+
         // Colors
         public Color arrowColor = Color.red;
         public Color highlightColor = new Color(1f, 1f, 0f, 0.3f);
