@@ -12,6 +12,8 @@ using Verse;
 
 namespace ChronosPointer
 {
+
+
     [HarmonyPatch(typeof(PawnColumnWorker_Timetable))]
     [HarmonyPatch("DoCell")]
     public static class Patch_DayNightPositionGetter
@@ -29,6 +31,8 @@ namespace ChronosPointer
 
         }
     }
+
+   
 
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
@@ -129,22 +133,33 @@ namespace ChronosPointer
                 // 1) Day/Night Bar
                 if (ChronosPointerMod.Settings.showDayNightBar)
                 {
-                    if (!dayNightColorsCalculated || incident > 0)
+                    if (!dayNightColorsCalculated || incident >= 0)
                     {
                         CalculateDayNightColors(incident);
 
                     }
                     DrawDayNightBar(fillRect, dayNightColors);
-                    if (incident == 5)
+                    if (incident == 5) // Check if Aurora is the active incident
                     {
-                        Color[] Aurora = dayNightColors;
-                        Color newColor = new Color(0.5f, Mathf.Abs(Mathf.Sin(Time.time)), 0.5f, Mathf.Abs(Mathf.Sin(Time.time * 0.6f)) * 0.5f);
+                        // Create a NEW array specifically for the Aurora overlay colors.
+                        Color[] auroraEffectOverlay = new Color[24];
+
+                        float time = Time.time; // Cache Time.time for slight optimization and consistency within this frame
+                        Color auroraShimmerColor = new Color(
+                            0.3f + Mathf.Abs(Mathf.Sin(time * 0.7f + 0.5f)) * 0.5f,  // Red component (e.g., varying between 0.3 and 0.8)
+                            0.5f + Mathf.Abs(Mathf.Sin(time * 0.9f + 1.0f)) * 0.4f,  // Green component (e.g., varying between 0.5 and 0.9)
+                            0.6f + Mathf.Abs(Mathf.Sin(time * 0.5f + 1.5f)) * 0.4f,  // Blue component (e.g., varying between 0.6 and 1.0)
+                            0.25f + Mathf.Abs(Mathf.Sin(time * 0.4f)) * 0.20f        // Alpha component (e.g., varying between 0.25 and 0.45 for transparency)
+                        );
+
+                        // Apply this shimmering color to all hours for the overlay.
                         for (int hour = 0; hour < 24; hour++)
                         {
-                            Aurora[hour] = newColor;
+                            auroraEffectOverlay[hour] = auroraShimmerColor;
                         }
-                        DrawDayNightBar(fillRect, Aurora);
 
+                        // Draw the Aurora overlay ON TOP of the previously drawn day/night bar.
+                        DrawDayNightBar(fillRect, auroraEffectOverlay);
                     }
 
                     if (ChronosPointerMod.Settings.showDayNightIndicator)
@@ -209,31 +224,45 @@ namespace ChronosPointer
         #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
         {
+            long currentAbsTick = GenTicks.TicksAbs;
+            float dayPercent = GenLocalDate.DayPercent(Find.CurrentMap); 
+            long ticksIntoLocalDay = (long)(dayPercent * (float)GenDate.TicksPerDay);
+            long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay; 
 
-            for (int hour = 0; hour < 24; hour++)
+            for (int localHour = 0; localHour < 24; localHour++)
             {
+                long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
+                float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
+                Color baseSunlightColor = GetColorForSunlight(sunlight); // Get the normal color for this hour
+
+                // Start with the actual sunlight color for this hour
+                dayNightColors[localHour] = baseSunlightColor;
+
                 switch (incident)
                 {
                     case 1: // Solar Flare
-                        dayNightColors[hour] = Color.yellow;
+                        if (sunlight > 0.05f) // Only affect if there's normally some light
+                        {
+                            // If the base color is Orange or Yellow, Solar Flare makes/keeps it Yellow.
+                            if (baseSunlightColor == new Color(1f, 0.5f, 0f) || baseSunlightColor == Color.yellow)
+                            {
+                                dayNightColors[localHour] = Color.yellow;
+                            }
+                        }
                         break;
                     case 2: // Eclipse
-                        dayNightColors[hour] = new Color(0f, 0f, 0.5f);  // Deep Blue
+                        dayNightColors[localHour] = new Color(0f, 0f, 0.5f);  // Deep Blue
                         break;
-                    case 3: // Toxic Fallout
-                        Color tingeGreen = dayNightColors[hour];
-                        dayNightColors[hour] = new Color(tingeGreen.r, tingeGreen.g * 1.6f, tingeGreen.b);
+                    case 3: // Toxic Fallout (modifies base color)
+                        Color baseColorTF = dayNightColors[localHour];
+                        dayNightColors[localHour] = new Color(baseColorTF.r, baseColorTF.g * 1.6f, baseColorTF.b);
                         break;
-                    case 4: // Volcanic Winter
-                        Color darker = dayNightColors[hour];
-                        dayNightColors[hour] = new Color(darker.r * 0.5f, darker.g * 0.5f, darker.b * 0.5f);
+                    case 4: // Volcanic Winter (modifies base color)
+                        Color baseColorVW = dayNightColors[localHour];
+                        dayNightColors[localHour] = new Color(baseColorVW.r * 0.5f, baseColorVW.g * 0.5f, baseColorVW.b * 0.5f);
                         break;
-                    default:
-
-                        float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, hour * 2500);
-                        //Log.Message("[Chronos Pointer] At hour " + hour + " sunlight == " + sunlight);
-                        dayNightColors[hour] = GetColorForSunlight(sunlight);
-                        break;
+                        // case 0 or default: no incident, base color from sunlight is used.
+                        // case 5 (Aurora) is handled separately as an overlay in Postfix.
                 }
             }
             dayNightColorsCalculated = true;
@@ -377,27 +406,24 @@ namespace ChronosPointer
         /// </summary>
         private static void DrawDayNightTimeIndicator(Rect fillRect)
         {
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f; // Correct for positioning
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
 
-            float lineX = fillRect.x + BaseOffsetX
+            float lineX = fillRect.x + BaseOffsetX // fillRect here is UseMeForTheXYPosOfDayNightBar
                         + currentHour * (HourBoxWidth + HourBoxGap)
                         + hourProgress * HourBoxWidth;
 
-            float lineY = fillRect.y + BaseOffsetY;
+            float lineY = fillRect.y + BaseOffsetY; // fillRect here is UseMeForTheXYPosOfDayNightBar
             float lineHeight = BarHeight;
 
-            // Get the sunlight value for the current hour
-            float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)(currentHourF * 2500));
+            // For sunlight calculation for the dynamic line color, use the current absolute tick:
+            long currentAbsoluteTick = GenTicks.TicksAbs;
+            float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);
 
-            // Determine the color of the line based on the sunlight
             Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (sunlight >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight;
 
-            // 2 px wide
             Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
-
-
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
 
