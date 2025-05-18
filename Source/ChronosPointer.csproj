@@ -49,6 +49,9 @@
     <OutputPath>..\1.4\Assemblies\</OutputPath>
     <DefineConstants>rw_1_4</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2|AnyCPU'">
+    <OutputPath>bin\1.2\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
