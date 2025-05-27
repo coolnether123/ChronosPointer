@@ -11,7 +11,6 @@ namespace ChronosPointer
     {
         public static ChronosPointerSettings Settings;
         public static float cursorThickness = 2f; // Default thickness
-        private Vector2 scrollPosition = Vector2.zero;
 
         public ChronosPointerMod(ModContentPack content) : base(content)
         {

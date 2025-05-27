@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using Mono.Unix.Native;
 using RimWorld;
-using UnityEngine; // Added for Time.time if you were using it in Aurora
+using RimWorld.QuestGen;
+using UnityEngine;
 using Verse;
 
 namespace ChronosPointer
@@ -14,21 +14,17 @@ namespace ChronosPointer
     [HarmonyPatch("DoCell")]
     public static class Patch_DayNightPositionGetter
     {
-        static bool hasRect = false; // This should ideally be reset if the UI ever fully reinitializes
+        static bool hasRect = false;
         [HarmonyPostfix]
-        public static void Postfix(Rect rect, Pawn pawn, PawnTable table) // Removed __instance as it wasn't used
+        public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
         {
-            if (!hasRect || Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar == default(Rect)) // Ensure it's a valid rect
+            if (!hasRect)
             {
+                hasRect = true;
                 Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
-                if (rect.width > 0 && rect.height > 0) // Basic validation
-                {
-                    hasRect = true;
-                }
             }
         }
     }
-
 
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
@@ -37,352 +33,150 @@ namespace ChronosPointer
         #region Values
         public static Rect UseMeForTheXYPosOfDayNightBar;
 
-        public static float BaseOffsetX = 1f;
-        public static float BaseOffsetY = 40f; // Made it float consistently
+        // Where the schedule grid starts
+        private static float BaseOffsetX = 1f;
+        private const float BaseOffsetY = 40;
 
-        public static float HourBoxWidth = 19f;
-        public static float HourBoxGap = 2f;
+        // Each hour cell
+        private const float HourBoxWidth = 19f;
+        private const float HourBoxGap = 2f;
 
-        public static float PawnRowHeight = 28f;
-        public static float PawnRowGap = 2f;
+        // Pawn row
+        private const float PawnRowHeight = 28f;
+        private const float PawnRowGap = 2f;
 
-        public static float BarHeight = 10f;
+        // Day/night bar
+        private const float BarHeight = 10f;
 
-        public static float PawnAreaTopOffset = 16f;
-        public static float PawnAreaBottomTrim = 2f;
+        // Extra offsets for highlight & line so they don't slip off top/bottom
+        private const float PawnAreaTopOffset = 16f;
+        private const float PawnAreaBottomTrim = 2f;
 
-        private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare", false); // Added 'false' to not error if missing (though it shouldn't be)
+        // Define the SolarFlare condition if not available
+        private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamed("SolarFlare");
 
+        // Flag to track if the day/night colors have been calculated
         public static bool dayNightColorsCalculated = false;
-        public static bool pawnCountCalculated = false; // We might not need this if GetPawnCount is called every frame
 
+        // Flag to track if the pawn count has been calculated
+        public static bool pawnCountCalculated = false;
+
+        // Array to store the colors for each hour
         private static Color[] dayNightColors = new Color[24];
+
+        // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
-        private static int pawnCount = 0; // This will be totalEffectiveRows
 
-        private static readonly string gplPackageId = "name.krypt.rimworld.pawntablegrouped";
-        private static bool isGPLModActiveCheckedThisFrame = false;
-        private static bool isGPLModActiveResult = false;
+        //cached number of pawns for the full height and highlight bars
+        private static int pawnCount = 0;
 
-
-        // List of mod IDs to check for specific compatibility handling
-        private static readonly Dictionary<string, Action> modCompatibilityActions = new Dictionary<string, Action>()
+        // Custom Schedules (continued) mod ID
+        private static readonly string[] customSchedulesModIds = new string[]
         {
-            { "Mysterius.CustomSchedules", ApplyFixForMysteriusCustomSchedules }
-            // We will handle GPL separately due to its complexity
+            "Mysterius.CustomSchedules"
         };
-        #endregion
-
-        #region GroupedPawnsList_Compatibility_Helpers
-        private static bool gplReflectionAttempted = false;
-        private static bool gplReflectionSucceeded = false;
-
-        private static Type gpl_PawnTableGroupedImplType = null;
-        private static Type gpl_PawnTableGroupedModelType = null;
-        private static Type gpl_PawnTableGroupType = null;
-
-        private static FieldInfo gpl_PawnTableGroupedImpl_modelField = null;
-        private static FieldInfo gpl_PawnTableGroupedModel_GroupsField = null;
-        private static MethodInfo gpl_PawnTableGroupedModel_IsExpandedMethod = null;
-        private static FieldInfo gpl_PawnTableGroup_PawnsField = null;
-
-        // For PawnTableExtensions
-        private static Type gpl_PawnTableExtensionsType = null;
-        private static MethodInfo gpl_TryGetImplementationMethod = null;
-
-        public static float GPLDayNightBarYOffset = -30f;  // tweak this until the bar sits above the hour numbers
-        private static float gplHorizontalOffset = 173f; // Offset for the whole block on X axis
-        private static float gplVerticalOffset = 0f;   // Offset for the whole block on Y axis
-        public static float GPLHighlightYOffset = GPLDayNightBarYOffset;  // reuse the same Y shift
-        public static float GPLHighlightHeightAdd = 2f;                     // fills the 2‑px gap
-
-        private static void InitializeGPLReflection()
-        {
-            if (gplReflectionAttempted) return;
-            gplReflectionAttempted = true;
-            Log.Message("ChronosPointer: Attempting to Initialize GPL Reflection...");
-
-            if (!isGPLModActiveResult)
-            {
-                Log.Message("ChronosPointer: InitializeGPLReflection called but isGPLModActiveResult is false. Skipping.");
-                return;
-            }
-
-            string targetNamespace = "PawnTableGrouped";
-
-            // Get GPL Core Types
-            gpl_PawnTableGroupedImplType = AccessTools.TypeByName($"{targetNamespace}.PawnTableGroupedImpl");
-            gpl_PawnTableGroupedModelType = AccessTools.TypeByName($"{targetNamespace}.PawnTableGroupedModel");
-            gpl_PawnTableGroupType = AccessTools.TypeByName($"{targetNamespace}.PawnTableGroup");
-
-            // NEW: Get PawnTableExtensions type
-            gpl_PawnTableExtensionsType = AccessTools.TypeByName($"{targetNamespace}.PawnTableExtensions");
-
-            if (gpl_PawnTableGroupedImplType == null || gpl_PawnTableGroupedModelType == null ||
-                gpl_PawnTableGroupType == null || gpl_PawnTableExtensionsType == null) // Added check for Extensions type
-            {
-                Log.Warning("ChronosPointer: Could not find one or more critical types for Grouped Pawns List compatibility (Core types or PawnTableExtensions). GPL support will be disabled.");
-                return;
-            }
-            Log.Message("ChronosPointer: All required GPL base types (including PawnTableExtensions) FOUND.");
-
-            bool allMembersFound = true;
-
-            // Get members from PawnTableGroupedImpl, PawnTableGroupedModel, PawnTableGroup
-            gpl_PawnTableGroupedImpl_modelField = AccessTools.Field(gpl_PawnTableGroupedImplType, "model");
-            // ... (rest of your existing member reflection: GroupsField, IsExpandedMethod, PawnsField) ...
-            // Ensure these logs and checks are still in place:
-            if (gpl_PawnTableGroupedImpl_modelField == null) { /* Log warning, allMembersFound = false; */ } else { /* Log FOUND */ }
-            gpl_PawnTableGroupedModel_GroupsField = AccessTools.Field(gpl_PawnTableGroupedModelType, "Groups");
-            if (gpl_PawnTableGroupedModel_GroupsField == null) { /* Log warning, allMembersFound = false; */ } else { /* Log FOUND */ }
-            gpl_PawnTableGroupedModel_IsExpandedMethod = AccessTools.Method(gpl_PawnTableGroupedModelType, "IsExpanded", new Type[] { gpl_PawnTableGroupType });
-            if (gpl_PawnTableGroupedModel_IsExpandedMethod == null) { /* Log warning, allMembersFound = false; */ } else { /* Log FOUND */ }
-            gpl_PawnTableGroup_PawnsField = AccessTools.Field(gpl_PawnTableGroupType, "Pawns");
-            if (gpl_PawnTableGroup_PawnsField == null) { /* Log warning, allMembersFound = false; */ } else { /* Log FOUND */ }
-
-
-            // NEW: Get PawnTableExtensions.TryGetImplementation method
-            // It's a static method: bool TryGetImplementation(PawnTable table, out PawnTableGroupedImpl implementation)
-            // The 'out' parameter type is gpl_PawnTableGroupedImplType.MakeByRefType() for reflection
-            Log.Message($"ChronosPointer: Trying to get Method 'TryGetImplementation' from type {gpl_PawnTableExtensionsType.FullName}");
-            gpl_TryGetImplementationMethod = AccessTools.Method(gpl_PawnTableExtensionsType, "TryGetImplementation",
-                new Type[] { typeof(PawnTable), gpl_PawnTableGroupedImplType.MakeByRefType() });
-            if (gpl_TryGetImplementationMethod == null)
-            {
-                Log.Warning($"ChronosPointer: FAILED to find Method 'TryGetImplementation' in {gpl_PawnTableExtensionsType.FullName}");
-                allMembersFound = false;
-            }
-            else
-            {
-                Log.Message("ChronosPointer: Method 'TryGetImplementation' FOUND.");
-            }
-
-
-            if (!allMembersFound)
-            {
-                Log.Warning("ChronosPointer: Failed to cache one or more required reflection members for Grouped Pawns List. GPL support will be disabled.");
-                return;
-            }
-
-            gplReflectionSucceeded = true;
-            Log.Message("[ChronosPointer] Grouped Pawns List reflection successful. Compatibility fully enabled for this session.");
-        }
-
-        private static bool TryGetGPLModelAndGroups(PawnTable vanillaPawnTable,
-                                            out object modelInstance,
-                                            out System.Collections.IList groupsList)
-        {
-            modelInstance = null;
-            groupsList = null;
-
-            if (!gplReflectionSucceeded || gpl_TryGetImplementationMethod == null) // Check if our key method was found
-            {
-                return false;
-            }
-            if (vanillaPawnTable == null) return false;
-
-            try
-            {
-                object[] parameters = new object[] { vanillaPawnTable, null }; // Second param is for 'out PawnTableGroupedImpl'
-                bool success = (bool)gpl_TryGetImplementationMethod.Invoke(null, parameters); // Static method, so first arg is null
-
-                if (success)
-                {
-                    object gplImplementationInstance = parameters[1]; // The 'out' parameter value is here
-
-                    if (gplImplementationInstance == null || gplImplementationInstance.GetType() != gpl_PawnTableGroupedImplType)
-                    {
-                        Log.ErrorOnce("ChronosPointer: GPL TryGetImplementation succeeded but returned null or wrong type for impl.", "GPLCompatImplTypeError".GetHashCode());
-                        return false;
-                    }
-
-                    modelInstance = gpl_PawnTableGroupedImpl_modelField.GetValue(gplImplementationInstance);
-                    if (modelInstance == null)
-                    {
-                        Log.ErrorOnce("ChronosPointer: GPL Compat - Model instance is null (from reflected TryGetImplementation).", "GPLCompatModelNull4".GetHashCode());
-                        return false;
-                    }
-
-                    object groupsObj = gpl_PawnTableGroupedModel_GroupsField.GetValue(modelInstance);
-                    if (groupsObj == null)
-                    {
-                        Log.ErrorOnce("ChronosPointer: GPL Compat - Groups object is null.", "GPLCompatGroupsNull4".GetHashCode());
-                        return false;
-                    }
-
-                    groupsList = groupsObj as System.Collections.IList;
-                    if (groupsList == null)
-                    {
-                        Log.ErrorOnce("ChronosPointer: GPL Compat - Groups object is not an IList.", "GPLCompatGroupsNotIList4".GetHashCode());
-                        return false;
-                    }
-                    // Log.Message("ChronosPointer: TryGetGPLModelAndGroups returning TRUE. groupsList count: " + groupsList.Count);
-                    return true;
-                }
-                else
-                {
-                    // TryGetImplementation returned false, meaning GPL is not active for this table. This is normal.
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.ErrorOnce($"ChronosPointer: Exception in TryGetGPLModelAndGroups (using TryGetImplementation): {ex.ToString()}", ex.GetHashCode() + 6);
-                return false;
-            }
-        }
-
-        private static List<Pawn> GetPawnsFromGPLGroup(object groupObj)
-        {
-            // Ensure reflection succeeded and the field was found.
-            if (groupObj == null || !gplReflectionSucceeded || gpl_PawnTableGroup_PawnsField == null || groupObj.GetType() != gpl_PawnTableGroupType)
-            {
-                return new List<Pawn>();
-            }
-
-            try
-            {
-                // Pawns are from a field, so use gpl_PawnTableGroup_PawnsField
-                var pawnsListObj = gpl_PawnTableGroup_PawnsField.GetValue(groupObj);
-                return pawnsListObj as List<Pawn> ?? new List<Pawn>();
-            }
-            catch (Exception ex)
-            {
-                Log.ErrorOnce($"ChronosPointer: Exception in GetPawnsFromGPLGroup for groupObj type {groupObj.GetType().FullName}: {ex.ToString()}", groupObj.GetHashCode() + 3);
-                return new List<Pawn>();
-            }
-        }
-
-        private static int CountExpandedGroups(object modelInstance, System.Collections.IList groupsList)
-        {
-            if (modelInstance == null || groupsList == null) return 0;
-            int count = 0;
-            foreach (var groupObj in groupsList)
-            {
-                if (IsGPLGroupExpanded(modelInstance, groupObj))
-                    count++;
-            }
-            return count;
-        }
-
-
-        private static bool IsGPLGroupExpanded(object modelInstance, object groupObj)
-        {
-            if (modelInstance == null || groupObj == null || !gplReflectionSucceeded || gpl_PawnTableGroupedModel_IsExpandedMethod == null ||
-                modelInstance.GetType() != gpl_PawnTableGroupedModelType || groupObj.GetType() != gpl_PawnTableGroupType)
-            {
-                return false; // Default to not expanded if types don't match or reflection failed
-            }
-
-            try
-            {
-                return (bool)gpl_PawnTableGroupedModel_IsExpandedMethod.Invoke(modelInstance, new object[] { groupObj });
-            }
-            catch (Exception ex)
-            {
-                Log.ErrorOnce($"ChronosPointer: Exception in IsGPLGroupExpanded: {ex.ToString()}", modelInstance.GetHashCode() + groupObj.GetHashCode() + 4);
-                return false; // Default to not expanded on error
-            }
-        }
         #endregion
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (Find.CurrentMap == null) return;
-            if (UseMeForTheXYPosOfDayNightBar.width <= 0 || UseMeForTheXYPosOfDayNightBar.height <= 0) return;
 
-            Rect drawingAnchorRect = UseMeForTheXYPosOfDayNightBar; // Start with the base position
+            fillRect = UseMeForTheXYPosOfDayNightBar;
 
-            // Cache GPL active status per frame
-            if (!isGPLModActiveCheckedThisFrame)
+            // Apply GPL offset if GPL is active
+            if (GPLCompatibility.IsGPLActive())
             {
-                isGPLModActiveResult = ModLister.AllInstalledMods.Any(mod =>
-                    mod.Active && mod.PackageId.Equals(gplPackageId, StringComparison.OrdinalIgnoreCase));
-                isGPLModActiveCheckedThisFrame = true;
-                // No log here, already in Initialize
-                if (isGPLModActiveResult) InitializeGPLReflection();
+                fillRect = GPLCompatibility.ApplyGPLOffset(fillRect);
             }
-
-            // --- APPLY GPL Global Offset if active AND reflection succeeded ---
-            if (isGPLModActiveResult && gplReflectionSucceeded)
-            {
-                // Apply the horizontal and vertical offsets to the anchor point
-                drawingAnchorRect.x += gplHorizontalOffset;
-                drawingAnchorRect.y += gplVerticalOffset;
-
-                // Optional: If the offset fundamentally changes where the Day/Night bar
-                // is relative to the pawn list *within* your block, you might need to
-                // adjust BaseOffsetY or PawnAreaTopOffset here based on GPL active state.
-                // For now, assume they remain constant relative to the offset anchor.
-            }
-            // --- END APPLYING OFFSET ---
 
             try
             {
-                foreach (var modActionEntry in modCompatibilityActions)
+                // Iterate over each mod ID and check if it's active
+                foreach (var modId in customSchedulesModIds)
                 {
-                    if (ModLister.AllInstalledMods.Any(mod =>
-                        mod.Active && mod.PackageId.Equals(modActionEntry.Key, StringComparison.OrdinalIgnoreCase)))
+                    bool isModActive = ModLister.AllInstalledMods.Any(mod =>
+                        mod.Active && mod.PackageId.Equals(modId, StringComparison.OrdinalIgnoreCase));
+
+                    if (isModActive)
                     {
-                        modActionEntry.Value?.Invoke();
+                        // Trigger specific fixes based on the active mod
+                        switch (modId)
+                        {
+                            case "Mysterius.CustomSchedules":
+                                ApplyFixForMysteriusCustomSchedules();
+                                break;
+                        }
                     }
                 }
-
                 int incident = IncidentHappening();
+
                 pawnCount = GetPawnCount(__instance);
 
+                // Check if the current map has changed
                 if (Find.CurrentMap != lastKnownMap)
                 {
+                    // Reset the flag and update the last known map
                     dayNightColorsCalculated = false;
+                    pawnCountCalculated = false;
                     lastKnownMap = Find.CurrentMap;
                 }
 
+                // 1) Day/Night Bar
                 if (ChronosPointerMod.Settings.showDayNightBar)
                 {
                     if (!dayNightColorsCalculated || incident >= 0)
                     {
                         CalculateDayNightColors(incident);
                     }
-                    DrawDayNightBar(drawingAnchorRect, dayNightColors);
-
-                    if (incident == 5)
+                    DrawDayNightBar(fillRect, dayNightColors);
+                    if (incident == 5) // Check if Aurora is the active incident
                     {
+                        // Create a NEW array specifically for the Aurora overlay colors.
                         Color[] auroraEffectOverlay = new Color[24];
-                        float time = Time.time;
+
+                        float time = Time.time; // Cache Time.time for slight optimization and consistency within this frame
                         Color auroraShimmerColor = new Color(
-                            0.3f + Mathf.Abs(Mathf.Sin(time * 0.7f + 0.5f)) * 0.5f,
-                            0.5f + Mathf.Abs(Mathf.Sin(time * 0.9f + 1.0f)) * 0.4f,
-                            0.6f + Mathf.Abs(Mathf.Sin(time * 0.5f + 1.5f)) * 0.4f,
-                            0.25f + Mathf.Abs(Mathf.Sin(time * 0.4f)) * 0.20f
+                            0.3f + Mathf.Abs(Mathf.Sin(time * 0.7f + 0.5f)) * 0.5f,  // Red component (e.g., varying between 0.3 and 0.8)
+                            0.5f + Mathf.Abs(Mathf.Sin(time * 0.9f + 1.0f)) * 0.4f,  // Green component (e.g., varying between 0.5 and 0.9)
+                            0.6f + Mathf.Abs(Mathf.Sin(time * 0.5f + 1.5f)) * 0.4f,  // Blue component (e.g., varying between 0.6 and 1.0)
+                            0.25f + Mathf.Abs(Mathf.Sin(time * 0.4f)) * 0.20f        // Alpha component (e.g., varying between 0.25 and 0.45 for transparency)
                         );
+
+                        // Apply this shimmering color to all hours for the overlay.
                         for (int hour = 0; hour < 24; hour++)
                         {
                             auroraEffectOverlay[hour] = auroraShimmerColor;
                         }
-                        DrawDayNightBar(drawingAnchorRect, auroraEffectOverlay);
+
+                        // Draw the Aurora overlay ON TOP of the previously drawn day/night bar.
+                        DrawDayNightBar(fillRect, auroraEffectOverlay);
                     }
 
                     if (ChronosPointerMod.Settings.showDayNightIndicator)
                     {
-                        DrawDayNightTimeIndicator(drawingAnchorRect);
+                        DrawDayNightTimeIndicator(fillRect);
                     }
                 }
-
+                // 2) Arrow and time-trace
                 if (ChronosPointerMod.Settings.enableArrow)
                 {
-                    DrawArrowTexture(drawingAnchorRect);
+                    DrawArrowTexture(fillRect);
                 }
 
+                //Don't draw the pawn bars if there are no pawns
                 if (pawnCount > 0)
                 {
+                    // 3) Highlight bar
                     if (ChronosPointerMod.Settings.showHighlight)
                     {
-                        DrawHighlight(drawingAnchorRect, __instance, pawnCount); // Pass adjusted rect
+                        DrawHighlight(fillRect, __instance, pawnCount);
                     }
+
+                    // 4) Full-height vertical line
                     if (ChronosPointerMod.Settings.showPawnLine)
                     {
-                        DrawFullHeightCursor(drawingAnchorRect, __instance, pawnCount); // Pass adjusted rect
+                        DrawFullHeightCursor(fillRect, __instance, pawnCount);
                     }
                 }
             }
@@ -391,15 +185,19 @@ namespace ChronosPointer
                 Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
             }
 
-            isGPLModActiveCheckedThisFrame = false;
+            GPLCompatibility.ResetFrameCache();
         }
 
+        #region Compatability Patches
+        // Define methods for specific fixes
         private static void ApplyFixForMysteriusCustomSchedules()
         {
-            Log.ErrorOnce("ChronosPointer: Custom Schedules (continued) is Active. Chronos Pointer may have UI overlap.", "CSCompatWarning".GetHashCode());
+            // Implement the fix logic for Mysterius.CustomSchedules
+            Log.Error("Custom Schedules (continued) is Active. Chronos Pointer will have overlap");
         }
+        #endregion
 
-        #region Day/Night Bar and Time Calculations
+        #region Day/Night Bar
         private static void CalculateDayNightColors(int incident)
         {
             long currentAbsTick = GenTicks.TicksAbs;
@@ -411,24 +209,36 @@ namespace ChronosPointer
             {
                 long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
                 float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
-                Color baseSunlightColor = GetColorForSunlight(sunlight);
+                Color baseSunlightColor = GetColorForSunlight(sunlight); // Get the normal color for this hour
+
+                // Start with the actual sunlight color for this hour
                 dayNightColors[localHour] = baseSunlightColor;
 
                 switch (incident)
                 {
                     case 1: // Solar Flare
-                        if (sunlight > 0.05f)
+                        if (sunlight > 0.05f) // Only affect if there's normally some light
                         {
+                            // If the base color is Orange or Yellow, Solar Flare makes/keeps it Yellow.
                             if (baseSunlightColor == new Color(1f, 0.5f, 0f) || baseSunlightColor == Color.yellow)
                             {
                                 dayNightColors[localHour] = Color.yellow;
                             }
-                            // Light Blue stays Light Blue
                         }
                         break;
-                    case 2: dayNightColors[localHour] = new Color(0f, 0f, 0.5f); break; // Eclipse
-                    case 3: dayNightColors[localHour] = new Color(dayNightColors[localHour].r, dayNightColors[localHour].g * 1.6f, dayNightColors[localHour].b); break; // Toxic Fallout
-                    case 4: dayNightColors[localHour] = new Color(dayNightColors[localHour].r * 0.5f, dayNightColors[localHour].g * 0.5f, dayNightColors[localHour].b * 0.5f); break; // Volcanic Winter
+                    case 2: // Eclipse
+                        dayNightColors[localHour] = new Color(0f, 0f, 0.5f);  // Deep Blue
+                        break;
+                    case 3: // Toxic Fallout (modifies base color)
+                        Color baseColorTF = dayNightColors[localHour];
+                        dayNightColors[localHour] = new Color(baseColorTF.r, baseColorTF.g * 1.6f, baseColorTF.b);
+                        break;
+                    case 4: // Volcanic Winter (modifies base color)
+                        Color baseColorVW = dayNightColors[localHour];
+                        dayNightColors[localHour] = new Color(baseColorVW.r * 0.5f, baseColorVW.g * 0.5f, baseColorVW.b * 0.5f);
+                        break;
+                        // case 0 or default: no incident, base color from sunlight is used.
+                        // case 5 (Aurora) is handled separately as an overlay in Postfix.
                 }
             }
             dayNightColorsCalculated = true;
@@ -436,90 +246,111 @@ namespace ChronosPointer
 
         private static int IncidentHappening()
         {
-            if (Find.CurrentMap == null || Find.CurrentMap.gameConditionManager == null) return 0;
-            if (SolarFlareDef != null && Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef)) return 1;
-            if (Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Eclipse)) return 2;
-            if (Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.ToxicFallout)) return 3;
-            if (Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter)) return 4;
-            if (Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora)) return 5;
-            return 0;
+            int incident = 0;
+
+            // Check for solar flare all yellow
+            bool isSolarFlare = Find.CurrentMap.gameConditionManager.ConditionIsActive(SolarFlareDef);
+            // Check for eclipse all dark blue
+            bool isEclipse = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Eclipse);
+            // Green tinge
+            bool isToxicFallout = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.ToxicFallout);
+            bool isVolcanicWinter = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter);
+            bool isAurora = Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora);
+
+            if (isSolarFlare == true)
+            {
+                incident = 1;
+            }
+            else if (isEclipse == true)
+            {
+                incident = 2;
+            }
+            else if (isToxicFallout == true)
+            {
+                incident = 3;
+            }
+            else if (isVolcanicWinter == true)
+            {
+                incident = 4;
+            }
+            else if (isAurora == true)
+            {
+                incident = 5;
+            }
+
+            return incident;
         }
 
-        private static void DrawDayNightBar(Rect anchorRect, Color[] colors)
+        private static void DrawDayNightBar(Rect fillRect, Color[] colors)
         {
-            float baseX = anchorRect.x + BaseOffsetX;
-            float baseY = anchorRect.y + BaseOffsetY;
+            float baseX = fillRect.x + BaseOffsetX;
+            float baseY = fillRect.y + BaseOffsetY;
 
-            if (isGPLModActiveResult && gplReflectionSucceeded)
-                baseY += GPLDayNightBarYOffset;
+            if (GPLCompatibility.IsGPLActive())
+                baseY += GPLCompatibility.GPLDayNightBarYOffset;
 
             for (int hour = 0; hour < 24; hour++)
             {
-                Rect hourRect = new Rect(baseX + hour * (HourBoxWidth + HourBoxGap), baseY, HourBoxWidth, BarHeight);
+                float hourX = baseX + hour * (HourBoxWidth + HourBoxGap);
+                Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
+
                 Widgets.DrawBoxSolid(hourRect, colors[hour]);
             }
         }
 
         private static Color GetColorForSunlight(float sunlight)
         {
-            if (sunlight <= 0f) return new Color(0f, 0f, 0.5f);  // Deep Blue
-            if (sunlight < 0.35f) return new Color(0.5f, 0.5f, 1f); // Light Blue
-            if (sunlight < 0.7f) return new Color(1f, 0.5f, 0f);   // Orange
-            return Color.yellow; // Full daylight
+            // Deep night
+            if (sunlight == 0f)
+                return new Color(0f, 0f, 0.5f);  // Deep Blue
+
+            // Dawn/Dusk
+            if (sunlight < 0.35f)
+                return new Color(0.5f, 0.5f, 1f); // Light Blue
+
+            // Sunrise/Sunset
+            if (sunlight < 0.7f)
+                return new Color(1f, 0.5f, 0f);   // Orange
+
+            // Full daylight
+            return Color.yellow;
         }
 
-        private static void DrawDayNightTimeIndicator(Rect anchorRect)
+        #region Scroll Detection Helper
+        private static bool IsScrolledToBottom(MainTabWindow_Schedule scheduleInstance)
         {
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
-            float lineX = anchorRect.x + BaseOffsetX + currentHourF * HourBoxWidth + (Mathf.FloorToInt(currentHourF) * HourBoxGap); // Adjusted for gaps
-            // Simplified X for continuous movement:
-            lineX = anchorRect.x + BaseOffsetX + (currentHourF * (HourBoxWidth + HourBoxGap)) - (currentHourF / (24 - (24 / HourBoxGap)) * (HourBoxGap * 23)); //This is not quite right.
-            // Correct X for continuous movement:
-            lineX = anchorRect.x + BaseOffsetX + (currentHourF * (HourBoxWidth + HourBoxGap)) - (((currentHourF - Mathf.Floor(currentHourF))) * HourBoxGap);
-            // Let's use the simpler calculation that was working before based on hour progress.
+            try
+            {
+                // Try to get scroll position through reflection
+                var scrollPositionField = typeof(MainTabWindow_Schedule).GetField("scrollPosition", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                                        typeof(MainTabWindow_PawnTable).GetField("scrollPosition", BindingFlags.Instance | BindingFlags.NonPublic);
 
+                if (scrollPositionField != null)
+                {
+                    Vector2 scrollPosition = (Vector2)scrollPositionField.GetValue(scheduleInstance);
 
-            int currentHourInt = (int)currentHourF;
-            float hourProgress = currentHourF - currentHourInt;
-            lineX = anchorRect.x + BaseOffsetX + currentHourInt * (HourBoxWidth + HourBoxGap) + hourProgress * HourBoxWidth;
+                    // Get the content height vs visible height
+                    var pawnTable = GetPawnTableFromScheduleWindow(scheduleInstance);
+                    if (pawnTable != null)
+                    {
+                        float contentHeight = pawnCount * (PawnRowHeight + PawnRowGap);
+                        float visibleHeight = 400f; // Approximate visible area height
 
+                        if (contentHeight > visibleHeight)
+                        {
+                            float maxScroll = contentHeight - visibleHeight;
+                            return Mathf.Abs(scrollPosition.y - maxScroll) < 5f; // 5px tolerance
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorOnce($"ChronosPointer: Error detecting scroll position: {ex.Message}", "ScrollDetectionError".GetHashCode());
+            }
 
-            float lineY = anchorRect.y + BaseOffsetY;
-            if (isGPLModActiveResult && gplReflectionSucceeded)
-                lineY += GPLDayNightBarYOffset;
-            long currentAbsoluteTick = GenTicks.TicksAbs;
-            float sunlightAtCurrentTick = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);
-            Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (sunlightAtCurrentTick >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight;
-            Widgets.DrawBoxSolid(new Rect(lineX, lineY, 2f, BarHeight), lineColor);
+            return false; // Default to not at bottom
         }
-
-        private static void DrawArrowTexture(Rect anchorRect)
-        {
-            if (ChronosPointerTextures.ArrowTexture == null) return;
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
-            int currentHourInt = (int)currentHourF;
-            float hourProgress = currentHourF - currentHourInt;
-
-            float arrowCenterX = anchorRect.x + BaseOffsetX + currentHourInt * (HourBoxWidth + HourBoxGap) + hourProgress * HourBoxWidth + 1f; // Center of the 2px line
-            float barTopY = anchorRect.y + BaseOffsetY;
-            if (isGPLModActiveResult && gplReflectionSucceeded)
-                barTopY += GPLDayNightBarYOffset + 2;
-            float arrowWidth = ChronosPointerMod.Settings.showDayNightBar ? 8f : 12f; // Make arrow bigger if bar is hidden
-            float arrowHeight = ChronosPointerMod.Settings.showDayNightBar ? 8f : 12f;
-            float arrowRectX = arrowCenterX - (arrowWidth / 2f);
-            float arrowRectY = barTopY - arrowHeight - (ChronosPointerMod.Settings.showDayNightBar ? 3f : -2f); // Adjust vertical position
-
-            Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
-            Matrix4x4 oldMatrix = GUI.matrix;
-            GUI.color = ChronosPointerMod.Settings.arrowColor;
-            GUIUtility.RotateAroundPivot(90f, arrowRect.center);
-            GUI.DrawTexture(arrowRect, ChronosPointerTextures.ArrowTexture);
-            GUI.matrix = oldMatrix;
-            GUI.color = Color.white; // Reset GUI.color
-        }
-        #endregion
-
-        #region Pawn Area Elements (Highlight & Full Height Cursor)
 
         private static PawnTable GetPawnTableFromScheduleWindow(MainTabWindow_Schedule scheduleWindowInstance)
         {
@@ -532,210 +363,251 @@ namespace ChronosPointer
             }
             return pawnTableField.GetValue(scheduleWindowInstance) as PawnTable;
         }
+        #endregion
 
-        public static int GetPawnCount(MainTabWindow_Schedule __instance)
+
+        private static void DrawHighlight(Rect fillRect, MainTabWindow_Schedule scheduleInstance, int pawnCount)
         {
-            PawnTable pawnTable = GetPawnTableFromScheduleWindow(__instance);
-            if (pawnTable == null) return 0;
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            int currentHour = (int)currentHourF;
 
-            if (isGPLModActiveResult && TryGetGPLModelAndGroups(pawnTable, out object modelInstance, out System.Collections.IList groupsList))
+            float colX = fillRect.x + BaseOffsetX
+                         + currentHour * (HourBoxWidth + HourBoxGap);
+            float colY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
+
+            // Check if we're at the bottom of scroll for pixel adjustment
+            bool atScrollBottom = IsScrolledToBottom(scheduleInstance);
+            float extraPixel = atScrollBottom ? 0f : 1f;
+
+            if (GPLCompatibility.IsGPLActive())
             {
-                int effectiveRowCount = 0;
-                if (groupsList != null)
+                // Use GPL logic with same starting position as cursor
+                PawnTable pawnTable = GetPawnTableFromScheduleWindow(scheduleInstance);
+                if (pawnTable != null)
                 {
-                    foreach (var groupObj in groupsList)
+                    float highlightStartY = colY - PawnRowHeight - 3f; // Same as cursor start
+                    float drawableHeight = GPLCompatibility.CalculateGPLTotalHeight(pawnTable, PawnRowHeight, PawnRowGap);
+
+                    const float maxLineHeight = 835f;
+                    if (drawableHeight > maxLineHeight)
+                        drawableHeight = maxLineHeight;
+
+                    if (drawableHeight > 0)
                     {
-                        if (IsGPLGroupExpanded(modelInstance, groupObj))
-                        {
-                            effectiveRowCount += GetPawnsFromGPLGroup(groupObj).Count;
-                        }
+                        Rect highlightRect = new Rect(colX, highlightStartY, HourBoxWidth, drawableHeight + extraPixel);
+                        if (ChronosPointerMod.Settings.hollowHourHighlight)
+                            Widgets.DrawBoxSolidWithOutline(highlightRect, new Color(0, 0, 0, 0), ChronosPointerMod.Settings.highlightColor, 2);
                         else
-                        {
-                            effectiveRowCount++;
-                        }
+                            Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
                     }
                 }
-                // pawnCountCalculated = true; // Not strictly needed if called every frame
-                return effectiveRowCount;
             }
             else
             {
-                var pawnsProperty = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                if (pawnsProperty == null) return 0;
-                var pawnsIEnumerable = pawnsProperty.GetValue(__instance) as IEnumerable<Pawn>;
-                if (pawnsIEnumerable == null) return 0;
-                // pawnCountCalculated = true; // Not strictly needed
-                return pawnsIEnumerable.Count();
+                // Original vanilla behavior
+                float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
+                // Trim from bottom
+                totalHeight -= PawnAreaBottomTrim;
+
+                // Clamp to max length
+                const float maxLineHeight = 835f;
+                if (totalHeight > maxLineHeight)
+                    totalHeight = maxLineHeight;
+
+                Rect highlightRect = new Rect(colX, colY - 1f, HourBoxWidth, totalHeight + extraPixel);
+                if (ChronosPointerMod.Settings.hollowHourHighlight)
+                    Widgets.DrawBoxSolidWithOutline(highlightRect, new Color(0, 0, 0, 0), ChronosPointerMod.Settings.highlightColor, 2);
+                else
+                    Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
             }
         }
+        #endregion
 
-        private static void DrawHighlight(Rect anchorRect, MainTabWindow_Schedule scheduleInstance, int totalEffectiveRows)
+        #region Time Trace Line
+
+        static int GetPawnCount(MainTabWindow_Schedule __instance)
         {
-            PawnTable pawnTable = GetPawnTableFromScheduleWindow(scheduleInstance);
-            if (pawnTable == null || totalEffectiveRows == 0) return;
+            if (__instance == null)
+            {
+                Log.Error("Instance is null!");
+                return 0;
+            }
 
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            if (GPLCompatibility.IsGPLActive())
+            {
+                PawnTable pawnTable = GetPawnTableFromScheduleWindow(__instance);
+                if (pawnTable != null)
+                {
+                    return GPLCompatibility.GetGPLPawnCount(pawnTable);
+                }
+            }
+
+            // Original vanilla logic
+            var field = __instance.GetType().GetProperty("Pawns", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (field == null)
+            {
+                Log.Error("Field is null!");
+                return 0;
+            }
+            var pawnsIEnumerable = field.GetValue(__instance) as IEnumerable<Pawn>;
+            if (pawnsIEnumerable == null)
+            {
+                Log.Error("pawnsIEnum is null!");
+                return 0;
+            }
+            int totalHeight = pawnsIEnumerable.Count();
+
+            pawnCountCalculated = true;
+
+            return totalHeight;
+        }
+
+        /// <summary>
+        /// A small vertical line in the day/night bar, 2px wide for visibility.
+        /// </summary>
+        private static void DrawDayNightTimeIndicator(Rect fillRect)
+        {
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f; // Correct for positioning
             int currentHour = (int)currentHourF;
-            float colX = anchorRect.x + BaseOffsetX + currentHour * (HourBoxWidth + HourBoxGap); // Uses the potentially offset anchorRect.x
+            float hourProgress = currentHourF - currentHour;
 
-            // startYForPawnContent is already relative to the (potentially offset) anchorRect
-            float startYForPawnContent = anchorRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset; // Uses the potentially offset anchorRect.y
+            float lineX = fillRect.x + BaseOffsetX // fillRect here is UseMeForTheXYPosOfDayNightBar
+                        + currentHour * (HourBoxWidth + HourBoxGap)
+                        + hourProgress * HourBoxWidth;
 
-            if (isGPLModActiveResult && gplReflectionSucceeded && TryGetGPLModelAndGroups(pawnTable, out object modelInstance, out System.Collections.IList groupsList))
-            {
-                // --- REMOVE THE OLD gplVerticalOffsetFix application here ---
-                // float currentDrawingY = startYForPawnContent + gplVerticalOffsetFix; // DELETE THIS LINE
-                float currentDrawingY = startYForPawnContent; // Start from the calculated position relative to the offset anchor
-                                                              // Log.Message($"GPL DRAW Highlight: StartY: {startYForPawnContent}, CurrentY (initial): {currentDrawingY}"); // Debug Y
+            float lineY = fillRect.y + BaseOffsetY; // fillRect here is UseMeForTheXYPosOfDayNightBar
+            if (GPLCompatibility.IsGPLActive())
+                lineY += GPLCompatibility.GPLDayNightBarYOffset;
 
-                if (groupsList != null)
-                {
-                    foreach (var groupObj in groupsList)
-                    {
-                        bool isExpanded = IsGPLGroupExpanded(modelInstance, groupObj);
-                        float segmentHeight;
-                        int numPawnsInThisSegment = 0;
+            float lineHeight = BarHeight;
 
-                        if (isExpanded)
-                        {
-                            List<Pawn> pawnsInGroup = GetPawnsFromGPLGroup(groupObj);
-                            numPawnsInThisSegment = pawnsInGroup.Count;
-                        }
-                        else
-                        {
-                            numPawnsInThisSegment = 1;
-                        }
+            // For sunlight calculation for the dynamic line color, use the current absolute tick:
+            long currentAbsoluteTick = GenTicks.TicksAbs;
+            float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);
 
-                        segmentHeight = numPawnsInThisSegment * PawnRowHeight;
-                        if (numPawnsInThisSegment > 0 && isExpanded && numPawnsInThisSegment > 1)
-                        {
-                            segmentHeight += (numPawnsInThisSegment - 1) * PawnRowGap;
-                        }
+            Color lineColor = !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (sunlight >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight;
 
-                        float drawableSegmentHeight = segmentHeight;
-                        if (isExpanded && GetPawnsFromGPLGroup(groupObj).Count == 0)
-                        {
-                            drawableSegmentHeight = 0;
-                        }
-
-                        if (drawableSegmentHeight > 0)
-                        {
-                            Rect groupHighlightRect = new Rect(colX, currentDrawingY, HourBoxWidth, drawableSegmentHeight);
-                            if (ChronosPointerMod.Settings.hollowHourHighlight)
-                                Widgets.DrawBoxSolidWithOutline(groupHighlightRect, Color.clear, ChronosPointerMod.Settings.highlightColor, 2);
-                            else
-                                Widgets.DrawBoxSolid(groupHighlightRect, ChronosPointerMod.Settings.highlightColor);
-                        }
-                        currentDrawingY += segmentHeight + PawnRowGap; // Advance Y for the next segment
-                    }
-                }
-            }
-            else // GPL not active or failed, use default logic
-            {
-                float calculatedTotalHeight = totalEffectiveRows * PawnRowHeight;
-                if (totalEffectiveRows > 1)
-                {
-                    calculatedTotalHeight += (totalEffectiveRows - 1) * PawnRowGap;
-                }
-                float drawableHeight = calculatedTotalHeight - PawnAreaBottomTrim;
-
-                if (drawableHeight > 0)
-                {
-                    Rect highlightRect = new Rect(colX, startYForPawnContent, HourBoxWidth, drawableHeight); // Uses startYForPawnContent relative to anchorRect
-                    if (ChronosPointerMod.Settings.hollowHourHighlight)
-                        Widgets.DrawBoxSolidWithOutline(highlightRect, Color.clear, ChronosPointerMod.Settings.highlightColor, 2);
-                    else
-                        Widgets.DrawBoxSolid(highlightRect, ChronosPointerMod.Settings.highlightColor);
-                }
-            }
+            Rect traceRect = new Rect(lineX, lineY, 2f, lineHeight);
+            Widgets.DrawBoxSolid(traceRect, lineColor);
         }
-        private static void DrawFullHeightCursor(Rect anchorRect,MainTabWindow_Schedule scheduleInstance,int totalEffectiveRows)
+
+        private static void DrawArrowTexture(Rect fillRect)
         {
-            PawnTable pawnTable = GetPawnTableFromScheduleWindow(scheduleInstance);
-            if (pawnTable == null || totalEffectiveRows == 0) return;
+            if (ChronosPointerTextures.ArrowTexture == null) return;
 
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
-            float cursorX =
-                anchorRect.x
-                + BaseOffsetX
+
+            // The line's X (center of arrow)
+            float arrowCenterX = fillRect.x + BaseOffsetX
+                                + currentHour * (HourBoxWidth + HourBoxGap)
+                                + hourProgress * HourBoxWidth + 1f;
+
+            // The top of the day/night bar
+            float barTopY = fillRect.y + BaseOffsetY + 4;
+            if (GPLCompatibility.IsGPLActive())
+                barTopY += GPLCompatibility.GPLDayNightBarYOffset + 2;
+
+            // Will rotate the arrow later
+            float arrowWidth = 8f; // Default width
+            float arrowHeight = 8f; // Default height
+
+            // Center the arrow horizontally on the line, 
+            // so arrowRect.center.x = arrowCenterX
+            float arrowRectX = arrowCenterX - (arrowWidth / 2f);
+
+            // Changes the arrow up or down. up is -
+            float arrowRectY = barTopY - arrowHeight - (!ChronosPointerMod.Settings.showDayNightBar ? -2f : 4f);
+
+            // Build the rect
+            Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
+
+            // Save current matrix
+            Matrix4x4 oldMatrix = GUI.matrix;
+            Color oldColor = GUI.color;
+
+            // Rotate around center by +90 degrees to point downward
+            GUIUtility.RotateAroundPivot(90f, arrowRect.center);
+
+            // Draw the arrow
+            GUI.color = ChronosPointerMod.Settings.arrowColor;
+
+            GUI.DrawTexture(arrowRect.ScaledBy((!ChronosPointerMod.Settings.showDayNightBar ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
+
+            // Restore matrix & color
+            GUI.matrix = oldMatrix;
+            GUI.color = oldColor;
+        }
+        #endregion
+
+        #region Full Height Cursor
+        private static void DrawFullHeightCursor(Rect fillRect, MainTabWindow_Schedule scheduleInstance, int pawnCount)
+        {
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            int currentHour = (int)currentHourF;
+            float hourProgress = currentHourF - currentHour;
+
+            // Calculate cursorX consistently with other elements and shift 1px to the right
+            float cursorX = fillRect.x + BaseOffsetX
                 + currentHour * (HourBoxWidth + HourBoxGap)
                 + hourProgress * HourBoxWidth
-                + 1f;
+                + 1f; // Shift 1px to the right
+
+            // Ensure cursorThickness is an even number
             float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
-            if (cursorThickness % 2 != 0) cursorThickness += 1f;
+            if (cursorThickness % 2 != 0)
+            {
+                cursorThickness += 1f; // Adjust to the next even number
+            }
+
+            // Adjust cursorX to center the thickness
             cursorX -= cursorThickness / 2f;
 
-            float startYForPawnContent =
-                anchorRect.y
-                + BaseOffsetY
-                + BarHeight
-                + PawnAreaTopOffset;
+            // Top offset to match highlight
+            float cursorY = fillRect.y + BaseOffsetY + BarHeight + PawnAreaTopOffset;
 
-            float lineStartY = startYForPawnContent - PawnRowHeight - 3f; // 2px higher, as you found perfect
-            float lineEndY = startYForPawnContent; // will be set below
+            // Check if we're at the bottom of scroll for pixel adjustment
+            bool atScrollBottom = IsScrolledToBottom(scheduleInstance);
+            float extraPixel = atScrollBottom ? 0f : 1f;
 
-            if (
-                isGPLModActiveResult
-                && gplReflectionSucceeded
-                && TryGetGPLModelAndGroups(
-                    pawnTable,
-                    out object modelInstance2,
-                    out System.Collections.IList groupsList2
-                )
-            )
+            if (GPLCompatibility.IsGPLActive())
             {
-                // Calculate total rows: group headers + visible pawns
-                if (groupsList2 != null)
+                // Use GPL logic
+                PawnTable pawnTable = GetPawnTableFromScheduleWindow(scheduleInstance);
+                if (pawnTable != null)
                 {
-                    int totalRows = 0;
-                    foreach (var groupObj in groupsList2)
-                    {
-                        totalRows++; // group header
-                        bool isExpanded = IsGPLGroupExpanded(modelInstance2, groupObj);
-                        if (isExpanded)
-                        {
-                            List<Pawn> pawnsInGroup = GetPawnsFromGPLGroup(groupObj);
-                            totalRows += pawnsInGroup.Count;
-                        }
-                    }
-                    int totalGaps = Math.Max(0, totalRows - 1);
+                    float lineStartY = cursorY - PawnRowHeight - 3f;
+                    float totalHeight = GPLCompatibility.CalculateGPLTotalHeight(pawnTable, PawnRowHeight, PawnRowGap);
 
-                    float totalHeight = totalRows * PawnRowHeight + totalGaps * PawnRowGap;
-                    lineEndY = lineStartY + totalHeight;
+                    const float maxLineHeight = 835f;
+                    if (totalHeight > maxLineHeight)
+                        totalHeight = maxLineHeight;
+
+                    if (totalHeight > 0)
+                    {
+                        Rect cursorRect = new Rect(cursorX, lineStartY, cursorThickness, totalHeight + extraPixel);
+                        Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
+                    }
                 }
             }
-            else // GPL not active or failed, use default logic
+            else
             {
-                float calculatedTotalHeight = totalEffectiveRows * PawnRowHeight;
-                int totalGaps = Math.Max(0, totalEffectiveRows - 1);
-                calculatedTotalHeight += totalGaps * PawnRowGap;
-                lineEndY = lineStartY + calculatedTotalHeight;
-            }
+                // Original vanilla behavior
+                float totalHeight = pawnCount * (PawnRowHeight + PawnRowGap);
+                // Trim from bottom
+                totalHeight -= PawnAreaBottomTrim;
 
-            float lineHeight = lineEndY - lineStartY;
+                // Clamp to max length
+                const float maxLineHeight = 835f;
+                if (totalHeight > maxLineHeight)
+                    totalHeight = maxLineHeight;
 
-            // Clamp the line height to not exceed the safe drawable area
-            const float maxLineHeight = 836f;
-            if (lineHeight > maxLineHeight)
-                lineHeight = maxLineHeight;
-
-            if (lineHeight > 0)
-            {
-                Rect cursorRect = new Rect(
-                    cursorX,
-                    lineStartY,
-                    cursorThickness,
-                    lineHeight
-                );
-                Widgets.DrawBoxSolid(
-                    cursorRect,
-                    ChronosPointerMod.Settings.bottomCursorColor
-                );
+                Rect cursorRect = new Rect(cursorX, cursorY - 1f, cursorThickness, totalHeight + extraPixel);
+                Widgets.DrawBoxSolid(cursorRect, ChronosPointerMod.Settings.bottomCursorColor);
             }
         }
-
         #endregion
     }
 }
