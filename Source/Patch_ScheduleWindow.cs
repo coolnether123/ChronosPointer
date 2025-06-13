@@ -50,14 +50,13 @@ namespace ChronosPointer
         private const float HourBoxGap = 2f;
 
         // Pawn row
-        private const float PawnRowHeight = 28f; // user wants 28f
+        private const float PawnRowHeight = 28f; 
         private const float PawnRowGap = 2f;
 
         // Day/night bar
         private const float BarHeight = 10f;
 
         // Extra offsets for highlight & line so they don’t slip off top/bottom
-        // (Adjust to taste if you see they still slip a bit.)
         private const float PawnAreaTopOffset = 16f;
         private const float PawnAreaBottomTrim = 2f;
 
@@ -79,11 +78,15 @@ namespace ChronosPointer
         //cached number of pawns for the full height and highlight bars
         private static int pawnCount = 0;
 
+        // Make pawn width smaller if CompactWorkTab is active
+        private static int CompactWorkTab = 0;
+
         // Custom Schedules (continued) mod ID
         // Change the single string to an array of strings
         private static readonly string[] customSchedulesModIds = new string[]
         {
-            "Mysterius.CustomSchedules"
+            "Mysterius.CustomSchedules",
+            "Mlie.CompactWorkTab"
         };
         #endregion
 
@@ -111,6 +114,9 @@ namespace ChronosPointer
                             case "Mysterius.CustomSchedules":
 
                                 ApplyFixForMysteriusCustomSchedules();
+                                break;
+                            case "Mlie.CompactWorkTab":
+                                ApplyFixForMlieCompactWorkTab();
                                 break;
                         }
                     }
@@ -218,6 +224,12 @@ namespace ChronosPointer
             // Implement the fix logic for Mysterius.CustomSchedules
             Log.Error("Custom Schedules (continued) is Active. Chronos Pointer will have overlap");
         }
+
+        private static void ApplyFixForMlieCompactWorkTab()
+        {
+            CompactWorkTab = 1;
+        }
+
         #endregion
 
 
@@ -310,6 +322,7 @@ namespace ChronosPointer
         {
             float baseX = fillRect.x + BaseOffsetX;
             float baseY = fillRect.y + BaseOffsetY;
+
 
             for (int hour = 0; hour < 24; hour++)
             {
