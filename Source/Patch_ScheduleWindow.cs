@@ -12,28 +12,6 @@ using Verse;
 
 namespace ChronosPointer
 {
-
-
-    [HarmonyPatch(typeof(PawnColumnWorker_Timetable))]
-    [HarmonyPatch("DoCell")]
-    public static class Patch_DayNightPositionGetter
-    {
-        static bool hasRect = false;
-        [HarmonyPostfix]
-        public static void Postfix(PawnColumnWorker_Timetable __instance, Rect rect, Pawn pawn, PawnTable table)
-        {
-
-            if (!hasRect)
-            {
-                hasRect = true;
-                Patch_ScheduleWindow.UseMeForTheXYPosOfDayNightBar = rect;
-            }
-
-        }
-    }
-
-   
-
     [HarmonyPatch(typeof(MainTabWindow_Schedule))]
     [HarmonyPatch("DoWindowContents")]
     public static class Patch_ScheduleWindow
@@ -95,7 +73,16 @@ namespace ChronosPointer
         {
             if (Find.CurrentMap == null) return;
 
-            fillRect = UseMeForTheXYPosOfDayNightBar;
+            var instanceTable = __instance.table;
+            var instanceTableColumns = instanceTable.columns;
+            for (var i = 0; i < instanceTableColumns.Count; i++)
+            {
+                if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
+                {
+                    break;
+                }
+                fillRect.x += instanceTable.cachedColumnWidths[i];
+            }
 
             try
             {
