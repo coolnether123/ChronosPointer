@@ -74,7 +74,7 @@ namespace ChronosPointer
             if (Find.CurrentMap == null) return;
 
             var instanceTable = __instance.table;
-            var instanceTableColumns = instanceTable.columns;
+            var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
             for (var i = 0; i < instanceTableColumns.Count; i++)
             {
                 if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
