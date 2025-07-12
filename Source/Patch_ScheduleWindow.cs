@@ -573,6 +573,14 @@ namespace ChronosPointer
 
             Rect rect1 = new Rect(xPos, baseY, cursorThickness, BarHeight);
             Widgets.DrawBoxSolid(rect1, !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)GenTicks.TicksAbs) >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight); // Dummy widget to ensure the rect is set
+
+            Rect rect2 = new Rect();
+            rect2.size = Text.CalcSize("Schedule")*1.25f;
+            rect2.x = rect.center.x - (rect2.width / 2f);
+            rect2.y = rect.center.y - (rect2.height / 2f);
+            GUI.color = Color.black;
+            Widgets.TextArea(rect2, "Schedule".ResolveTags(), true);
+            GUI.color = Color.white;
         }
     }
 
