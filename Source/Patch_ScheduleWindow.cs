@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-
-using System.Linq;
-using System.Reflection;
-using HarmonyLib;
+﻿using HarmonyLib;
 using RimWorld;
 using RimWorld.QuestGen;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
-
 using Verse;
 
 namespace ChronosPointer
@@ -48,7 +46,7 @@ namespace ChronosPointer
         public static bool pawnCountCalculated = false;
 
         // Array to store the colors for each hour
-        private static Color[] dayNightColors = new Color[24];
+        public static Color[] dayNightColors { get; private set; } = new Color[24];
 
         // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
@@ -71,6 +69,7 @@ namespace ChronosPointer
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
+
             if (Find.CurrentMap == null) return;
 
             var instanceTable = __instance.table;
@@ -128,7 +127,7 @@ namespace ChronosPointer
                 {
                     if (!dayNightColorsCalculated || incident >= 0)
                     {
-                        CalculateDayNightColors(incident);
+                        dayNightColors = CalculateDayNightColors(incident, out dayNightColorsCalculated);
 
                     }
                     DrawDayNightBar(fillRect, dayNightColors);
@@ -221,8 +220,10 @@ namespace ChronosPointer
 
 
         #region Day/Night Bar
-        private static void CalculateDayNightColors(int incident)
+        public static Color[] CalculateDayNightColors(int incident, out bool dayNightColorsCalculated)
         {
+            Color[] dayNightColors = new Color[24];
+
             long currentAbsTick = GenTicks.TicksAbs;
             float dayPercent = GenLocalDate.DayPercent(Find.CurrentMap); 
             long ticksIntoLocalDay = (long)(dayPercent * (float)GenDate.TicksPerDay);
@@ -265,9 +266,10 @@ namespace ChronosPointer
                 }
             }
             dayNightColorsCalculated = true;
+            return dayNightColors;
         }
 
-        private static int IncidentHappening()
+        public static int IncidentHappening()
         {
             int incident = 0;
 
@@ -529,12 +531,19 @@ namespace ChronosPointer
     [HarmonyPatch(nameof(MainButtonWorker.DoButton))]
     public static class Patch_ScheduleButton
     {
+        static Color[] dayNightColors = new Color[24];
+        static bool dayNightColorsCalculated = false;
         [HarmonyPostfix]
         public static void Postfix(MainButtonWorker __instance, Rect rect)
         {
             if(__instance.def.defName != "Schedule")
                 return;
-            
+
+            if (!dayNightColorsCalculated)
+            {
+                dayNightColors = Patch_ScheduleWindow.CalculateDayNightColors(Patch_ScheduleWindow.IncidentHappening(), out dayNightColorsCalculated);
+            }
+
             float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
             int currentHour = (int)currentHourF;
             float hourProgress = currentHourF - currentHour;
@@ -548,8 +557,22 @@ namespace ChronosPointer
             {
                 cursorThickness += 1f; // Adjust to the next even number
             }
-            Rect rect1 = new Rect(xPos, rect.y+1, cursorThickness, rect.height-2);
-            Widgets.DrawBoxSolid(rect1, new Color(0,0,0,1)); // Dummy widget to ensure the rect is set
+            float baseX = rect.x;
+            float baseY = rect.y+1;
+
+            float HourBoxWidth = rect.width/24f;
+            float BarHeight = rect.height-2;
+            for (int hour = 0; hour < 24; hour++)
+            {
+                float hourX = rect.x+(HourBoxWidth * hour);
+                Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
+
+                Widgets.DrawBoxSolid(hourRect, dayNightColors[hour]);
+                Log.Message(Patch_ScheduleWindow.dayNightColors[hour].ToString());
+            }
+
+            Rect rect1 = new Rect(xPos, baseY, cursorThickness, BarHeight);
+            Widgets.DrawBoxSolid(rect1, !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)GenTicks.TicksAbs) >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight); // Dummy widget to ensure the rect is set
         }
     }
 
