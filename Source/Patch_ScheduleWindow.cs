@@ -20,7 +20,7 @@ namespace ChronosPointer
         public static Rect UseMeForTheXYPosOfDayNightBar;
 
         // Where the schedule grid starts
-        private static float BaseOffsetX = 1f;// CalculateBaseOffsetX();
+        private const float BaseOffsetX = 1f;// CalculateBaseOffsetX();
         private const float BaseOffsetY = 40;
 
         // Each hour cell
@@ -524,6 +524,34 @@ namespace ChronosPointer
 
     }
     #endregion
+
+    [HarmonyPatch(typeof(MainButtonWorker))]
+    [HarmonyPatch(nameof(MainButtonWorker.DoButton))]
+    public static class Patch_ScheduleButton
+    {
+        [HarmonyPostfix]
+        public static void Postfix(MainButtonWorker __instance, Rect rect)
+        {
+            if(__instance.def.defName != "Schedule")
+                return;
+            
+            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            int currentHour = (int)currentHourF;
+            float hourProgress = currentHourF - currentHour;
+
+            float xPos = rect.x + (rect.width * GenLocalDate.DayPercent(Find.CurrentMap));
+
+
+
+            float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
+            if (cursorThickness % 2 != 0)
+            {
+                cursorThickness += 1f; // Adjust to the next even number
+            }
+            Rect rect1 = new Rect(xPos, rect.y+1, cursorThickness, rect.height-2);
+            Widgets.DrawBoxSolid(rect1, new Color(0,0,0,1)); // Dummy widget to ensure the rect is set
+        }
+    }
 
 
 }

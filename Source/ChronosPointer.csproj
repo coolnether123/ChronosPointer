@@ -49,8 +49,9 @@
     <OutputPath>..\1.4\Assemblies\</OutputPath>
     <DefineConstants>rw_1_4</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2|AnyCPU'">
-    <OutputPath>bin\1.2\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.6|AnyCPU' ">
+    <OutputPath>..\1.6\Assemblies\</OutputPath>
+    <DefineConstants>re_1_6</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
@@ -65,7 +66,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4488-beta" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4518" />
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.6</Version>
     </PackageReference>
