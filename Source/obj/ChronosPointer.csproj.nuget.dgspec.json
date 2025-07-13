@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
         "projectName": "ChronosPointer",
         "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
-        "packagesPath": "C:\\Users\\optim\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\CASPI\\.nuget\\packages\\",
         "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
@@ -19,7 +19,7 @@
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\optim\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\CASPI\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -52,7 +52,7 @@
             },
             "Krafs.Rimworld.Ref": {
               "target": "Package",
-              "version": "[1.5.4409, )"
+              "version": "[1.6.4518, )"
             },
             "Lib.Harmony": {
               "target": "Package",

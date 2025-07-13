@@ -152,7 +152,19 @@ namespace ChronosPointer
 
             GUI.color = Color.white;
 
+            Widgets.DrawBoxSolid(listingStandard.GetRect(10), testColor);
+
+            if (listingStandard.ButtonText("Open built-in colorpicker?"))
+            {
+                Find.WindowStack.Add(new Dialog_ChooseColor("header", testColor, new System.Collections.Generic.List<Color> {Color.red, Color.black, Color.blue, Color.white}, newColor => { testColor = newColor; }));
+            }
+            listingStandard.Gap(10f);
+
+            GUI.color = Color.white;
+
             listingStandard.End();
+
         }
+        static Color testColor = new Color(0.5f, 0.5f, 0.5f, 1f);
     }
 }
