@@ -536,9 +536,16 @@ namespace ChronosPointer
         [HarmonyPostfix]
         public static void Postfix(MainButtonWorker __instance, Rect rect)
         {
-            if(__instance.def.defName != "Schedule")
+            if (__instance.def.defName != "Schedule")
                 return;
+            // GenUI.DrawTextureWithMaterial(); // Draw a box to ensure the button is visible
+            Log.Message(HourBlockDefOf.Block.someData);
 
+            //DoScheduleButtonClock(rect);
+        }
+
+        private static void DoScheduleButtonClock(Rect rect)
+        {
             if (!dayNightColorsCalculated)
             {
                 dayNightColors = Patch_ScheduleWindow.CalculateDayNightColors(Patch_ScheduleWindow.IncidentHappening(), out dayNightColorsCalculated);
@@ -550,21 +557,19 @@ namespace ChronosPointer
 
             float xPos = rect.x + (rect.width * GenLocalDate.DayPercent(Find.CurrentMap));
 
-
-
             float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
             if (cursorThickness % 2 != 0)
             {
                 cursorThickness += 1f; // Adjust to the next even number
             }
             float baseX = rect.x;
-            float baseY = rect.y+1;
+            float baseY = rect.y + 1;
 
-            float HourBoxWidth = rect.width/24f;
-            float BarHeight = rect.height-2;
+            float HourBoxWidth = rect.width / 24f;
+            float BarHeight = rect.height - 2;
             for (int hour = 0; hour < 24; hour++)
             {
-                float hourX = rect.x+(HourBoxWidth * hour);
+                float hourX = rect.x + (HourBoxWidth * hour);
                 Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
 
                 Widgets.DrawBoxSolid(hourRect, dayNightColors[hour]);
@@ -572,14 +577,15 @@ namespace ChronosPointer
             }
 
             Rect rect1 = new Rect(xPos, baseY, cursorThickness, BarHeight);
-            Widgets.DrawBoxSolid(rect1, !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)GenTicks.TicksAbs) >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight); // Dummy widget to ensure the rect is set
+
+            Widgets.DrawBoxSolid(rect1, !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)GenTicks.TicksAbs) >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight);
 
             Rect rect2 = new Rect();
-            rect2.size = Text.CalcSize("Schedule")*1.25f;
+            rect2.size = Text.CalcSize("Schedule");
             rect2.x = rect.center.x - (rect2.width / 2f);
             rect2.y = rect.center.y - (rect2.height / 2f);
             GUI.color = Color.black;
-            Widgets.TextArea(rect2, "Schedule".ResolveTags(), true);
+            Widgets.TextArea(rect2, "Schedule", true);
             GUI.color = Color.white;
         }
     }

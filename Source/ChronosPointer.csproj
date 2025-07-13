@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="HourBlock.cs" />
     <Compile Include="Patch_ScheduleWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChronosPointerMod.cs" />

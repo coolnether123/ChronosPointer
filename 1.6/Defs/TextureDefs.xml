@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef Name="HourBlock">
+    <defName>HourBlock</defName>
+    <label>HourBlock</label>
+    <thingClass>ChronosPointer.HourBlock</thingClass>
+    <description>You should never see this :)</description>
+    <someData>ThisIsSomeData</someData>
+    <graphicData>
+      <texPath>ChronosPointer/BlankTex</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1</drawSize>
+    </graphicData>
+  </ThingDef>
+</Defs>
