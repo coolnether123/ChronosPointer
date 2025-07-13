@@ -531,63 +531,81 @@ namespace ChronosPointer
     [HarmonyPatch(nameof(MainButtonWorker.DoButton))]
     public static class Patch_ScheduleButton
     {
+        public static Rect SideBarRect;
+
         static Color[] dayNightColors = new Color[24];
         static bool dayNightColorsCalculated = false;
+
         [HarmonyPostfix]
         public static void Postfix(MainButtonWorker __instance, Rect rect)
         {
             if (__instance.def.defName != "Schedule")
                 return;
             // GenUI.DrawTextureWithMaterial(); // Draw a box to ensure the button is visible
-            Log.Message(HourBlockDefOf.Block.someData);
 
-            //DoScheduleButtonClock(rect);
+            DoScheduleButtonClock(SideBarRect);
         }
 
-        private static void DoScheduleButtonClock(Rect rect)
+        public static void DoScheduleButtonClock(Rect rect)
         {
             if (!dayNightColorsCalculated)
             {
                 dayNightColors = Patch_ScheduleWindow.CalculateDayNightColors(Patch_ScheduleWindow.IncidentHappening(), out dayNightColorsCalculated);
             }
 
-            float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
-            int currentHour = (int)currentHourF;
-            float hourProgress = currentHourF - currentHour;
+            //float currentHourF = GenLocalDate.DayPercent(Find.CurrentMap) * 24f;
+            //int currentHour = (int)currentHourF;
+            //float hourProgress = currentHourF - currentHour;
 
-            float xPos = rect.x + (rect.width * GenLocalDate.DayPercent(Find.CurrentMap));
-
-            float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
-            if (cursorThickness % 2 != 0)
-            {
-                cursorThickness += 1f; // Adjust to the next even number
-            }
             float baseX = rect.x;
             float baseY = rect.y + 1;
 
-            float HourBoxWidth = rect.width / 24f;
-            float BarHeight = rect.height - 2;
+            //Draw hour boxes with colors
+            float HourBoxWidth = (rect.width-24f) / 24f;
+            float BarHeight = rect.height;
+     
             for (int hour = 0; hour < 24; hour++)
             {
-                float hourX = rect.x + (HourBoxWidth * hour);
-                Rect hourRect = new Rect(hourX, baseY, HourBoxWidth, BarHeight);
+
+                float hourX = baseX + hour * (HourBoxWidth + 1f); // +1f for a small gap between boxes
+                Rect hourRect = new Rect(hourX, baseY, Mathf.Ceil(HourBoxWidth), Mathf.Ceil(BarHeight));
 
                 Widgets.DrawBoxSolid(hourRect, dayNightColors[hour]);
                 Log.Message(Patch_ScheduleWindow.dayNightColors[hour].ToString());
             }
 
-            Rect rect1 = new Rect(xPos, baseY, cursorThickness, BarHeight);
+
+            //Draw the cursor line
+
+            float cursorThickness = ChronosPointerMod.Settings.cursorThickness;
+            float xPos = rect.x + (rect.width * GenLocalDate.DayPercent(Find.CurrentMap));
+
+            Rect rect1 = new Rect(xPos, baseY - 3, cursorThickness, BarHeight + 6);
+            if (cursorThickness % 2 != 0)
+            {
+                cursorThickness += 1f; // Adjust to the next even number
+            }
+
+
 
             Widgets.DrawBoxSolid(rect1, !ChronosPointerMod.Settings.useDynamicTimeTraceLine ? ChronosPointerMod.Settings.timeTraceColorDay : (GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)GenTicks.TicksAbs) >= 0.7f) ? ChronosPointerMod.Settings.timeTraceColorDay : ChronosPointerMod.Settings.timeTraceColorNight);
-
-            Rect rect2 = new Rect();
-            rect2.size = Text.CalcSize("Schedule");
-            rect2.x = rect.center.x - (rect2.width / 2f);
-            rect2.y = rect.center.y - (rect2.height / 2f);
-            GUI.color = Color.black;
-            Widgets.TextArea(rect2, "Schedule", true);
-            GUI.color = Color.white;
         }
+    }
+
+        [HarmonyPatch(typeof(GlobalControlsUtility))]
+    [HarmonyPatch(nameof(GlobalControlsUtility.DoTimespeedControls))]
+    public static class Patch_SideUI
+    {
+    
+        [HarmonyPostfix]
+        public static void Postfix(float leftX, float width, ref float curBaseY)
+        {
+            float boxHeight = 12f;
+            Rect timerRect = new Rect(leftX + 22f, curBaseY - boxHeight-6f, width-30f, boxHeight);
+            Patch_ScheduleButton.SideBarRect = timerRect; // Store the rect for later use
+            curBaseY -= timerRect.height+6f;
+        }
+
     }
 
 
