@@ -73,6 +73,10 @@
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_PawnTable.table" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.Pawns" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeightNoScrollbar" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0ColourPicker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

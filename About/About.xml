@@ -37,5 +37,6 @@
   <loadAfter>
     <li>brrainz.harmony</li>
     <li>Ludeon.RimWorld</li>
+    <li>Mysterius.CustomSchedules</li>
   </loadAfter>
 </ModMetaData>
