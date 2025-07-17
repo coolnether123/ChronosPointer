@@ -203,7 +203,7 @@ namespace ChronosPointer
 
         static Color GetAuroraColor(float pos)
         {
-            return MixColors(Settings.AuroraColor1, Settings.AuroraColor2, pos, true);
+            return MixColors(Settings.Color_Aurora1, Settings.Color_Aurora2, pos, true);
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace ChronosPointer
 
                 if (isToxicFallout)
                 {
-                    var mixedColor = MixColors(hourColor, Settings.ToxicFalloutColor, 0.5f); // baseColorTF.b);
+                    var mixedColor = MixColors(hourColor, Settings.Color_ToxicFallout, 0.5f); // baseColorTF.b);
                     hourColor = mixedColor;
                 }
 
