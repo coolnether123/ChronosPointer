@@ -100,10 +100,14 @@ namespace ChronosPointer
         public ChronosPointerMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<ChronosPointerSettings>();
-            // Harmony patch
-            var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
-            harmony.PatchAll();
-            Log.Message("[ChronosPointer] Harmony patches applied.");
+
+            if (ModsConfig.IsActive("brrainz.harmony"))
+            {
+                // Harmony patch
+                var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
+                harmony.PatchAll();
+                Log.Message("[ChronosPointer] Harmony patches applied.");
+            }
         }
 
         public override string SettingsCategory()

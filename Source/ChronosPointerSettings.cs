@@ -13,13 +13,13 @@ namespace ChronosPointer
 
 
         // Method to ensure cursorThickness is always an even number
-        public int ValidateCursorThickness(ref int cursor)
+        public static int ValidateCursorThickness(ref float cursor)
         {
             if (cursor % 2 != 0)
             {
                 cursor += 1; // Adjust to the next even number
             }
-            return cursor;
+            return (int) cursor;
         }
         // Toggles
         public bool DrawArrow = true;
@@ -65,8 +65,8 @@ namespace ChronosPointer
         public bool DoLoadWarnings = true;
 
         // Floats
-        public int CursorThickness = 2; // Default thickness
-        public int HoursBarCursorThickness = 2; // Default thickness
+        public float CursorThickness = 2; // Default thickness
+        public float HoursBarCursorThickness = 2; // Default thickness
         public float AuroraMinOpacity = 0.1f;
         public float AuroraMaxOpacity = 0.75f;
         public float SunlightThreshold_Night = 0.0f;
@@ -75,7 +75,7 @@ namespace ChronosPointer
         public float SunlightThreshold_SunriseSunset = 0.7f;
 
         // Ints
-        public int HighlightBorderThickness = 2; // Default thickness
+        public float HighlightBorderThickness = 2; // Default thickness
 
         // Colors
         public Color Color_Arrow = Color.red;
@@ -258,14 +258,13 @@ namespace ChronosPointer
             HoursBarCursorThickness      = (int) listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(ref HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
             GrayIfInactive(DrawCurrentHourHighlight);
 #else
-            listL.Label($"- Main Cursor ({CursorThickness:F1})");
-            CursorThickness                 = (int) listL.Slider(ValidateCursorThickness(ref CursorThickness), 2f, 10f);
+            ;
+
+            CursorThickness = (int) Do1_3LabeledSlider($"- Main Cursor ({CursorThickness:F1})", listL, ref CursorThickness, 2f, 10f, true);
             GrayIfInactive(DrawHoursBarCursor);
-            listL.Label($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})");
-            HoursBarCursorThickness      = (int) listL.Slider(ValidateCursorThickness(ref HoursBarCursorThickness), 2f, 10f);
+            HoursBarCursorThickness = (int) Do1_3LabeledSlider($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", listL, ref HoursBarCursorThickness, 2f, 10f, true);
             GrayIfInactive(DrawCurrentHourHighlight);
-            listL.Label($"- Highlight Border ({HighlightBorderThickness:F1})");
-            HighlightBorderThickness        = (int)listL.Slider(ValidateCursorThickness(ref HighlightBorderThickness), 0, 10);
+            HighlightBorderThickness = (int) Do1_3LabeledSlider($"- Highlight Border ({HighlightBorderThickness:F1})", listL, ref HighlightBorderThickness, 2f, 10f, true);
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
@@ -278,8 +277,10 @@ namespace ChronosPointer
             SunlightThreshold_DawnDusk      = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
             SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip:"How dark the map has to be to show the sunrise/sunset color.");
 #else
-            //Do the 1.3 stuff
-            listL.Label("Sorry for this. The latest Harmony is broken in 1.3 so these arent working.");
+            SunlightThreshold_Night         =  Do1_3LabeledSlider($"- Night ({SunlightThreshold_Night:F2})", listL, ref SunlightThreshold_Night, 0.0f, 1.0f);
+            //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
+            SunlightThreshold_DawnDusk      = Do1_3LabeledSlider($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", listL, ref SunlightThreshold_DawnDusk, 0.0f, 1.0f);
+            SunlightThreshold_SunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", listL, ref SunlightThreshold_SunriseSunset, 0.0f, 1.0f);
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
@@ -292,6 +293,9 @@ namespace ChronosPointer
             GrayIfInactive(DrawIncidentOverlay);
             AuroraMaxOpacity                = listL.SliderLabeled($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
 #else
+            AuroraMinOpacity                = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
+            GrayIfInactive(DrawIncidentOverlay);
+            AuroraMaxOpacity                = Do1_3LabeledSlider($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", listL, ref AuroraMaxOpacity, 0.0f, 1.0f);
             //do the 1.3 stuff
 #endif
             GUI.color = Color.white;
@@ -350,6 +354,12 @@ namespace ChronosPointer
             
         }
 
+#if V1_3
+        public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
+        {
+            return Widgets.HorizontalSlider(list.Label(label).RightHalf(), validateThickness ? (float)ValidateCursorThickness(ref value) : value, min, max);
+        }
+#endif
         public void OldWindow(Rect inRect)
         {
             float height = 1000f;

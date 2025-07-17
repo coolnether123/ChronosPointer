@@ -1,0 +1,16 @@
+<Patch>
+  <Operation Class="PatchOperationReplace">
+    <xpath>Defs/MainButtonDef[defName="Schedule"]</xpath>
+      <value>
+        <MainButtonDef>
+	        <defName>Schedule</defName>
+	          <label>schedule</label>
+	          <description>Schedule colonists' activ...</description>
+	          <tabWindowClass>ChronosPointer.Patch_ScheduleWindow</tabWindowClass>
+	          <order>20</order>
+	          <defaultHotKey>F2</defaultHotKey>
+	          <closesWorldView>true</closesWorldView>
+        </MainButtonDef>
+      </value>
+  </Operation>
+</Patch>
