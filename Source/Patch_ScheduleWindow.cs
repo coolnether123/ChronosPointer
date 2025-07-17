@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
+#if V1_5U
 using LudeonTK;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using RimWorld.QuestGen;
@@ -10,6 +12,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using Verse;
+using static UnityEngine.GUI;
 using static UnityStandardAssets.ImageEffects.BloomOptimized;
 
 namespace ChronosPointer
@@ -92,8 +95,8 @@ namespace ChronosPointer
             if (Find.CurrentMap == null) return;
 
             var instanceTable = __instance.table;
-#if rw_1_3
-            var instanceTableColumns = instanceTable.ColumnsListForReading //for version 1.3 | Use instanceTable.Columns for version 1.4 >
+#if v1_3
+            var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
             var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #endif
@@ -140,7 +143,7 @@ namespace ChronosPointer
                 }
 
                 // 1) Day/Night Bar
-                if (Settings.DoDayNightBarDraw)
+                if (Settings.DrawHourBar)
                 {
                     bool incidentHappening = IncidentHappening();
 
@@ -151,33 +154,33 @@ namespace ChronosPointer
                     }
 
                     // Draw incident effects ON TOP of the previously drawn day/night bar.
-                    if (Settings.DoIncidentSpecialDraw && debugDrawOverlayBar && incidentHappening)
+                    if (Settings.DrawIncidentOverlay && debugDrawOverlayBar && incidentHappening)
                     {
                         Rect otherRect = fillRect;
                         //otherRect.y -= HOUR_BOX_HEIGHT / 2f;
                         DrawDayNightBar(otherRect, GetIncidentColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
                     }
 
-                    if (Settings.DoDayNightIndicatorDraw)
+                    if (Settings.DrawHoursBarCursor)
                     {
                         DrawDayNightTimeIndicator(fillRect, hourBoxWidth, HOUR_BOX_HEIGHT);
                     }
                 }
                 // 2) Arrow and time-trace
-                if (Settings.DoArrowDraw)
+                if (Settings.DrawArrow)
                 {
                     DrawArrowTexture(fillRect, hourBoxWidth);
                 }
 
 
                 // 3) Highlight bar
-                if (Settings.DoHighlightDraw)
+                if (Settings.DrawCurrentHourHighlight)
                 {
                     DrawHighlight(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
                 }
 
                 // 4) Full-height vertical line
-                if (Settings.DoPawnLineDraw)
+                if (Settings.DrawMainCursor)
                 {
                     DrawFullHeightCursor(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
                 }
@@ -248,7 +251,7 @@ namespace ChronosPointer
                 Color hourColor = Settings._DefaultTransparentColor; // Default to transparent white
 
                 // If doIncidentSpecials is false, do not show the incident colors.
-                if (!Settings.DoIncidentSpecialDraw)
+                if (!Settings.DrawIncidentOverlay)
                 {
                     colors[localHour] = hourColor;
                     continue;
@@ -267,10 +270,14 @@ namespace ChronosPointer
                 {
                     if(hourColor.r == Settings._DefaultTransparentColor.r && hourColor.g == Settings._DefaultTransparentColor.g && hourColor.b == Settings._DefaultTransparentColor.b) // mixing white with black makes gray, so if the hourColor is white, set it to black
                     {
-                        hourColor = Color.black;
+                        hourColor = Settings.Color_VolcanicWinter;
                     }
-                    var mixedColor = MixColors(hourColor, Settings.VolcanicWinterColor, 0.5f, true);
-                    hourColor = mixedColor;
+                    else
+                    {
+
+                        var mixedColor = MixColors(hourColor, Settings.Color_VolcanicWinter, 0.5f, true);
+                        hourColor = mixedColor;
+                    }
                 }
 
                 if (isAurora)
@@ -278,7 +285,17 @@ namespace ChronosPointer
                     var hOffset = (float)localHour / 24f;
                     float loopingTime = 0.5f + 0.5f * Mathf.Cos(Time.time + hOffset);
                     Color auroraShimmerColor = GetAuroraColor(loopingTime);
+#if V1_6U
                     auroraShimmerColor.a = Mathf.PerlinNoise1D(loopingTime).Remap(0f, 1f, Settings.AuroraMinOpacity, Settings.AuroraMaxOpacity);
+#elif V1_5
+                    auroraShimmerColor.a = Mathf.PerlinNoise(loopingTime, loopingTime).Remap(0f, 1f, Settings.AuroraMinOpacity, Settings.AuroraMaxOpacity);
+
+#elif V1_4D
+
+                    float remappedPerlin = Settings.AuroraMinOpacity + (Settings.AuroraMaxOpacity - Settings.AuroraMinOpacity) * ((Mathf.PerlinNoise(loopingTime, loopingTime) - 0f) / (1f - 0f));
+
+                    auroraShimmerColor.a = remappedPerlin; //Mathf.PerlinNoise(loopingTime, loopingTime).Remap(0f, 1f, Settings.AuroraMinOpacity, Settings.AuroraMaxOpacity);
+#endif
                     hourColor = MixColors(hourColor, auroraShimmerColor, 0.5f);
                 }
                 colors[localHour] = hourColor;
@@ -302,43 +319,43 @@ namespace ChronosPointer
         }
         private static Color GetColorForSunlight(float sunlightForHour)
         {
-            if (Settings.DoIncidentSpecialDraw)
+            if (Settings.DrawIncidentOverlay)
             {
                 if (isEclipse)
                 {
                     if (sunlightForHour > Settings.SunlightThreshold_Night)
                     {
-                        return Settings.DawnDuskColor;
+                        return Settings.Color_DawnDusk;
                     }
                 }
 
                 //These are here because they change the base color of the day/night bar; they are not an overlay.
                 if (isSolarFlare)
                 {
-                    if (sunlightForHour > Settings.SunlightThreshold_Any) // Only affect if there's normally some light
+                    if (sunlightForHour > Settings._SunlightThreshold_Any) // Only affect if there's normally some light
                     {
                         // If the base color is Orange or Yellow, Solar Flare makes/keeps it Yellow.
                         if (sunlightForHour >= Settings.SunlightThreshold_DawnDusk)
                         {
-                            return Settings.DayColor;
+                            return Settings.Color_Day;
                         }
                     }
                 }
             }
             // Deep night
             if (sunlightForHour == Settings.SunlightThreshold_Night)
-                return Settings.NightColor;  // Deep Blue
+                return Settings.Color_Night;  // Deep Blue
 
             // Dawn/Dusk
             if (sunlightForHour < Settings.SunlightThreshold_DawnDusk)
-                return Settings.DawnDuskColor; // Light Blue
+                return Settings.Color_DawnDusk; // Light Blue
 
             // Sunrise/Sunset
             if (sunlightForHour < Settings.SunlightThreshold_SunriseSunset)
-                return Settings.SunriseSunsetColor;   // Orange
+                return Settings.Color_SunriseSunset;   // Orange
 
             // Full daylight
-            return Settings.DayColor; // Default to daylight color;
+            return Settings.Color_Day; // Default to daylight color;
         }
 
         private static void DrawHighlight(Rect fillRect, float windowHeight, float hourBoxWidth, float barHeight)
@@ -351,7 +368,10 @@ namespace ChronosPointer
             float colY = fillRect.y + BASE_OFFSET_Y + barHeight + PAWN_AREA_TOP_OFFSET;
 
             Rect highlightRect = new Rect(colX, colY, hourBoxWidth, windowHeight);
-            Widgets.DrawBoxSolidWithOutline(highlightRect, Settings.DoHollowHour ? Settings._HighlightInteriorColor : Settings.HighlightColor, Settings.HighlightColor, Settings.HighlightBorderThickness);
+            if (Settings.DoFilledHourHighlight)
+                Widgets.DrawBoxSolid(highlightRect, Settings.Color_HourHighlight);
+            else
+                Widgets.DrawBoxSolidWithOutline(highlightRect, Settings._HighlightInteriorColor, Settings.Color_HourHighlight, 2);
         }
 
         private static void DrawDayNightBar(Rect fillRect, Color[] colors, float hourBoxWidth, float hourBoxHeight)
@@ -370,7 +390,7 @@ namespace ChronosPointer
 
         }
         
-        #endregion
+#endregion
 
         #region Time Trace Line
 
@@ -393,9 +413,9 @@ namespace ChronosPointer
             long currentAbsoluteTick = GenTicks.TicksAbs;
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);
 
-            Color lineColor = !Settings.DoDynamicTimeTraceLineDraw ? Settings.TimeTraceColorDay : (sunlight >= Settings.SunlightThreshold_SunriseSunset) ? Settings.TimeTraceColorDay : Settings.TimeTraceColorNight;
+            Color lineColor = !Settings.DoDynamicHoursBarLine ? Settings.Color_HoursBarCursor_Day : (sunlight >= Settings.SunlightThreshold_SunriseSunset) ? Settings.Color_HoursBarCursor_Day : Settings.Color_HoursBarCursor_Night;
 
-            Rect traceRect = new Rect(lineX, lineY, Settings.DayNightBarCursorThickness, lineHeight);
+            Rect traceRect = new Rect(lineX, lineY, Settings.HoursBarCursorThickness, lineHeight);
             Widgets.DrawBoxSolid(traceRect, lineColor);
         }
 
@@ -424,7 +444,7 @@ namespace ChronosPointer
             float arrowRectX = arrowCenterX - (arrowWidth / 2f);
 
             // Changes the arrow up or down. up is -
-            float arrowRectY = barTopY - arrowHeight - (!Settings.DoDayNightBarDraw ? -2f : 4f);
+            float arrowRectY = barTopY - arrowHeight - (!Settings.DrawHourBar ? -2f : 4f);
 
             // Build the rect
             Rect arrowRect = new Rect(arrowRectX, arrowRectY, arrowWidth, arrowHeight);
@@ -437,10 +457,10 @@ namespace ChronosPointer
             GUIUtility.RotateAroundPivot(90f, arrowRect.center);
 
             // Draw the arrow
-            GUI.color = Settings.ArrowColor;
+            GUI.color = Settings.Color_Arrow;
             ;
 
-            GUI.DrawTexture(arrowRect.ScaledBy((!Settings.DoDayNightBarDraw ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
+            GUI.DrawTexture(arrowRect.ScaledBy((!Settings.DrawHourBar ? 2 : 1)), ChronosPointerTextures.ArrowTexture);
 
             // Restore matrix & color
             GUI.matrix = oldMatrix;
@@ -485,7 +505,7 @@ namespace ChronosPointer
                 windowHeight
             );
 
-            Widgets.DrawBoxSolid(cursorRect, Settings.BottomCursorColor);
+            Widgets.DrawBoxSolid(cursorRect, Settings.Color_MainCursor);
         }
 
         

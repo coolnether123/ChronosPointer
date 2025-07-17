@@ -71,13 +71,13 @@ namespace ChronosPointer
             GUI.color = Color.white;
             listing.Gap(5f);
 
-            if (listing.ButtonText("Test incident"))
+            if (listing.ButtonText("Simulate incident"))
             {
                 closeOnClickedOutside = false;
                 var options = new List<FloatMenuOption>() {
                 new FloatMenuOption(EnableString(!aurora)+ " Aurora", () => {Patch_ScheduleWindow.overrideIsAurora = !Patch_ScheduleWindow.overrideIsAurora;}),
-                new FloatMenuOption(EnableString(!toxFallout)+" Eclipse", () => {Patch_ScheduleWindow.overrideIsEclipse = !Patch_ScheduleWindow.overrideIsEclipse;  }),
-                new FloatMenuOption(EnableString(!toxFallout) + " Solar Flare", () => {Patch_ScheduleWindow.overrideIsSolarFlare = !Patch_ScheduleWindow.overrideIsSolarFlare; }),
+                new FloatMenuOption(EnableString(!eclipse)+" Eclipse", () => {Patch_ScheduleWindow.overrideIsEclipse = !Patch_ScheduleWindow.overrideIsEclipse;  }),
+                new FloatMenuOption(EnableString(!solarFlare) + " Solar Flare", () => {Patch_ScheduleWindow.overrideIsSolarFlare = !Patch_ScheduleWindow.overrideIsSolarFlare; }),
                 new FloatMenuOption(EnableString(!toxFallout)+ " Toxic Fallout", () => {Patch_ScheduleWindow.overrideIsToxicFallout = !Patch_ScheduleWindow.overrideIsToxicFallout; }),
                 new FloatMenuOption(EnableString(!volWinter) + " Volcanic Winter", () => {Patch_ScheduleWindow.overrideIsVolcanicWinter = !Patch_ScheduleWindow.overrideIsVolcanicWinter;  }),
                     };
@@ -96,6 +96,12 @@ namespace ChronosPointer
             GUI.color = Color.white;
             listing.End();
 
+            if(windowRect.x < 0 || windowRect.xMax > UI.screenWidth || windowRect.y < 0 || windowRect.yMax > UI.screenHeight)
+            {
+                windowRect.x = Mathf.Clamp(windowRect.x, 0, UI.screenWidth - windowRect.width);
+                windowRect.y = Mathf.Clamp(windowRect.y, 0, UI.screenHeight - windowRect.height);
+            }
+
         }
 
 
@@ -106,12 +112,7 @@ namespace ChronosPointer
                 buttonAAction();
             }
             Event.current.Use();
-            Patch_ScheduleWindow.overrideIsAurora = false;
-            Patch_ScheduleWindow.overrideIsEclipse = false;
-            Patch_ScheduleWindow.overrideIsSolarFlare = false;
-            Patch_ScheduleWindow.overrideIsToxicFallout = false;
-            Patch_ScheduleWindow.overrideIsVolcanicWinter = false;
-            Patch_ScheduleWindow.IsInTestMode = false;
+            
 
         }
 

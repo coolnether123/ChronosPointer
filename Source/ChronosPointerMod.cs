@@ -42,9 +42,9 @@ namespace ChronosPointer
             if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
                 return;
 
-            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DoDayNightBarDraw : true))
+            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
                 ApplyFixForMysteriusCustomSchedules();
-            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DoPawnLineDraw : true))
+            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
                 ApplyFixForScheduleClock();
             //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
             if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
@@ -56,8 +56,8 @@ namespace ChronosPointer
             // Implement the fix logic for Mysterius.CustomSchedules
             var message = new Dialog_ModWarning("CustomSchedules (Continued) is Active", "Chronos Pointer will overlap the additional schedule buttons. You can hide this overlap by disabling the arrow the Day/Night bar.", () =>
             {
-                ChronosPointerMod.Settings.DoDayNightBarDraw = false;
-                ChronosPointerMod.Settings.DoArrowDraw = false;
+                ChronosPointerMod.Settings.DrawHourBar = false;
+                ChronosPointerMod.Settings.DrawArrow = false;
                 ChronosPointerMod.Settings?.Write();
             });
 
@@ -76,7 +76,7 @@ namespace ChronosPointer
             message.buttonCText = "Disable Overlap";
             message.buttonCAction = () =>
             {
-                ChronosPointerMod.Settings.DoPawnLineDraw = false;
+                ChronosPointerMod.Settings.DrawMainCursor = false;
                 ChronosPointerMod.Settings?.Write();
             };
             Find.WindowStack?.Add(message);
@@ -119,6 +119,13 @@ namespace ChronosPointer
         {
             base.WriteSettings();
             Patch_ScheduleWindow.dayNightColorsCalculated = false;
+            Patch_ScheduleWindow.overrideIsAurora = false;
+            Patch_ScheduleWindow.overrideIsEclipse = false;
+            Patch_ScheduleWindow.overrideIsSolarFlare = false;
+            Patch_ScheduleWindow.overrideIsToxicFallout = false;
+            Patch_ScheduleWindow.overrideIsVolcanicWinter = false;
+            Patch_ScheduleWindow.IsInTestMode = false;
+
         }
 
     }
