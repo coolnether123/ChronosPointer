@@ -95,7 +95,7 @@ namespace ChronosPointer
             if (Find.CurrentMap == null) return;
 
             var instanceTable = __instance.table;
-#if v1_3
+#if V1_3
             var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
             var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
@@ -198,7 +198,7 @@ namespace ChronosPointer
 
         static Color GetAuroraColor(float pos)
         {
-            return MixColors(Settings.AuroraColor1, Settings.AuroraColor2, pos, true);
+            return MixColors(Settings.Color_Aurora1, Settings.Color_Aurora2, pos, true);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace ChronosPointer
 
                 if (isToxicFallout)
                 {
-                    var mixedColor = MixColors(hourColor, Settings.ToxicFalloutColor, 0.5f); // baseColorTF.b);
+                    var mixedColor = MixColors(hourColor, Settings.Color_ToxicFallout, 0.5f); // baseColorTF.b);
                     hourColor = mixedColor;
                 }
 

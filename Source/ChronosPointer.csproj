@@ -66,7 +66,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4523" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.3.3389" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4409" Condition="'$(Configuration)' == '1.5'" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.4.3901" Condition="'$(Configuration)' == '1.4'" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.3.3389" Condition="'$(Configuration)' == '1.3'" />
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.6</Version>
     </PackageReference>
@@ -79,13 +82,34 @@
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="0ColourPicker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <Reference Include="0ColourPicker_1_6, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\1.6\Assemblies\0ColourPicker.dll</HintPath>
+      <HintPath>ColourPickerDLLs\0ColourPicker_1_6.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.5'">
+    <Reference Include="0ColourPicker_1_5, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ColourPickerDLLs\0ColourPicker_1_5.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.4'">
+    <Reference Include="0ColourPicker_1_4, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ColourPickerDLLs\0ColourPicker_1_4.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0ColourPicker_1_3, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ColourPickerDLLs\0ColourPicker_1_3.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="RestorePackages" BeforeTargets="Build">
+    <Exec Command="nuget restore ChronosPointer.sln" />
+  </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
