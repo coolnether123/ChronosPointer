@@ -53,9 +53,15 @@
     <OutputPath>bin\1.2\</OutputPath>
     <DefineConstants>V1_2; V1_3D</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6|AnyCPU'">
+    <OutputPath>..\1.6\Assemblies\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="ColorPicker\Dialog_ColourPicker.cs" />
+    <Compile Include="ColorPicker\RecentColours.cs" />
+    <Compile Include="ColorPicker\TextField.cs" />
     <Compile Include="Dialog_IncidentTesting.cs" />
     <Compile Include="Patch_ScheduleWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -67,7 +73,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4409" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4523" />
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.6</Version>
     </PackageReference>
@@ -79,12 +85,6 @@
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeightNoScrollbar" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="0ColourPicker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\1.5\Assemblies\0ColourPicker.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
