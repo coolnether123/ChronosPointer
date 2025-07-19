@@ -1,8 +1,0 @@
-<Patch>
-  <Operation Class="PatchOperationReplace">
-    <xpath>Defs/MainButtonDef[defName="Schedule"]/tabWindowClass</xpath>
-      <value>
-	          <tabWindowClass>ChronosPointer.Patch_ScheduleWindow</tabWindowClass>
-      </value>
-  </Operation>
-</Patch>

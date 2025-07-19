@@ -18,7 +18,8 @@ using static UnityStandardAssets.ImageEffects.BloomOptimized;
 namespace ChronosPointer
 {
 
-    public class Patch_ScheduleWindow : MainTabWindow_Schedule
+    [HarmonyPatch(typeof(MainTabWindow_Schedule), nameof(MainTabWindow_Schedule.DoWindowContents))]
+    public static class Patch_ScheduleWindow
     {
         #region Values
         public static Rect UseMeForTheXYPosOfDayNightBar;
@@ -87,114 +88,100 @@ namespace ChronosPointer
         #endregion
 
 
-        //[HarmonyPostfix]
-        public override void DoWindowContents(Rect fillRect)
+        [HarmonyPostfix]
+        public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
-            base.DoWindowContents(fillRect);
-            try
-            {
-                if (Find.CurrentMap == null) return;
+            if (Find.CurrentMap == null) return;
 
-                var instanceTable = table;
-#if V1_3
-            var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
+            var table = __instance.table;
+            if (table == null) return;
+
+#if V1_4
+            var instanceTableColumns = table.Columns;
 #else
-                var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
+            var instanceTableColumns = table.ColumnsListForReading;
 #endif
-                float hourBoxWidth = 19f; // default width for each hour box
+            float hourBoxWidth = 19f; // default width for each hour box
 
-                //Sumarbrander to CoolNether123: if we could eliminate this for loop, that would be great.
-                for (var i = 0; i < instanceTableColumns.Count; i++)
+            //Sumarbrander to CoolNether123: if we could eliminate this for loop, that would be great.
+            for (var i = 0; i < instanceTableColumns.Count; i++)
+            {
+                if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
                 {
-                    if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
-                    {
-                        hourBoxWidth = (instanceTable.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
-                        break;
-                    }
-                    var width = instanceTable.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
-
-                    fillRect.x += width;
-                    fillRect.width -= width;
+                    hourBoxWidth = (table.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
+                    break;
                 }
-                try
+                var width = table.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
+
+                fillRect.x += width;
+                fillRect.width -= width;
+            }
+
+            //int incident = IncidentHappening() + incidentSimulator;
+
+            float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
+
+            foreach (var def in instanceTableColumns)
+            {
+                if (def.defName == "PawnColumnWorker_Timetable")
                 {
-
-                    //int incident = IncidentHappening() + incidentSimulator;
-
-                    float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
-
-                    foreach (var def in instanceTableColumns)
-                    {
-                        if (def.defName == "PawnColumnWorker_Timetable")
-                        {
-                            // If the column is a timetable, set the BaseOffsetX to its width
-                            BaseOffsetX = def.width + 1f; // Add 1px for the gap
-                            break;
-                        }
-                    }
-
-                    // Check if the current map has changed
-                    if (Find.CurrentMap != lastKnownMap)
-                    {
-                        // Reset the flag and update the last known map
-                        dayNightColorsCalculated = false;
-                        //incidentsDirty = true; // Reset incident colors
-                        pawnCountCalculated = false;
-                        lastKnownMap = Find.CurrentMap;
-                    }
-
-                    // 1) Day/Night Bar
-                    if (Settings.DrawHourBar)
-                    {
-                        bool incidentHappening = IncidentHappening();
-
-                        if (overrideDrawRegularBar)
-                        {
-                            //draw regular day/night bar
-                            DrawDayNightBar(fillRect, GetDaylightColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-
-                        // Draw incident effects ON TOP of the previously drawn day/night bar.
-                        if (Settings.DrawIncidentOverlay && debugDrawOverlayBar && incidentHappening)
-                        {
-                            Rect otherRect = fillRect;
-                            //otherRect.y -= HOUR_BOX_HEIGHT / 2f;
-                            DrawDayNightBar(otherRect, GetIncidentColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-
-                        if (Settings.DrawHoursBarCursor)
-                        {
-                            DrawDayNightTimeIndicator(fillRect, hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-                    }
-                    // 2) Arrow and time-trace
-                    if (Settings.DrawArrow)
-                    {
-                        DrawArrowTexture(fillRect, hourBoxWidth);
-                    }
-
-
-                    // 3) Highlight bar
-                    if (Settings.DrawCurrentHourHighlight)
-                    {
-                        DrawHighlight(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
-                    }
-
-                    // 4) Full-height vertical line
-                    if (Settings.DrawMainCursor)
-                    {
-                        DrawFullHeightCursor(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
+                    // If the column is a timetable, set the BaseOffsetX to its width
+                    BaseOffsetX = def.width + 1f; // Add 1px for the gap
+                    break;
                 }
             }
-            catch (Exception e)
-            {
-                Log.Error($"ChronosPointer: Error in DoWindowContents - {e.Message}\n{e.StackTrace}");
 
+            // Check if the current map has changed
+            if (Find.CurrentMap != lastKnownMap)
+            {
+                // Reset the flag and update the last known map
+                dayNightColorsCalculated = false;
+                //incidentsDirty = true; // Reset incident colors
+                pawnCountCalculated = false;
+                lastKnownMap = Find.CurrentMap;
+            }
+
+            // 1) Day/Night Bar
+            if (Settings.DrawHourBar)
+            {
+                bool incidentHappening = IncidentHappening();
+
+                if (overrideDrawRegularBar)
+                {
+                    //draw regular day/night bar
+                    DrawDayNightBar(fillRect, GetDaylightColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+
+                // Draw incident effects ON TOP of the previously drawn day/night bar.
+                if (Settings.DrawIncidentOverlay && debugDrawOverlayBar && incidentHappening)
+                {
+                    Rect otherRect = fillRect;
+                    //otherRect.y -= HOUR_BOX_HEIGHT / 2f;
+                    DrawDayNightBar(otherRect, GetIncidentColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+
+                if (Settings.DrawHoursBarCursor)
+                {
+                    DrawDayNightTimeIndicator(fillRect, hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+            }
+            // 2) Arrow and time-trace
+            if (Settings.DrawArrow)
+            {
+                DrawArrowTexture(fillRect, hourBoxWidth);
+            }
+
+
+            // 3) Highlight bar
+            if (Settings.DrawCurrentHourHighlight)
+            {
+                DrawHighlight(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
+            }
+
+            // 4) Full-height vertical line
+            if (Settings.DrawMainCursor)
+            {
+                DrawFullHeightCursor(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
             }
         }
         #region Compatability Patches
@@ -244,7 +231,11 @@ namespace ChronosPointer
             long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay;
 
             long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
+#if V1_5U
             return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
+#else
+            return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
+#endif
         }
 
         private static Color[] GetIncidentColors()

@@ -1,0 +1,47 @@
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	CS1503	Argument 1: cannot convert from 'int' to 'Verse.Map'	ChronosPointer	D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\Patch_ScheduleWindow.cs	237		
+Error (active)	CS1503	Argument 2: cannot convert from 'RimWorld.Twelfth' to 'int'	ChronosPointer	D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\Patch_ScheduleWindow.cs	237		
+
+
+
+Decompiled code
+
+#region Assembly Assembly-CSharp, Version=1.4.8706.7168, Culture=neutral, PublicKeyToken=null
+// D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\obj\1.4\PublicizedAssemblies\Assembly-CSharp.F7F046C13FD49F24A5D9EA8FD0F622AC\Assembly-CSharp.dll
+#endregion
+
+using UnityEngine;
+using Verse;
+
+namespace RimWorld
+{
+    public static class GenCelestial
+    {
+        public const float ShadowMaxLengthDay = 15;
+        public const float ShadowMaxLengthNight = 15;
+
+        public static float AverageGlow(float latitude, int dayOfYear);
+        public static float CelestialSunGlow(Map map, int ticksAbs);
+        public static float CelestialSunGlow(int tile, int ticksAbs);
+        public static float CurCelestialSunGlow(Map map);
+        public static float CurShadowStrength(Map map);
+        public static Vector3 CurSunPositionInWorldSpace();
+        public static LightInfo GetLightSourceInfo(Map map, LightType type);
+        public static bool IsDaytime(float glow);
+        public static void LogSunAngleForYear();
+        public static void LogSunGlowForYear();
+
+        public enum LightType
+        {
+            Shadow = 0,
+            LightingSun = 1,
+            LightingMoon = 2
+        }
+
+        public struct LightInfo
+        {
+            public Vector2 vector;
+            public float intensity;
+        }
+    }
+}

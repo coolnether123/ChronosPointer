@@ -73,7 +73,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4523" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.4.3901" />
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.6</Version>
     </PackageReference>
@@ -81,6 +81,7 @@
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_PawnTable.table" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.table" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.Pawns" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeightNoScrollbar" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
