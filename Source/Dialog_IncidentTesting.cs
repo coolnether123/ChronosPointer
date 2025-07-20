@@ -18,7 +18,7 @@ namespace ChronosPointer
         {
             get
             {
-                return new Vector2(300f, 270f);
+                return new Vector2(300f, 320f);
             }
         }
 
@@ -29,63 +29,53 @@ namespace ChronosPointer
             Patch_ScheduleWindow.IsInTestMode = true;
         }
 
-        string EnableString(bool isEnabled)
+        private void DrawIncidentToggle(Listing_Standard listing, string label, ref bool overrideFlag)
         {
-            return isEnabled ? "Enable" : "Disable";
+            Color originalColor = GUI.color;
+            bool isOverridden = overrideFlag || (label == "Aurora" && Patch_ScheduleWindow.isAurora) ||
+                                (label == "Eclipse" && Patch_ScheduleWindow.isEclipse) ||
+                                (label == "Solar Flare" && Patch_ScheduleWindow.isSolarFlare) ||
+                                (label == "Toxic Fallout" && Patch_ScheduleWindow.isToxicFallout) ||
+                                (label == "Volcanic Winter" && Patch_ScheduleWindow.isVolcanicWinter);
+
+            if (isOverridden)
+            {
+                GUI.color = Color.green;
+            }
+
+            listing.CheckboxLabeled(label, ref overrideFlag, "Toggle simulation for this incident.");
+            GUI.color = originalColor;
         }
 
-        void DoGUIColor(bool green)
-        {
-            GUI.color = green ? Color.green : Color.red;
-        }
 
         public override void DoWindowContents(Rect inRect)
         {
-            Vector2 buttonSize = new Vector2(180f, 60f);
-
             var listing = new Listing_Standard();
 
-            bool aurora = Patch_ScheduleWindow.AuroraActive;
-            bool eclipse = Patch_ScheduleWindow.EclipseActive;
-            bool solarFlare = Patch_ScheduleWindow.SolarFlareActive;
-            bool toxFallout = Patch_ScheduleWindow.ToxicFalloutActive;
-            bool volWinter = Patch_ScheduleWindow.VolcanicWinterActive;
+            Rect contentRect = inRect;
+            contentRect.height -= 40f; // Space for the bottom button
 
-            listing.Begin(inRect);
+            listing.Begin(contentRect);
             Text.Font = GameFont.Medium;
-            listing.Label("Preview Changes");
+            listing.Label("Incident Simulation");
             listing.Gap(15f);
             Text.Font = GameFont.Small;
 
-            DoGUIColor(aurora);
-            listing.Label("Aurora: " + EnableString(aurora) + "d");
-            DoGUIColor(eclipse);
-            listing.Label("Eclipse: " + EnableString(eclipse) + "d");
-            DoGUIColor(solarFlare);
-            listing.Label("Solar Flare: " + EnableString(solarFlare) + "d");
-            DoGUIColor(toxFallout);
-            listing.Label("Toxic Fallout: " + EnableString(toxFallout) + "d");
-            DoGUIColor(volWinter);
-            listing.Label("Volcanic Winter: " + EnableString(volWinter) + "d");
+            listing.Label("Toggle incidents on/off for preview:");
+            listing.Gap(10f);
 
-            GUI.color = Color.white;
-            listing.Gap(5f);
+            // Directly use checkboxes to toggle the override flags
+            DrawIncidentToggle(listing, "Aurora", ref Patch_ScheduleWindow.overrideIsAurora);
+            DrawIncidentToggle(listing, "Eclipse", ref Patch_ScheduleWindow.overrideIsEclipse);
+            DrawIncidentToggle(listing, "Solar Flare", ref Patch_ScheduleWindow.overrideIsSolarFlare);
+            DrawIncidentToggle(listing, "Toxic Fallout", ref Patch_ScheduleWindow.overrideIsToxicFallout);
+            DrawIncidentToggle(listing, "Volcanic Winter", ref Patch_ScheduleWindow.overrideIsVolcanicWinter);
 
-            if (listing.ButtonText("Simulate incident"))
-            {
-                closeOnClickedOutside = false;
-                var options = new List<FloatMenuOption>() {
-                new FloatMenuOption(EnableString(!aurora)+ " Aurora", () => {Patch_ScheduleWindow.overrideIsAurora = !Patch_ScheduleWindow.overrideIsAurora;}),
-                new FloatMenuOption(EnableString(!eclipse)+" Eclipse", () => {Patch_ScheduleWindow.overrideIsEclipse = !Patch_ScheduleWindow.overrideIsEclipse;  }),
-                new FloatMenuOption(EnableString(!solarFlare) + " Solar Flare", () => {Patch_ScheduleWindow.overrideIsSolarFlare = !Patch_ScheduleWindow.overrideIsSolarFlare; }),
-                new FloatMenuOption(EnableString(!toxFallout)+ " Toxic Fallout", () => {Patch_ScheduleWindow.overrideIsToxicFallout = !Patch_ScheduleWindow.overrideIsToxicFallout; }),
-                new FloatMenuOption(EnableString(!volWinter) + " Volcanic Winter", () => {Patch_ScheduleWindow.overrideIsVolcanicWinter = !Patch_ScheduleWindow.overrideIsVolcanicWinter;  }),
-                    };
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
-            closeOnClickedOutside = !Find.WindowStack.Windows.Any(w => w is FloatMenu);
+            listing.End();
 
-            if (listing.ButtonText(buttonAText))
+            // Bottom "Done" button
+            Rect buttonRect = new Rect(inRect.x, inRect.yMax - 30f, inRect.width, 30f);
+            if (Widgets.ButtonText(new Rect(buttonRect.center.x - 75f, buttonRect.y, 150f, buttonRect.height), buttonAText))
             {
                 if (buttonAAction != null)
                 {
@@ -94,14 +84,12 @@ namespace ChronosPointer
                 Close();
             }
             GUI.color = Color.white;
-            listing.End();
 
-            if(windowRect.x < 0 || windowRect.xMax > UI.screenWidth || windowRect.y < 0 || windowRect.yMax > UI.screenHeight)
+            if (windowRect.x < 0 || windowRect.xMax > UI.screenWidth || windowRect.y < 0 || windowRect.yMax > UI.screenHeight)
             {
                 windowRect.x = Mathf.Clamp(windowRect.x, 0, UI.screenWidth - windowRect.width);
                 windowRect.y = Mathf.Clamp(windowRect.y, 0, UI.screenHeight - windowRect.height);
             }
-
         }
 
 
@@ -112,8 +100,6 @@ namespace ChronosPointer
                 buttonAAction();
             }
             Event.current.Use();
-            
-
         }
 
         public override void OnCancelKeyPressed()
@@ -121,7 +107,6 @@ namespace ChronosPointer
             base.OnCancelKeyPressed();
             CloseAction();
             Close();
-
         }
 
         public override void Notify_ClickOutsideWindow()
@@ -131,13 +116,11 @@ namespace ChronosPointer
                 return;
             CloseAction();
             Close();
-
         }
 
         public override void PostClose()
         {
             CloseAction();
         }
-
     }
 }

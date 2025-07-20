@@ -57,12 +57,12 @@ namespace ChronosPointer
         private static Map lastKnownMap = null;
 
 
-
-        private static bool isSolarFlare = false;
-        private static bool isEclipse = false;
-        private static bool isToxicFallout = false;
-        private static bool isVolcanicWinter = false;
-        private static bool isAurora = false;
+        // These are now internal so Dialog_IncidentTesting can see them
+        internal static bool isSolarFlare = false;
+        internal static bool isEclipse = false;
+        internal static bool isToxicFallout = false;
+        internal static bool isVolcanicWinter = false;
+        internal static bool isAurora = false;
 
         public static bool AuroraActive => isAurora || overrideIsAurora;
         public static bool SolarFlareActive => isSolarFlare || overrideIsSolarFlare;
@@ -93,13 +93,13 @@ namespace ChronosPointer
         {
             if (Find.CurrentMap == null) return;
 
-            var table = __instance.table;
-            if (table == null) return;
+            var instanceTable = __instance.table;
+            if (instanceTable == null) return;
 
-#if V1_4
-            var instanceTableColumns = table.Columns;
+#if V1_3
+            var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
-            var instanceTableColumns = table.ColumnsListForReading;
+            var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #endif
             float hourBoxWidth = 19f; // default width for each hour box
 
@@ -108,10 +108,10 @@ namespace ChronosPointer
             {
                 if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
                 {
-                    hourBoxWidth = (table.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
+                    hourBoxWidth = (instanceTable.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
                     break;
                 }
-                var width = table.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
+                var width = instanceTable.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
 
                 fillRect.x += width;
                 fillRect.width -= width;
@@ -119,7 +119,7 @@ namespace ChronosPointer
 
             //int incident = IncidentHappening() + incidentSimulator;
 
-            float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
+            float windowHeight = Mathf.Max(instanceTable.cachedSize.y - instanceTable.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
 
             foreach (var def in instanceTableColumns)
             {
@@ -231,11 +231,8 @@ namespace ChronosPointer
             long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay;
 
             long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
-#if V1_5U
+
             return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
-#else
-            return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
-#endif
         }
 
         private static Color[] GetIncidentColors()
@@ -264,7 +261,7 @@ namespace ChronosPointer
 
                 if (isVolcanicWinter)
                 {
-                    if(hourColor.r == Settings._DefaultTransparentColor.r && hourColor.g == Settings._DefaultTransparentColor.g && hourColor.b == Settings._DefaultTransparentColor.b) // mixing white with black makes gray, so if the hourColor is white, set it to black
+                    if (hourColor.r == Settings._DefaultTransparentColor.r && hourColor.g == Settings._DefaultTransparentColor.g && hourColor.b == Settings._DefaultTransparentColor.b) // mixing white with black makes gray, so if the hourColor is white, set it to black
                     {
                         hourColor = Settings.Color_VolcanicWinter;
                     }
@@ -308,7 +305,7 @@ namespace ChronosPointer
             isVolcanicWinter = IsInTestMode ? overrideIsVolcanicWinter : Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter) || overrideIsVolcanicWinter;
 
 
-            if(isEclipse || isSolarFlare)
+            if (isEclipse || isSolarFlare)
                 dayNightColorsCalculated = false;
 
             return isSolarFlare || isEclipse || isToxicFallout || isVolcanicWinter || isAurora;
@@ -385,8 +382,8 @@ namespace ChronosPointer
             }
 
         }
-        
-#endregion
+
+        #endregion
 
         #region Time Trace Line
 
@@ -462,7 +459,7 @@ namespace ChronosPointer
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
         }
-#endregion
+        #endregion
 
         #region Full Height Cursor
         private static void DrawFullHeightCursor(Rect fillRect, float windowHeight, float hourBoxWidth, float hourBoxHeight)
@@ -504,9 +501,7 @@ namespace ChronosPointer
             Widgets.DrawBoxSolid(cursorRect, Settings.Color_MainCursor);
         }
 
-        
+
     }
     #endregion
-
-
 }

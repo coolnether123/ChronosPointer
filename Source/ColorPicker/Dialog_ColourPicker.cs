@@ -10,7 +10,7 @@ using Verse;
 using Object = UnityEngine.Object;
 
 namespace ColourPicker {
-    public class Dialog_ColourPicker: Window {
+    public class Dialog_ColourPicker : Window {
         private controls _activeControl = controls.none;
 
         private Color _alphaBGColorA = Color.white,
@@ -39,8 +39,8 @@ namespace ColourPicker {
         private float _h;
         private float _s;
         private float _v;
-        private readonly int _pickerSize       = 300,
-                    _sliderWidth      = 15,
+        private readonly int _pickerSize = 300,
+                    _sliderWidth = 15,
                     _alphaBGBlockSize = 10,
                     _previewSize =
                         90, // odd multiple of alphaBGblocksize forces alternation of the background texture grid.
@@ -55,11 +55,18 @@ namespace ColourPicker {
         private Color _tempColour;
 
         public bool autoApply = false;
+        public Action onCancel;
+        public Action onPostClose;
 
-        // the colour we're going to pass out if requested
-        public  Color             curColour;
+
+        // the colour getting passed out if requested
+        public Color curColour;
         private readonly TextField<string> HexField;
-        public  bool              minimalistic = false;
+        public bool minimalistic = false;
+
+        // Properties to signal the container window
+        public bool WantsToClose { get; private set; }
+        public bool Accepted { get; private set; }
 
         private readonly TextField<float> RedField,
                                  GreenField,
@@ -323,8 +330,8 @@ namespace ColourPicker {
                     try
                     {
 
-                    tex.SetPixels(x, y, _alphaBGBlockSize, _alphaBGBlockSize, column % 2 == 0 ? bgA : bgB);
-                    column++;
+                        tex.SetPixels(x, y, _alphaBGBlockSize, _alphaBGBlockSize, column % 2 == 0 ? bgA : bgB);
+                        column++;
                     }
                     catch
                     {
@@ -342,7 +349,7 @@ namespace ColourPicker {
         private void CreateAlphaPickerBG() {
             Texture2D tex = new Texture2D(1, _pickerSize);
 
-            int h  = _pickerSize;
+            int h = _pickerSize;
             float hu = 1f / h;
 
             // RGB color from cache, alternate a
@@ -357,10 +364,10 @@ namespace ColourPicker {
 
         private void CreateColourPickerBG() {
             float S, V;
-            int   w  = _pickerSize;
-            int   h  = _pickerSize;
-            float   wu = UnitsPerPixel;
-            float   hu = UnitsPerPixel;
+            int w = _pickerSize;
+            int h = _pickerSize;
+            float wu = UnitsPerPixel;
+            float hu = UnitsPerPixel;
 
             Texture2D tex = new Texture2D(w, h);
 
@@ -381,7 +388,7 @@ namespace ColourPicker {
         private void CreateHuePickerBG() {
             Texture2D tex = new Texture2D(1, _pickerSize);
 
-            int h  = _pickerSize;
+            int h = _pickerSize;
             float hu = 1f / h;
 
             // HSV colours, S = V = 1
@@ -399,7 +406,7 @@ namespace ColourPicker {
         }
 
         [Conditional("DEBUG")]
-        public static void Debug(string msg) {
+        public static void Debug(string msg) { 
             if (Traverse.Create(typeof(Log)).Field("reachedMaxMessagesLimit").GetValue<bool>()) {
                 Log.ResetMessageCount();
             }
@@ -407,30 +414,31 @@ namespace ColourPicker {
             Log.Message($"ColourPicker :: {msg}");
         }
 
-        public override void DoWindowContents(Rect inRect) {
+        public override void DoWindowContents(Rect inRect)
+        {
             // set up rects
-            Rect pickerRect     = new Rect(inRect.xMin, inRect.yMin, _pickerSize, _pickerSize);
-            Rect hueRect        = new Rect(pickerRect.xMax + _margin, inRect.yMin, _sliderWidth, _pickerSize);
-            Rect alphaRect      = new Rect(hueRect.xMax    + _margin, inRect.yMin, _sliderWidth, _pickerSize);
-            Rect previewRect    = new Rect(alphaRect.xMax  + _margin, inRect.yMin, _previewSize, _previewSize);
+            Rect pickerRect = new Rect(inRect.xMin, inRect.yMin, _pickerSize, _pickerSize);
+            Rect hueRect = new Rect(pickerRect.xMax + _margin, inRect.yMin, _sliderWidth, _pickerSize);
+            Rect alphaRect = new Rect(hueRect.xMax + _margin, inRect.yMin, _sliderWidth, _pickerSize);
+            Rect previewRect = new Rect(alphaRect.xMax + _margin, inRect.yMin, _previewSize, _previewSize);
             Rect previewOldRect = new Rect(previewRect.xMax, inRect.yMin, _previewSize, _previewSize);
             Rect doneRect = new Rect(alphaRect.xMax + _margin, inRect.yMax - _buttonHeight, _previewSize * 2,
                                     _buttonHeight);
             Rect setRect = new Rect(alphaRect.xMax + _margin, inRect.yMax - (2 * _buttonHeight) - _margin,
-                                   _previewSize   - (_margin                  / 2), _buttonHeight);
+                                   _previewSize - (_margin / 2), _buttonHeight);
             Rect cancelRect = new Rect(setRect.xMax + _margin, setRect.yMin, _previewSize - (_margin / 2),
                                       _buttonHeight);
             Rect hsvFieldRect = new Rect(alphaRect.xMax + _margin,
-                                        inRect.yMax    - (2 * _buttonHeight) - (3 * _fieldHeight) - (4 * _margin),
+                                        inRect.yMax - (2 * _buttonHeight) - (3 * _fieldHeight) - (4 * _margin),
                                         _previewSize * 2, _fieldHeight);
             Rect rgbFieldRect = new Rect(alphaRect.xMax + _margin,
-                                        inRect.yMax    - (2 * _buttonHeight) - (2 * _fieldHeight) - (3 * _margin),
+                                        inRect.yMax - (2 * _buttonHeight) - (2 * _fieldHeight) - (3 * _margin),
                                         _previewSize * 2, _fieldHeight);
             Rect hexRect = new Rect(alphaRect.xMax + _margin,
-                                   inRect.yMax    - (2 * _buttonHeight) - (1 * _fieldHeight) - (2 * _margin),
+                                   inRect.yMax - (2 * _buttonHeight) - (1 * _fieldHeight) - (2 * _margin),
                                    _previewSize * 2, _fieldHeight);
             Rect recentRect = new Rect(previewRect.xMin, previewRect.yMax + _margin, _previewSize * 2,
-                                      _recentSize                                                * 2);
+                                      _recentSize * 2);
 
             // draw transparency backgrounds
             GUI.DrawTexture(pickerRect, PickerAlphaBG);
@@ -445,7 +453,8 @@ namespace ColourPicker {
             GUI.DrawTexture(previewRect, TempPreviewBG);
             GUI.DrawTexture(previewOldRect, PreviewBG);
 
-            if (Widgets.ButtonInvisible(previewOldRect)) {
+            if (Widgets.ButtonInvisible(previewOldRect))
+            {
                 tempColour = curColour;
                 NotifyRGBUpdated();
             }
@@ -458,7 +467,7 @@ namespace ColourPicker {
             Rect hueHandleRect = new Rect(hueRect.xMin - 3f, hueRect.yMin + _huePosition - (_handleSize / 2),
                                          _sliderWidth + 6f, _handleSize);
             Rect alphaHandleRect = new Rect(alphaRect.xMin - 3f, alphaRect.yMin + _alphaPosition - (_handleSize / 2),
-                                           _sliderWidth   + 6f, _handleSize);
+                                           _sliderWidth + 6f, _handleSize);
             Rect pickerHandleRect = new Rect(pickerRect.xMin + _position.x - (_handleSize / 2),
                                             pickerRect.yMin + _position.y - (_handleSize / 2), _handleSize, _handleSize);
             GUI.DrawTexture(hueHandleRect, TempPreviewBG);
@@ -472,7 +481,8 @@ namespace ColourPicker {
             GUI.color = Color.white;
 
             // reset active control on mouseup
-            if (Input.GetMouseButtonUp(0)) {
+            if (Input.GetMouseButtonUp(0))
+            {
                 _activeControl = controls.none;
             }
 
@@ -485,21 +495,26 @@ namespace ColourPicker {
             GUI.color = Color.white;
         }
 
-        private void DrawAlphaPicker(Rect alphaRect) {
+        private void DrawAlphaPicker(Rect alphaRect)
+        {
             // alpha picker interaction
-            if (Mouse.IsOver(alphaRect)) {
-                if (Input.GetMouseButtonDown(0)) {
+            if (Mouse.IsOver(alphaRect))
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
                     _activeControl = controls.alphaPicker;
                 }
 
-                if (Event.current.type == EventType.ScrollWheel) {
+                if (Event.current.type == EventType.ScrollWheel)
+                {
                     A -= Event.current.delta.y * UnitsPerPixel;
                     _alphaPosition = Mathf.Clamp(_alphaPosition + Event.current.delta.y, 0f, _pickerSize);
                     Event.current.Use();
                 }
 
-                if (_activeControl == controls.alphaPicker) {
-                    float MousePosition  = Event.current.mousePosition.y;
+                if (_activeControl == controls.alphaPicker)
+                {
+                    float MousePosition = Event.current.mousePosition.y;
                     float PositionInRect = MousePosition - alphaRect.yMin;
 
                     AlphaAction(PositionInRect);
@@ -507,30 +522,41 @@ namespace ColourPicker {
             }
         }
 
-        private void DrawButtons(Rect doneRect, Rect setRect, Rect cancelRect) {
-            if (Widgets.ButtonText(doneRect, "OK")) {
+        private void DrawButtons(Rect doneRect, Rect setRect, Rect cancelRect)
+        {
+            if (Widgets.ButtonText(doneRect, "OK"))
+            {
                 SetColor(true);
-                Close();
+                Accepted = true;
+                WantsToClose = true;
             }
 
-            if (Widgets.ButtonText(setRect, "Apply")) {
+            if (Widgets.ButtonText(setRect, "Apply"))
+            {
                 SetColor(false);
             }
 
-            if (Widgets.ButtonText(cancelRect, "Cancel")) {
-                Close();
+            if (Widgets.ButtonText(cancelRect, "Cancel"))
+            {
+                onCancel?.Invoke();
+                Accepted = false;
+                WantsToClose = true;
             }
         }
 
-        private void DrawColourPicker(Rect pickerRect) {
+        private void DrawColourPicker(Rect pickerRect)
+        {
             // colourpicker interaction
-            if (Mouse.IsOver(pickerRect)) {
-                if (Input.GetMouseButtonDown(0)) {
+            if (Mouse.IsOver(pickerRect))
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
                     _activeControl = controls.colourPicker;
                 }
 
-                if (_activeControl == controls.colourPicker) {
-                    Vector2 MousePosition  = Event.current.mousePosition;
+                if (_activeControl == controls.colourPicker)
+                {
+                    Vector2 MousePosition = Event.current.mousePosition;
                     Vector2 PositionInRect = MousePosition - new Vector2(pickerRect.xMin, pickerRect.yMin);
 
                     PickerAction(PositionInRect);
@@ -538,7 +564,8 @@ namespace ColourPicker {
             }
         }
 
-        private void DrawFields(Rect hsvFieldRect, Rect rgbFieldRect, Rect hexRect) {
+        private void DrawFields(Rect hsvFieldRect, Rect rgbFieldRect, Rect hexRect)
+        {
             Text.Font = GameFont.Small;
 
             Rect fieldRect = hsvFieldRect;
@@ -583,8 +610,9 @@ namespace ColourPicker {
             HexField.Draw(hexRect);
             Text.Anchor = TextAnchor.UpperLeft;
 
-            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab) {
-                string curControl      = GUI.GetNameOfFocusedControl();
+            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab)
+            {
+                string curControl = GUI.GetNameOfFocusedControl();
                 int curControlIndex = textFieldIds.IndexOf(curControl);
                 GUI.FocusControl(textFieldIds[
                                      GenMath.PositiveMod(curControlIndex + (Event.current.shift ? -1 : 1),
@@ -592,21 +620,26 @@ namespace ColourPicker {
             }
         }
 
-        private void DrawHuePicker(Rect hueRect) {
+        private void DrawHuePicker(Rect hueRect)
+        {
             // hue picker interaction
-            if (Mouse.IsOver(hueRect)) {
-                if (Input.GetMouseButtonDown(0)) {
+            if (Mouse.IsOver(hueRect))
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
                     _activeControl = controls.huePicker;
                 }
 
-                if (Event.current.type == EventType.ScrollWheel) {
+                if (Event.current.type == EventType.ScrollWheel)
+                {
                     H -= Event.current.delta.y * UnitsPerPixel;
                     _huePosition = Mathf.Clamp(_huePosition + Event.current.delta.y, 0f, _pickerSize);
                     Event.current.Use();
                 }
 
-                if (_activeControl == controls.huePicker) {
-                    float MousePosition  = Event.current.mousePosition.y;
+                if (_activeControl == controls.huePicker)
+                {
+                    float MousePosition = Event.current.mousePosition.y;
                     float PositionInRect = MousePosition - hueRect.yMin;
 
                     HueAction(PositionInRect);
@@ -614,23 +647,27 @@ namespace ColourPicker {
             }
         }
 
-        private void DrawRecent(Rect canvas) {
-            int cols = (int) (canvas.width  / _recentSize);
-            int rows = (int) (canvas.height / _recentSize);
-            int n    = Math.Min(cols * rows, _recentColours.Count);
+        private void DrawRecent(Rect canvas)
+        {
+            int cols = (int)(canvas.width / _recentSize);
+            int rows = (int)(canvas.height / _recentSize);
+            int n = Math.Min(cols * rows, _recentColours.Count);
 
             GUI.BeginGroup(canvas);
-            for (int i = 0; i < n; i++) {
-                int col   = i % cols;
-                int row   = i / cols;
+            for (int i = 0; i < n; i++)
+            {
+                int col = i % cols;
+                int row = i / cols;
                 Color color = _recentColours[i];
-                Rect rect  = new Rect(col * _recentSize, row * _recentSize, _recentSize, _recentSize);
+                Rect rect = new Rect(col * _recentSize, row * _recentSize, _recentSize, _recentSize);
                 Widgets.DrawBoxSolid(rect, color);
-                if (Mouse.IsOver(rect)) {
+                if (Mouse.IsOver(rect))
+                {
                     Widgets.DrawBox(rect);
                 }
 
-                if (Widgets.ButtonInvisible(rect)) {
+                if (Widgets.ButtonInvisible(rect))
+                {
                     tempColour = color;
                     NotifyRGBUpdated();
                 }
@@ -639,22 +676,26 @@ namespace ColourPicker {
             GUI.EndGroup();
         }
 
-        public static Color HSVAToRGB(float H, float S, float V, float A) {
+        public static Color HSVAToRGB(float H, float S, float V, float A)
+        {
             Color color = Color.HSVToRGB(H, S, V);
             color.a = A;
             return color;
         }
 
-        public void HueAction(float pos) {
+        public void HueAction(float pos)
+        {
             // only changing one value, property should work fine
             H = 1 - (UnitsPerPixel * pos);
             _huePosition = pos;
         }
 
-        public void NotifyHexUpdated() {
+        public void NotifyHexUpdated()
+        {
             Debug($"HEX updated ({Hex})");
 
-            if (ColorUtility.TryParseHtmlString(_hex, out Color color)) {
+            if (ColorUtility.TryParseHtmlString(_hex, out Color color))
+            {
                 // set rgb colour;
                 tempColour = color;
 
@@ -668,7 +709,8 @@ namespace ColourPicker {
             }
         }
 
-        public void NotifyHSVUpdated() {
+        public void NotifyHSVUpdated()
+        {
             Debug($"HSV updated: ({_h}, {_s}, {_v})");
 
             // update rgb colour
@@ -692,7 +734,8 @@ namespace ColourPicker {
             HexField.Value = Hex;
         }
 
-        public void NotifyRGBUpdated() {
+        public void NotifyRGBUpdated()
+        {
             Debug($"RGB updated: ({R}, {G}, {B})");
 
             // Set HSV from RGB
@@ -716,12 +759,32 @@ namespace ColourPicker {
             HexField.Value = Hex;
         }
 
-        public override void OnAcceptKeyPressed() {
+        public override void OnAcceptKeyPressed()
+        {
             base.OnAcceptKeyPressed();
             SetColor(false);
         }
 
-        public void PickerAction(Vector2 pos) {
+        public override void OnCancelKeyPressed()
+        {
+            onCancel?.Invoke();
+            base.OnCancelKeyPressed();
+        }
+
+        public override void Notify_ClickOutsideWindow()
+        {
+            onCancel?.Invoke();
+            base.Notify_ClickOutsideWindow();
+        }
+
+        public override void PostClose()
+        {
+            base.PostClose();
+            onPostClose?.Invoke();
+        }
+
+        public void PickerAction(Vector2 pos)
+        {
             // if we set S, V via properties these will be called twice.
             _s = UnitsPerPixel * pos.x;
             _v = 1 - (UnitsPerPixel * pos.y);
@@ -731,32 +794,36 @@ namespace ColourPicker {
             _position = pos;
         }
 
-        public override void PreOpen() {
+        public override void PreOpen()
+        {
             base.PreOpen();
             NotifyHSVUpdated();
         }
 
-        public void SetColor(bool closing) {
+        public void SetColor(bool closing)
+        {
             curColour = tempColour;
             _recentColours.Add(tempColour);
             _callback?.Invoke(curColour, closing);
             CreatePreviewBG(ref _previewBG, tempColour);
         }
 
-        protected override void SetInitialSizeAndPosition() {
+        protected override void SetInitialSizeAndPosition()
+        {
             // get position based on requested size and position, limited by screen space.
             Vector2 size = new Vector2(
                 Mathf.Min(InitialSize.x, UI.screenWidth),
                 Mathf.Min(InitialSize.y, UI.screenHeight - 35f));
 
             Vector2 position = new Vector2(
-                Mathf.Max(0f, Mathf.Min(InitialPosition.x, UI.screenWidth  - size.x)),
+                Mathf.Max(0f, Mathf.Min(InitialPosition.x, UI.screenWidth - size.x)),
                 Mathf.Max(0f, Mathf.Min(InitialPosition.y, UI.screenHeight - size.y)));
 
             windowRect = new Rect(position.x, position.y, size.x, size.y);
         }
 
-        public void SetPickerPositions() {
+        public void SetPickerPositions()
+        {
             // set slider positions
             _huePosition = (1f - H) / UnitsPerPixel;
             _position.x = S / UnitsPerPixel;
@@ -764,12 +831,14 @@ namespace ColourPicker {
             _alphaPosition = (1f - A) / UnitsPerPixel;
         }
 
-        private void SwapTexture(ref Texture2D tex, Texture2D newTex) {
+        private void SwapTexture(ref Texture2D tex, Texture2D newTex)
+        {
             Object.Destroy(tex);
             tex = newTex;
         }
 
-        private enum controls {
+        private enum controls
+        {
             colourPicker,
             huePicker,
             alphaPicker,
