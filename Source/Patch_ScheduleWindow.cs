@@ -117,10 +117,12 @@ namespace ChronosPointer
                 fillRect.width -= width;
             }
 
-            //int incident = IncidentHappening() + incidentSimulator;
-
             float windowHeight = Mathf.Max(instanceTable.cachedSize.y - instanceTable.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
 
+            // - 7/21/2025 @Coolnether123 changed to use a Where instead of a foreach loop, so it only runs once.
+            BaseOffsetX = instanceTableColumns.Where<PawnColumnDef>(def => def.defName == "PawnColumnWorker_Timetable").First().width + 1f; // Add 1px for the gap
+
+            /*
             foreach (var def in instanceTableColumns)
             {
                 if (def.defName == "PawnColumnWorker_Timetable")
@@ -129,7 +131,7 @@ namespace ChronosPointer
                     BaseOffsetX = def.width + 1f; // Add 1px for the gap
                     break;
                 }
-            }
+            }*/
 
             // Check if the current map has changed
             if (Find.CurrentMap != lastKnownMap)
