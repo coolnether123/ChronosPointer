@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using Verse;
 
@@ -99,6 +96,7 @@ namespace ChronosPointer
             {
                 buttonAAction();
             }
+            Patch_ScheduleWindow.IsInTestMode = false; // Reset test mode when this dialog closes
             Event.current.Use();
         }
 
@@ -121,6 +119,7 @@ namespace ChronosPointer
         public override void PostClose()
         {
             CloseAction();
+            base.PostClose(); // Keep the base call if it was there.
         }
     }
 }

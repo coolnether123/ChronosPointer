@@ -327,16 +327,10 @@ namespace ColourPicker {
             for (int x = 0; x < width; x += _alphaBGBlockSize) {
                 int column = row;
                 for (int y = 0; y < height; y += _alphaBGBlockSize) {
-                    try
-                    {
-
-                        tex.SetPixels(x, y, _alphaBGBlockSize, _alphaBGBlockSize, column % 2 == 0 ? bgA : bgB);
+                    int blockWidth = Mathf.Min(_alphaBGBlockSize, width - x);
+                    int blockHeight = Mathf.Min(_alphaBGBlockSize, height - y);
+                    tex.SetPixels(x, y, blockWidth, blockHeight, column % 2 == 0 ? bgA : bgB);
                         column++;
-                    }
-                    catch
-                    {
-                        //Log.Message($"Error setting pixels at ({x}, {y}): {e.Message}");
-                    }
                 }
 
                 row++;

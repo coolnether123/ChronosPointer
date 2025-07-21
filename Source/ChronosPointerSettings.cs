@@ -1,6 +1,4 @@
-﻿// START OF FILE ChronosPointerSettings.cs
-using ColourPicker;
-using Mono.Security.Protocol.Ntlm;
+﻿using ColourPicker;
 using RimWorld;
 using System;
 using System.Linq;
@@ -62,13 +60,13 @@ namespace ChronosPointer
 
 
         // Method to ensure cursorThickness is always an even number
-        public static int ValidateCursorThickness(ref float cursor)
+        public static float ValidateCursorThickness(float cursor)
         {
             if (cursor % 2 != 0)
             {
                 cursor += 1; // Adjust to the next even number
             }
-            return (int)cursor;
+            return cursor;
         }
         // Toggles
         public bool DrawArrow = true;
@@ -118,10 +116,51 @@ namespace ChronosPointer
         public float HoursBarCursorThickness = 2; // Default thickness
         public float AuroraMinOpacity = 0.1f;
         public float AuroraMaxOpacity = 0.75f;
-        public float SunlightThreshold_Night = 0.0f;
-        public float _SunlightThreshold_Any = 0.05f;
-        public float SunlightThreshold_DawnDusk = 0.35f;
-        public float SunlightThreshold_SunriseSunset = 0.7f;
+        private float _sunlightThreshold_Night = 0.0f;
+        public float SunlightThreshold_Night
+        {
+            get => _sunlightThreshold_Night;
+            set
+            {
+                _sunlightThreshold_Night = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_Any = 0.05f;
+        public float _SunlightThreshold_Any
+        {
+            get => _sunlightThreshold_Any;
+            set
+            {
+                _sunlightThreshold_Any = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_DawnDusk = 0.35f;
+        public float SunlightThreshold_DawnDusk
+        {
+            get => _sunlightThreshold_DawnDusk;
+            set
+            {
+                _sunlightThreshold_DawnDusk = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_SunriseSunset = 0.7f;
+        public float SunlightThreshold_SunriseSunset
+        {
+            get => _sunlightThreshold_SunriseSunset;
+            set
+            {
+                _sunlightThreshold_SunriseSunset = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        public static Action OnSunlightThresholdChanged;
 
         // Ints
         public float HighlightBorderThickness = 2; // Default thickness
@@ -186,14 +225,25 @@ namespace ChronosPointer
 
             Scribe_Values.Look(ref AuroraMinOpacity, "AuroraMinOpacity", 0.1f);
             Scribe_Values.Look(ref AuroraMaxOpacity, "AuroraMaxOpacity", 0.75f);
-            Scribe_Values.Look(ref SunlightThreshold_Night, "SunlightThreshold_Night", 0.0f);
-            Scribe_Values.Look(ref _SunlightThreshold_Any, "SunlightThreshold_Any", 0.05f);
-            Scribe_Values.Look(ref SunlightThreshold_DawnDusk, "SunlightThreshold_DawnDusk", 0.35f);
-            Scribe_Values.Look(ref SunlightThreshold_SunriseSunset, "SunlightThreshold_SunriseSunset", 0.7f);
+            float sunlightThresholdNight = SunlightThreshold_Night;
+            Scribe_Values.Look(ref sunlightThresholdNight, "SunlightThreshold_Night", 0.0f);
+            SunlightThreshold_Night = sunlightThresholdNight;
+
+            float sunlightThresholdAny = _SunlightThreshold_Any;
+            Scribe_Values.Look(ref sunlightThresholdAny, "SunlightThreshold_Any", 0.05f);
+            _SunlightThreshold_Any = sunlightThresholdAny;
+
+            float sunlightThresholdDawnDusk = SunlightThreshold_DawnDusk;
+            Scribe_Values.Look(ref sunlightThresholdDawnDusk, "SunlightThreshold_DawnDusk", 0.35f);
+            SunlightThreshold_DawnDusk = sunlightThresholdDawnDusk;
+
+            float sunlightThresholdSunriseSunset = SunlightThreshold_SunriseSunset;
+            Scribe_Values.Look(ref sunlightThresholdSunriseSunset, "SunlightThreshold_SunriseSunset", 0.7f);
+            SunlightThreshold_SunriseSunset = sunlightThresholdSunriseSunset;
 
             // Validate cursorThickness after loading
-            ValidateCursorThickness(ref CursorThickness);
-            ValidateCursorThickness(ref HoursBarCursorThickness);
+            CursorThickness = ValidateCursorThickness(CursorThickness);
+            HoursBarCursorThickness = ValidateCursorThickness(HoursBarCursorThickness);
         }
         public void ResetToDefaults()
         {
@@ -236,8 +286,8 @@ namespace ChronosPointer
             _HighlightInteriorColor = Defaults._HighlightInteriorColor;
 
             // Validate cursorThickness after resetting
-            ValidateCursorThickness(ref CursorThickness);
-            ValidateCursorThickness(ref HoursBarCursorThickness);
+            CursorThickness = ValidateCursorThickness(CursorThickness);
+            HoursBarCursorThickness = ValidateCursorThickness(HoursBarCursorThickness);
             Write();
         }
 
@@ -303,9 +353,9 @@ namespace ChronosPointer
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
 #if !V1_3
-            CursorThickness = (int)listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(ref CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
+            CursorThickness = listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
             GrayIfInactive(DrawHoursBarCursor);
-            HoursBarCursorThickness = (int)listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(ref HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
+            HoursBarCursorThickness = listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
             GrayIfInactive(DrawCurrentHourHighlight);
 #else
             ;
@@ -556,12 +606,16 @@ namespace ChronosPointer
                 Action onCancel = () =>
                 {
                     fieldInfo.SetValue(ChronosPointerMod.Settings, originalColor);
+
+                    Patch_ScheduleWindow.IsInTestMode = false;
                 };
 
                 Action onPostClose = () =>
                 {
                     Find.WindowStack.TryRemove(scheduleWindow);
                     incidentCleanupAction?.Invoke();
+
+                    Patch_ScheduleWindow.IsInTestMode = false;
                 };
 
                 // Open the schedule window as a non-modal sub-window

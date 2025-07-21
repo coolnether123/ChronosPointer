@@ -4,16 +4,12 @@ using LudeonTK;
 #endif
 using RimWorld;
 using RimWorld.Planet;
-using RimWorld.QuestGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using Verse;
 using static UnityEngine.GUI;
-using static UnityStandardAssets.ImageEffects.BloomOptimized;
 
 namespace ChronosPointer
 {
@@ -22,7 +18,7 @@ namespace ChronosPointer
     public static class Patch_ScheduleWindow
     {
         #region Values
-        public static Rect UseMeForTheXYPosOfDayNightBar;
+        
 
         // Where the schedule grid starts
         private static float BaseOffsetX = 1f;
@@ -44,17 +40,17 @@ namespace ChronosPointer
         // Flag to track if the day/night colors have been calculated
         public static bool dayNightColorsCalculated = false;
 
-        // Flag to track if the pawn count has been calculated
-        public static bool pawnCountCalculated = false;
+        
 
-        //Sumarbrander to CoolNether123: removed these because colors are no longer cached. It would be good if the daylight colors were.
 
-        // Array to store the colors for each hour
-        //private static Color[] dayNightColors = new Color[24];
-        //private static Color[] incidentColors = new Color[24];
+        
 
         // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
+
+        private static readonly Color[][] _seasonDaylightCache = new Color[5][];
+        public static Season _cachedSeason = Season.Undefined;
+        public static Map _cachedMap = null;
 
 
         // These are now internal so Dialog_IncidentTesting can see them
@@ -83,14 +79,23 @@ namespace ChronosPointer
         public static bool overrideDrawRegularBar = true;
         private static bool debugDrawOverlayBar = true;
 
-        //private static bool incidentsDirty = false; // Flag to track if incidents need recalculation
+        
 
         #endregion
-
 
         [HarmonyPostfix]
         public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
+            bool shouldDrawThisFrame = IsInTestMode || Find.MainTabsRoot.OpenTab == __instance.def;
+
+            
+
+            if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
+            {
+                return; // Skip drawing if not active tab and not in test mode
+            }
+
+
             if (Find.CurrentMap == null) return;
 
             var instanceTable = __instance.table;
@@ -213,14 +218,37 @@ namespace ChronosPointer
         #region Day/Night Bar
         private static Color[] GetDaylightColors()
         {
-            Color[] colors = new Color[24];
-            for (int localHour = 0; localHour < 24; localHour++)
-            {
-                colors[localHour] = GetColorForSunlight(GetCurrentDaylightForHour(localHour)); // Get the normal color for this hour
-            }
-            dayNightColorsCalculated = true;
+            Map map = Find.CurrentMap;
+            Season season = GenLocalDate.Season(map);
 
-            return colors;
+            // Invalidate cache on map or season change
+            if (_cachedMap != map || _cachedSeason != season)
+            {
+                _cachedMap = map;
+                _cachedSeason = season;
+                for (int i = 0; i < _seasonDaylightCache.Length; i++) _seasonDaylightCache[i] = null;
+            }
+
+            int idx = (int)season;
+            if (idx < 1 || idx >= _seasonDaylightCache.Length) idx = 1; // fallback to Spring if Undefined
+            if (_seasonDaylightCache[idx] == null)
+            {
+                Color[] colors = new Color[24];
+                long currentAbsTick = GenTicks.TicksAbs;
+                float dayPercent = GenLocalDate.DayPercent(map);
+                long ticksIntoLocalDay = (long)(dayPercent * (float)GenDate.TicksPerDay);
+                long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay;
+
+                for (int h = 0; h < 24; h++)
+                {
+                    long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)h * GenDate.TicksPerHour;
+                    float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForThisLocalHour);
+                    
+                    colors[h] = GetColorForSunlight(sunlight);
+                }
+                _seasonDaylightCache[idx] = colors;
+            }
+            return _seasonDaylightCache[idx];
         }
         private static float GetCurrentDaylightForHour(int localHour)
         {
@@ -336,7 +364,7 @@ namespace ChronosPointer
                 }
             }
             // Deep night
-            if (sunlightForHour == Settings.SunlightThreshold_Night)
+            if (sunlightForHour <= Settings.SunlightThreshold_Night)
                 return Settings.Color_Night;  // Deep Blue
 
             // Dawn/Dusk

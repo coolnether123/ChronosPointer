@@ -117,6 +117,7 @@ namespace ChronosPointer
         {
             base.PostClose();
             onPostCloseAction?.Invoke();
+            Patch_ScheduleWindow.IsInTestMode = false;
         }
     }
 }
