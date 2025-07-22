@@ -377,10 +377,17 @@ namespace ChronosPointer
             SunlightThreshold_DawnDusk = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
             SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
 #else
-            SunlightThreshold_Night         =  Do1_3LabeledSlider($"- Night ({SunlightThreshold_Night:F2})", listL, ref SunlightThreshold_Night, 0.0f, 1.0f);
-            //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
-            SunlightThreshold_DawnDusk      = Do1_3LabeledSlider($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", listL, ref SunlightThreshold_DawnDusk, 0.0f, 1.0f);
-            SunlightThreshold_SunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", listL, ref SunlightThreshold_SunriseSunset, 0.0f, 1.0f);
+            float night = SunlightThreshold_Night;
+            night = Do1_3LabeledSlider($"- Night ({night:F2})", listL, ref night, 0.0f, 1.0f);
+            SunlightThreshold_Night = night;
+
+            float dawnDusk = SunlightThreshold_DawnDusk;
+            dawnDusk = Do1_3LabeledSlider($"- Dawn/Dusk ({dawnDusk:F2})", listL, ref dawnDusk, 0.0f, 1.0f);
+            SunlightThreshold_DawnDusk = dawnDusk;
+
+            float sunriseSunset = SunlightThreshold_SunriseSunset;
+            sunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({sunriseSunset:F2})", listL, ref sunriseSunset, 0.0f, 1.0f);
+            SunlightThreshold_SunriseSunset = sunriseSunset;
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
@@ -457,7 +464,8 @@ namespace ChronosPointer
 #if V1_3
         public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
         {
-            return Widgets.HorizontalSlider(list.Label(label).RightHalf(), validateThickness ? (float)ValidateCursorThickness(ref value) : value, min, max);
+            // Remove 'ref' from ValidateCursorThickness call
+            return Widgets.HorizontalSlider(list.Label(label).RightHalf(), validateThickness ? ValidateCursorThickness(value) : value, min, max);
         }
 #endif
 
@@ -500,7 +508,7 @@ namespace ChronosPointer
                 if (isClosing && color.a > 0.3f && DoFilledHourHighlight)
                 {
 #if V1_5U
-                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color));
 #else
                     Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color, "Cancel"));
 #endif
@@ -519,7 +527,7 @@ namespace ChronosPointer
                 if (isClosing && color.a > 0.5f && DrawIncidentOverlay)
                 {
 #if V1_5U
-                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color));
 #else
                     Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color, "Cancel"));
 #endif
@@ -538,7 +546,7 @@ namespace ChronosPointer
                 if (isClosing && color.a > 0.5f && DrawIncidentOverlay)
                 {
 #if V1_5U
-                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color));
 #else
                     Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color, "Cancel"));
 #endif

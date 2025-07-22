@@ -196,12 +196,30 @@ namespace ColourPicker {
                                           new Vector2(UI.screenWidth - InitialSize.x,
                                                       UI.screenHeight - InitialSize.y) / 2f;
 
-        public override Vector2 InitialSize =>
-            // calculate window size to accomodate all elements
-            new Vector2(
-                _pickerSize + (3 * _margin) + (2 * _sliderWidth) + (2 * _previewSize) + (StandardMargin * 2),
-                _pickerSize + (StandardMargin * 2));
+        public override Vector2 InitialSize
+        {
+            get
+            {
+                // Calculate the total height required by the right-hand column content
+                float rightColumnHeight = _previewSize          // New/Old color preview
+                                        + _margin               // Gap
+                                        + (_recentSize * 2)     // Recent colors box
+                                        + _margin               // Gap
+                                        + (_fieldHeight * 3)    // HSV, RGB, HEX fields
+                                        + (_margin * 2)         // Gaps between fields
+                                        + _margin               // Gap
+                                        + (_buttonHeight * 2)   // Apply/Cancel and OK buttons
+                                        + _margin;              // Gap between button rows
 
+                // The window height should be the larger of the two columns (picker vs right-side content)
+                float contentHeight = Mathf.Max(_pickerSize, rightColumnHeight);
+
+                // The full window size includes standard margins around the content
+                return new Vector2(
+                    _pickerSize + (3 * _margin) + (2 * _sliderWidth) + (2 * _previewSize) + (StandardMargin * 2),
+                    contentHeight + (StandardMargin * 2));
+            }
+        }
         public Texture2D PickerAlphaBG {
             get {
                 if (_pickerAlphaBG == null) {
@@ -416,23 +434,32 @@ namespace ColourPicker {
             Rect alphaRect = new Rect(hueRect.xMax + _margin, inRect.yMin, _sliderWidth, _pickerSize);
             Rect previewRect = new Rect(alphaRect.xMax + _margin, inRect.yMin, _previewSize, _previewSize);
             Rect previewOldRect = new Rect(previewRect.xMax, inRect.yMin, _previewSize, _previewSize);
-            Rect doneRect = new Rect(alphaRect.xMax + _margin, inRect.yMax - _buttonHeight, _previewSize * 2,
-                                    _buttonHeight);
-            Rect setRect = new Rect(alphaRect.xMax + _margin, inRect.yMax - (2 * _buttonHeight) - _margin,
-                                   _previewSize - (_margin / 2), _buttonHeight);
-            Rect cancelRect = new Rect(setRect.xMax + _margin, setRect.yMin, _previewSize - (_margin / 2),
-                                      _buttonHeight);
-            Rect hsvFieldRect = new Rect(alphaRect.xMax + _margin,
-                                        inRect.yMax - (2 * _buttonHeight) - (3 * _fieldHeight) - (4 * _margin),
-                                        _previewSize * 2, _fieldHeight);
-            Rect rgbFieldRect = new Rect(alphaRect.xMax + _margin,
-                                        inRect.yMax - (2 * _buttonHeight) - (2 * _fieldHeight) - (3 * _margin),
-                                        _previewSize * 2, _fieldHeight);
-            Rect hexRect = new Rect(alphaRect.xMax + _margin,
-                                   inRect.yMax - (2 * _buttonHeight) - (1 * _fieldHeight) - (2 * _margin),
-                                   _previewSize * 2, _fieldHeight);
             Rect recentRect = new Rect(previewRect.xMin, previewRect.yMax + _margin, _previewSize * 2,
-                                      _recentSize * 2);
+                          _recentSize * 2);
+
+            Rect hsvFieldRect = new Rect(alphaRect.xMax + _margin,
+                                        recentRect.yMax + _margin,
+                                        _previewSize * 2, _fieldHeight);
+
+            Rect rgbFieldRect = new Rect(hsvFieldRect.x,
+                                        hsvFieldRect.yMax + _margin,
+                                        _previewSize * 2, _fieldHeight);
+
+            Rect hexRect = new Rect(rgbFieldRect.x,
+                                   rgbFieldRect.yMax + _margin,
+                                   _previewSize * 2, _fieldHeight);
+
+            Rect setRect = new Rect(hexRect.x,
+                                   hexRect.yMax + _margin,
+                                   _previewSize - (_margin / 2), _buttonHeight);
+
+            Rect cancelRect = new Rect(setRect.xMax + _margin,
+                                      setRect.y,
+                                      _previewSize - (_margin / 2), _buttonHeight);
+
+            Rect doneRect = new Rect(setRect.x,
+                                    setRect.yMax + _margin,
+                                    _previewSize * 2, _buttonHeight);
 
             // draw transparency backgrounds
             GUI.DrawTexture(pickerRect, PickerAlphaBG);
@@ -761,6 +788,7 @@ namespace ColourPicker {
 
         public override void OnCancelKeyPressed()
         {
+            Event.current.Use();
             onCancel?.Invoke();
             base.OnCancelKeyPressed();
         }

@@ -142,7 +142,7 @@ namespace ChronosPointer
                 // Reset the flag and update the last known map
                 dayNightColorsCalculated = false;
                 //incidentsDirty = true; // Reset incident colors
-                pawnCountCalculated = false;
+                //pawnCountCalculated = false;
                 lastKnownMap = Find.CurrentMap;
             }
 

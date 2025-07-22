@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -96,6 +97,15 @@ namespace ChronosPointer
             {
                 buttonAAction();
             }
+
+            var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
+                            .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+            if (scheduleWindow != null)
+            {
+                // Reset the layer back to default.
+                scheduleWindow.layer = WindowLayer.GameUI;
+            }
+
             Patch_ScheduleWindow.IsInTestMode = false; // Reset test mode when this dialog closes
             Event.current.Use();
         }

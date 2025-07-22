@@ -1,9 +1,9 @@
-﻿// START OF FILE Dialog_LivePreview.cs
-using ColourPicker;
+﻿using ColourPicker;
 using RimWorld;
 using System;
 using UnityEngine;
 using Verse;
+using System.Linq;
 
 namespace ChronosPointer
 {
@@ -117,8 +117,16 @@ namespace ChronosPointer
         {
             base.PostClose();
             onPostCloseAction?.Invoke();
+
+            var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
+                             .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+            if (scheduleWindow != null)
+            {
+                // Reset the layer back to default so it behaves like a normal tab again.
+                scheduleWindow.layer = WindowLayer.GameUI;
+            }
+
             Patch_ScheduleWindow.IsInTestMode = false;
         }
     }
 }
-// END OF FILE Dialog_LivePreview.cs
