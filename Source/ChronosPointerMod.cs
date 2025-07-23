@@ -2,10 +2,8 @@ using ColourPicker;
 using HarmonyLib;
 using RimWorld;
 using System;
-using System.Linq;
 using UnityEngine;
 using Verse;
-using System.Collections.Generic;
 
 namespace ChronosPointer
 {
@@ -108,6 +106,14 @@ namespace ChronosPointer
                 harmony.PatchAll();
                 Log.Message("[ChronosPointer] Harmony patches applied.");
             }
+
+            // Subscribe to sunlight threshold changes
+            ChronosPointerSettings.OnSunlightThresholdChanged += () =>
+            {
+                Patch_ScheduleWindow.dayNightColorsCalculated = false;
+                Patch_ScheduleWindow._cachedSeason = Season.Undefined;
+                Patch_ScheduleWindow._cachedMap = null;
+            };
         }
 
         public override string SettingsCategory()

@@ -1,8 +1,8 @@
 ﻿using ColourPicker;
-using Mono.Security.Protocol.Ntlm;
 using RimWorld;
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 
@@ -18,9 +18,9 @@ namespace ChronosPointer
         public static bool DoDynamicHoursBarLine = true;
         public static bool DrawMainCursor = true;
         public static bool DoFilledHourHighlight = false;
-        public static bool DrawIncidentOverlay = true;     
-        public static bool DoLoadWarnings = true;     
-               
+        public static bool DrawIncidentOverlay = true;
+        public static bool DoLoadWarnings = true;
+
         // Floats    
         public static float CursorThickness = 2; // Default thickness
         public static float HoursBarCursorThickness = 2; // Default thickness
@@ -30,14 +30,14 @@ namespace ChronosPointer
         public static float _SunlightThreshold_Any = 0.05f;
         public static float SunlightThreshold_DawnDusk = 0.35f;
         public static float SunlightThreshold_SunriseSunset = 0.7f;
-               
+
         // Ints       
         public static float HighlightBorderThickness = 2; // Default thickness
-               
+
         // Colors    
         public static Color Color_Arrow = Color.red;
         public static Color Color_MainCursor = Color.white;
-        public static Color Color_HourHighlight = new Color(1f, 1f, 0.75f, 1f);
+        public static Color Color_HourHighlight = new Color(0.737f, 0.737f, 0.114f, 0.812f);
         public static Color Color_HoursBarCursor_Day = Color.black;
         public static Color Color_HoursBarCursor_Night = Color.white;
         public static Color Color_Night = new Color(0f, 0f, 0.5f); //Deep blue
@@ -48,7 +48,7 @@ namespace ChronosPointer
         public static Color Color_ToxicFallout = new Color(0f, 1f, 0f, 0.5f);
         public static Color Color_Aurora1 = new Color(1.0f, 0.5f, 1.0f, 1.0f);
         public static Color Color_Aurora2 = new Color(0.5f, 1.0f, 0.5f, 1.0f);
-               
+
         public static Color _DefaultTransparentColor = new Color(1, 1, 1, 0);
         public static Color _HighlightInteriorColor = new Color(0f, 0f, 0f, 0f);
 
@@ -60,13 +60,13 @@ namespace ChronosPointer
 
 
         // Method to ensure cursorThickness is always an even number
-        public static int ValidateCursorThickness(ref float cursor)
+        public static float ValidateCursorThickness(float cursor)
         {
             if (cursor % 2 != 0)
             {
                 cursor += 1; // Adjust to the next even number
             }
-            return (int) cursor;
+            return cursor;
         }
         // Toggles
         public bool DrawArrow = true;
@@ -75,7 +75,7 @@ namespace ChronosPointer
         public bool DrawHourBar = true;
         public bool DrawHoursBarCursor = true;
         public bool DoDynamicHoursBarLine = true;
-        
+
         public bool DrawHourBarGetSet
         {
             get => DrawHourBar;
@@ -100,7 +100,7 @@ namespace ChronosPointer
             set
             {
                 DrawCurrentHourHighlight = value;
-                if(!value)
+                if (!value)
                 {
                     DoFilledHourHighlight = value; // Disable highlight fill if highlight is disabled
                 }
@@ -116,17 +116,58 @@ namespace ChronosPointer
         public float HoursBarCursorThickness = 2; // Default thickness
         public float AuroraMinOpacity = 0.1f;
         public float AuroraMaxOpacity = 0.75f;
-        public float SunlightThreshold_Night = 0.0f;
-        public float _SunlightThreshold_Any = 0.05f;
-        public float SunlightThreshold_DawnDusk = 0.35f;
-        public float SunlightThreshold_SunriseSunset = 0.7f;
+        private float _sunlightThreshold_Night = 0.0f;
+        public float SunlightThreshold_Night
+        {
+            get => _sunlightThreshold_Night;
+            set
+            {
+                _sunlightThreshold_Night = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_Any = 0.05f;
+        public float _SunlightThreshold_Any
+        {
+            get => _sunlightThreshold_Any;
+            set
+            {
+                _sunlightThreshold_Any = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_DawnDusk = 0.35f;
+        public float SunlightThreshold_DawnDusk
+        {
+            get => _sunlightThreshold_DawnDusk;
+            set
+            {
+                _sunlightThreshold_DawnDusk = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        private float _sunlightThreshold_SunriseSunset = 0.7f;
+        public float SunlightThreshold_SunriseSunset
+        {
+            get => _sunlightThreshold_SunriseSunset;
+            set
+            {
+                _sunlightThreshold_SunriseSunset = value;
+                OnSunlightThresholdChanged?.Invoke();
+            }
+        }
+
+        public static Action OnSunlightThresholdChanged;
 
         // Ints
         public float HighlightBorderThickness = 2; // Default thickness
 
         // Colors
         public Color Color_Arrow = Color.red;
-        public Color Color_HourHighlight = new Color(1f, 1f, 0f, 0.3f);
+        public Color Color_HourHighlight = new Color(0.737f, 0.737f, 0.114f, 0.812f);
         public Color Color_MainCursor = Color.white;
         public Color Color_HoursBarCursor_Day = Color.black;
         public Color Color_HoursBarCursor_Night = Color.white;
@@ -177,31 +218,42 @@ namespace ChronosPointer
             Scribe_Values.Look(ref writeCursorThickness, "CursorThickness", 2f); // Default thickn
             Scribe_Values.Look(ref writeHoursBarThickness, "HoursBarThickness", 2f); // Def
             Scribe_Values.Look(ref writeHighlightBorderThickness, "HighlightBorderThickness", 0.7f);
-            CursorThickness = (int)Mathf.Floor(writeCursorThickness );
-            HoursBarCursorThickness = (int)Mathf.Floor(writeHoursBarThickness );
+            CursorThickness = (int)Mathf.Floor(writeCursorThickness);
+            HoursBarCursorThickness = (int)Mathf.Floor(writeHoursBarThickness);
             HighlightBorderThickness = (int)Mathf.Floor(writeHighlightBorderThickness);
 
 
             Scribe_Values.Look(ref AuroraMinOpacity, "AuroraMinOpacity", 0.1f);
             Scribe_Values.Look(ref AuroraMaxOpacity, "AuroraMaxOpacity", 0.75f);
-            Scribe_Values.Look(ref SunlightThreshold_Night, "SunlightThreshold_Night", 0.0f);
-            Scribe_Values.Look(ref _SunlightThreshold_Any, "SunlightThreshold_Any", 0.05f);
-            Scribe_Values.Look(ref SunlightThreshold_DawnDusk, "SunlightThreshold_DawnDusk", 0.35f);
-            Scribe_Values.Look(ref SunlightThreshold_SunriseSunset, "SunlightThreshold_SunriseSunset", 0.7f);
+            float sunlightThresholdNight = SunlightThreshold_Night;
+            Scribe_Values.Look(ref sunlightThresholdNight, "SunlightThreshold_Night", 0.0f);
+            SunlightThreshold_Night = sunlightThresholdNight;
+
+            float sunlightThresholdAny = _SunlightThreshold_Any;
+            Scribe_Values.Look(ref sunlightThresholdAny, "SunlightThreshold_Any", 0.05f);
+            _SunlightThreshold_Any = sunlightThresholdAny;
+
+            float sunlightThresholdDawnDusk = SunlightThreshold_DawnDusk;
+            Scribe_Values.Look(ref sunlightThresholdDawnDusk, "SunlightThreshold_DawnDusk", 0.35f);
+            SunlightThreshold_DawnDusk = sunlightThresholdDawnDusk;
+
+            float sunlightThresholdSunriseSunset = SunlightThreshold_SunriseSunset;
+            Scribe_Values.Look(ref sunlightThresholdSunriseSunset, "SunlightThreshold_SunriseSunset", 0.7f);
+            SunlightThreshold_SunriseSunset = sunlightThresholdSunriseSunset;
 
             // Validate cursorThickness after loading
-            ValidateCursorThickness(ref CursorThickness);
-            ValidateCursorThickness(ref HoursBarCursorThickness);
+            CursorThickness = ValidateCursorThickness(CursorThickness);
+            HoursBarCursorThickness = ValidateCursorThickness(HoursBarCursorThickness);
         }
         public void ResetToDefaults()
         {
             DrawArrow = Defaults.DrawArrow;
             DrawCurrentHourHighlight = Defaults.DrawCurrentHourHighlight;
-            DrawHourBar = Defaults.DrawHourBar ;
-            DrawHoursBarCursor = Defaults.DrawHoursBarCursor ;
-            DoDynamicHoursBarLine = Defaults.DoDynamicHoursBarLine ;
-            DrawMainCursor = Defaults.DrawMainCursor ;
-            DoFilledHourHighlight = Defaults.DoFilledHourHighlight ;
+            DrawHourBar = Defaults.DrawHourBar;
+            DrawHoursBarCursor = Defaults.DrawHoursBarCursor;
+            DoDynamicHoursBarLine = Defaults.DoDynamicHoursBarLine;
+            DrawMainCursor = Defaults.DrawMainCursor;
+            DoFilledHourHighlight = Defaults.DoFilledHourHighlight;
             DrawIncidentOverlay = Defaults.DrawIncidentOverlay;
             //DoLoadWarnings = true; Don't reset because the user probably doesn't want to see the warnings again after they have been disabled.
 
@@ -234,17 +286,17 @@ namespace ChronosPointer
             _HighlightInteriorColor = Defaults._HighlightInteriorColor;
 
             // Validate cursorThickness after resetting
-            ValidateCursorThickness(ref CursorThickness);
-            ValidateCursorThickness(ref HoursBarCursorThickness);
+            CursorThickness = ValidateCursorThickness(CursorThickness);
+            HoursBarCursorThickness = ValidateCursorThickness(HoursBarCursorThickness);
             Write();
         }
 
-        
+
 
         public void DoWindowContents(Rect inRect)
         {
-            Rect buttonRect = new Rect(inRect.width - 150f-29f, 0f, 150f, 30f);
-            if(Widgets.ButtonText(buttonRect, "Reset Defaults"))
+            Rect buttonRect = new Rect(inRect.width - 150f - 29f, 0f, 150f, 30f);
+            if (Widgets.ButtonText(buttonRect, "Reset Defaults"))
             {
 #if V1_5U
                 Find.WindowStack.Add(new Dialog_Confirm("Are you sure you want to reset all settings to defaults?", () => 
@@ -252,7 +304,7 @@ namespace ChronosPointer
                     ResetToDefaults();
                 }));
 #else
-                Find.WindowStack.Add(new Dialog_MessageBox("Are you sure you want to reset all settings to defaults?", "Confirm", () => 
+                Find.WindowStack.Add(new Dialog_MessageBox("Are you sure you want to reset all settings to defaults?", "Confirm", () =>
                 {
                     ResetToDefaults();
                 }, "Cancel"));
@@ -286,7 +338,7 @@ namespace ChronosPointer
             listL.CheckboxLabeled("Show Main Cursor", ref DrawMainCursor, tooltip: "Whether to show the Pawn Main Cursor.");
             listL.CheckboxLabeled("Show Current Hour Highlight", ref DrawCurrentHourHighlight, tooltip: "Whether to show the Current Hour highlight.");
             DrawCurrentHourHighlightGetSet = DrawCurrentHourHighlight;
-            
+
             GrayIfInactive(DrawCurrentHourHighlight);
             Text.Font = GameFont.Tiny;
             listL.CheckboxLabeled("- Fill Current Hour Highlight", ref DoFilledHourHighlight, tooltip: "Whether to fill the Current Hour highlight.");
@@ -294,16 +346,16 @@ namespace ChronosPointer
             GUI.color = Color.white;
             listL.CheckboxLabeled("Show Warnings on Load", ref DoLoadWarnings, tooltip: "Whether to show mod conflict warnins on startup.");
             GUI.color = Color.white;
-            
+
             listL.Gap();
             GrayIfInactive(DrawMainCursor || DrawHoursBarCursor || DrawCurrentHourHighlight);
             listL.Label($"Cursor thicknesses:");
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
 #if !V1_3
-            CursorThickness                 = (int) listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(ref CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
+            CursorThickness = listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
             GrayIfInactive(DrawHoursBarCursor);
-            HoursBarCursorThickness      = (int) listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(ref HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
+            HoursBarCursorThickness = listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
             GrayIfInactive(DrawCurrentHourHighlight);
 #else
             ;
@@ -320,15 +372,22 @@ namespace ChronosPointer
             listL.Label("Sunlight thresholds (0.0 = no sunlight, 1.0 = full sunlight):");
             Text.Font = GameFont.Tiny;
 #if !V1_3
-            SunlightThreshold_Night         = listL.SliderLabeled($"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
+            SunlightThreshold_Night = listL.SliderLabeled($"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
             //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
-            SunlightThreshold_DawnDusk      = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
-            SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip:"How dark the map has to be to show the sunrise/sunset color.");
+            SunlightThreshold_DawnDusk = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
+            SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
 #else
-            SunlightThreshold_Night         =  Do1_3LabeledSlider($"- Night ({SunlightThreshold_Night:F2})", listL, ref SunlightThreshold_Night, 0.0f, 1.0f);
-            //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
-            SunlightThreshold_DawnDusk      = Do1_3LabeledSlider($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", listL, ref SunlightThreshold_DawnDusk, 0.0f, 1.0f);
-            SunlightThreshold_SunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", listL, ref SunlightThreshold_SunriseSunset, 0.0f, 1.0f);
+            float night = SunlightThreshold_Night;
+            night = Do1_3LabeledSlider($"- Night ({night:F2})", listL, ref night, 0.0f, 1.0f);
+            SunlightThreshold_Night = night;
+
+            float dawnDusk = SunlightThreshold_DawnDusk;
+            dawnDusk = Do1_3LabeledSlider($"- Dawn/Dusk ({dawnDusk:F2})", listL, ref dawnDusk, 0.0f, 1.0f);
+            SunlightThreshold_DawnDusk = dawnDusk;
+
+            float sunriseSunset = SunlightThreshold_SunriseSunset;
+            sunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({sunriseSunset:F2})", listL, ref sunriseSunset, 0.0f, 1.0f);
+            SunlightThreshold_SunriseSunset = sunriseSunset;
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
@@ -337,9 +396,9 @@ namespace ChronosPointer
 
             GrayIfInactive(DrawIncidentOverlay);
 #if !V1_3
-            AuroraMinOpacity                = listL.SliderLabeled($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", AuroraMinOpacity, 0.0f, 1.0f, tooltip: "The minimum transparancy the aurora effect gets.");
+            AuroraMinOpacity = listL.SliderLabeled($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", AuroraMinOpacity, 0.0f, 1.0f, tooltip: "The minimum transparancy the aurora effect gets.");
             GrayIfInactive(DrawIncidentOverlay);
-            AuroraMaxOpacity                = listL.SliderLabeled($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
+            AuroraMaxOpacity = listL.SliderLabeled($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
 #else
             AuroraMinOpacity                = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
             GrayIfInactive(DrawIncidentOverlay);
@@ -352,168 +411,72 @@ namespace ChronosPointer
             listL.End();
             GUI.color = Color.white;
 
-            
+
             var listC = new Listing_Standard();
-            
+
             listC.Begin(center);
             listC.Label("Main Colors");
 
             GrayIfInactive(DrawArrow);
-            DoColorPickButton(listC, Color_Arrow, (newColor, isClosing) => { Color_Arrow = newColor; }, "Arrow Color");
-            
+            DoColorPickButton(listC, Color_Arrow, (newColor, isClosing) => { Color_Arrow = newColor; }, "Arrow Color", nameof(Color_Arrow));
+
             GrayIfInactive(DrawMainCursor);
-            DoColorPickButton(listC, Color_MainCursor, (newColor, isClosing) => { Color_MainCursor = newColor; }, "Cursor Color");
-            
+            DoColorPickButton(listC, Color_MainCursor, (newColor, isClosing) => { Color_MainCursor = newColor; }, "Cursor Color", nameof(Color_MainCursor));
+
             GrayIfInactive(DrawCurrentHourHighlight);
-            DoColorPickButton(listC, Color_HourHighlight, ChangeCurrentHourHighlightAction(), "Current-hour color");
+            DoColorPickButton(listC, Color_HourHighlight, ChangeCurrentHourHighlightAction(), "Current-hour color", nameof(Color_HourHighlight));
 
             GrayIfInactive(DrawHourBar);
             listC.Label("Hour Bar Cursor Colors");
-            DoColorPickButton(listC, Color_HoursBarCursor_Day, (color, b) => Color_HoursBarCursor_Day = color, !DoDynamicHoursBarLine ? "Time Trace Color" : "Time Trace Color Day");
-            
+            DoColorPickButton(listC, Color_HoursBarCursor_Day, (color, b) => Color_HoursBarCursor_Day = color, !DoDynamicHoursBarLine ? "Time Trace Color" : "Time Trace Color Day", nameof(Color_HoursBarCursor_Day));
+
             GrayIfInactive(DoDynamicHoursBarLine);
-            DoColorPickButton(listC, Color_HoursBarCursor_Night, (color, b) => Color_HoursBarCursor_Night = color, "Time Trace Color Night");
+            DoColorPickButton(listC, Color_HoursBarCursor_Night, (color, b) => Color_HoursBarCursor_Night = color, "Time Trace Color Night", nameof(Color_HoursBarCursor_Night));
 
             GrayIfInactive(DrawHourBar);
             listC.Label("Hour Bar Colors");
-            DoColorPickButton(listC, Color_Night, (color, b) => Color_Night = color, "Night Color");
-            DoColorPickButton(listC, Color_DawnDusk, (color, b) => Color_DawnDusk = color, "Dawn/Dusk Color");
-            DoColorPickButton(listC, Color_SunriseSunset, (color, b) => Color_SunriseSunset = color, "Sunrise/Sunset Color");
-            DoColorPickButton(listC, Color_Day, (color, b) => Color_Day = color, "Day Color");
-            
+            DoColorPickButton(listC, Color_Night, (color, b) => Color_Night = color, "Night Color", nameof(Color_Night));
+            DoColorPickButton(listC, Color_DawnDusk, (color, b) => Color_DawnDusk = color, "Dawn/Dusk Color", nameof(Color_DawnDusk));
+            DoColorPickButton(listC, Color_SunriseSunset, (color, b) => Color_SunriseSunset = color, "Sunrise/Sunset Color", nameof(Color_SunriseSunset));
+            DoColorPickButton(listC, Color_Day, (color, b) => Color_Day = color, "Day Color", nameof(Color_Day));
+
             GUI.color = Color.white;
 
             listC.End();
-            
+
             var listR = new Listing_Standard();
-            
+
             listR.Begin(right);
 
             listR.Label("Incident Overlay Colors");
             GrayIfInactive(DrawIncidentOverlay);
-            DoColorPickButton(listR, Color_ToxicFallout,ChangeCurrentToxicColorAction(), "Toxic Fallout Color");
-            DoColorPickButton(listR, Color_VolcanicWinter, ChangeCurrentVolacanicColorAction(), "Volcanic Winter Color");
-            DoColorPickButton(listR, Color_Aurora1, (color, b) => Color_Aurora1 = color, "Aurora Color 1");
-            DoColorPickButton(listR, Color_Aurora2, (color, b) => Color_Aurora2 = color, "Aurora Color 2");
+            DoColorPickButton(listR, Color_ToxicFallout, ChangeCurrentToxicColorAction(), "Toxic Fallout Color", nameof(Color_ToxicFallout));
+            DoColorPickButton(listR, Color_VolcanicWinter, ChangeCurrentVolacanicColorAction(), "Volcanic Winter Color", nameof(Color_VolcanicWinter));
+            DoColorPickButton(listR, Color_Aurora1, (color, b) => Color_Aurora1 = color, "Aurora Color 1", nameof(Color_Aurora1));
+            DoColorPickButton(listR, Color_Aurora2, (color, b) => Color_Aurora2 = color, "Aurora Color 2", nameof(Color_Aurora2));
             GUI.color = Color.white;
 
             listR.End();
 
-            
+
         }
 
 #if V1_3
         public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
         {
-            return Widgets.HorizontalSlider(list.Label(label).RightHalf(), validateThickness ? (float)ValidateCursorThickness(ref value) : value, min, max);
+            // Remove 'ref' from ValidateCursorThickness call
+            return Widgets.HorizontalSlider(list.Label(label).RightHalf(), validateThickness ? ValidateCursorThickness(value) : value, min, max);
         }
 #endif
-        public void OldWindow(Rect inRect)
-        {
-            float height = 1000f;
-            Rect viewRect = new Rect(0f, 40f, inRect.width - 50f, height);
-
-            Listing_Standard listingStandard = new Listing_Standard();
-            listingStandard.Begin(viewRect);
-            DoTopSettings(listingStandard);
-
-            listingStandard.Gap(15f);
-            // ListingWidth
-            listingStandard.ColumnWidth = inRect.width / 2f;
-            float LRHeight = listingStandard.CurHeight + 25f;
-
-            listingStandard.Gap(5f);
-            DoLeftSettings(inRect, listingStandard);
-
-            listingStandard.End();
-            Rect rightRect = new Rect(inRect.x + inRect.width / 2f + 16f, LRHeight, inRect.width / 2f - 50f, height);
-
-            Listing_Standard rightListing = new Listing_Standard();
-            // ListingWidth
-            rightListing.ColumnWidth = rightRect.width;
-            rightListing.Begin(rightRect);
-            rightListing.Gap(5f);
-            DoRightSettings(rightListing);
-            rightListing.End();
-            GUI.color = Color.white;
-        }
-        private void DoTopSettings(Listing_Standard listingStandard)
-        {
-            if (listingStandard.ButtonText("Reset to Default"))
-            {
-                ResetToDefaults();
-            }
-            listingStandard.Gap(20f);
-
-            listingStandard.CheckboxLabeled("- Show Arrow", ref DrawArrow);
-            listingStandard.CheckboxLabeled("- Show Hours Bar", ref DrawHourBar);
-
-            // Gray out unapplicable settings
-            if (!DrawHourBar) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("    Show Hours Bar Time Indicator", ref DrawHoursBarCursor);
-            GUI.color = Color.white;
-
-            if (!DrawHoursBarCursor || !DrawHourBar) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("    Dynamic Hours Bar Cursor Color", ref DoDynamicHoursBarLine);
-            GUI.color = Color.white;
-
-            listingStandard.CheckboxLabeled("- Show Pawn Section Time Indicator", ref DrawMainCursor);
-            listingStandard.CheckboxLabeled("- Show Current Hour Highlight", ref DrawCurrentHourHighlight);
-            if (!DrawCurrentHourHighlight) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("    Hollow Current Hour Highlight", ref DoFilledHourHighlight);
-            GUI.color = Color.white;
-            listingStandard.CheckboxLabeled("Do Incident Special Effects", ref DrawIncidentOverlay);
-            listingStandard.CheckboxLabeled("Show Warnings on Load", ref DoLoadWarnings);
-            GUI.color = Color.white;
-        }
-
-
-
-        private void DoLeftSettings(Rect inRect, Listing_Standard listingStandard)
-        {
-            //DoShowScheduleWindow(listingStandard);
-            listingStandard.Gap(10f);
-            // Arrow Color
-            GrayIfInactive(DrawArrow);
-            DoColorPickButton(listingStandard, Color_Arrow, (newColor, isClosing) => { Color_Arrow = newColor; }, "Change Arrow Color");
-
-            listingStandard.Gap(4f);
-
-            // Pawn cursor
-            GrayIfInactive(DrawMainCursor);
-            listingStandard.Label($"Pawn Section Time Indicator Thickness: {CursorThickness:F2}");
-            float newThickness = listingStandard.Slider(CursorThickness, 2f, 10f);
-            if (DrawMainCursor)
-            {
-                //CursorThickness = Mathf.Round((float)newThickness / 2f) * 2f; // Round to nearest even number
-            }
-            listingStandard.Gap(4f);
-
-            GrayIfInactive(DrawMainCursor);
-            DoColorPickButton(listingStandard, Color_MainCursor, (newColor, isClosing) => { Color_MainCursor = newColor; }, "Change Pawn Section Time Indicator Color");
-
-            // Current hour highlight
-            GrayIfInactive(DrawCurrentHourHighlight);
-            GrayIfInactive(DrawHoursBarCursor);
-            listingStandard.Label($"Pawn Section Time Indicator Thickness: {HoursBarCursorThickness:F2}");
-            float secondNewThickness = listingStandard.Slider(HoursBarCursorThickness, 2f, 10f);
-            if (DrawHoursBarCursor)
-            {
-                //DayNightBarCursorThickness = Mathf.Round(secondNewThickness / 2f) * 2f; // Round to nearest even number
-            }
-            DoColorPickButton(listingStandard, Color_HourHighlight, ChangeCurrentHourHighlightAction(), "Change current-hour color");
-            GUI.color = Color.white;
-
-        }
 
         private static void DoShowScheduleWindowButton(Rect buttonRect)
         {
             if (Current.Game != null)
             {
                 GUI.color = Color.green;
-                if (Widgets.ButtonText(buttonRect, "Show schedule menu"))
+                if (Widgets.ButtonText(buttonRect, "Incident Preview..."))
                 {
-                    var fakeSchedule = Find.MainButtonsRoot.allButtonsInOrder.Where((MainButtonDef button) => { return button.TabWindow is MainTabWindow_Schedule; }).First()?.TabWindow;
+                    var fakeSchedule = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule)?.TabWindow;
                     if (fakeSchedule != null)
                     {
                         fakeSchedule.layer = WindowLayer.SubSuper;
@@ -532,31 +495,9 @@ namespace ChronosPointer
             else
             {
                 GrayIfInactive(false);
-                Widgets.ButtonText(buttonRect, "Show schedule menu");
+                Widgets.ButtonText(buttonRect, "Incident Preview...");
             }
-                GUI.color = Color.white;
-        }
-
-        private void DoRightSettings(Listing_Standard listingStandard)
-        {
-
-
-            // Hours Bar day and night colors
-            GrayIfInactive(DrawHourBar);
-            GrayIfInactive(DrawHourBar && DrawHoursBarCursor);
-            // Day/Default
-            DoColorPickButton(listingStandard, Color_HoursBarCursor_Day, (color, b) => Color_HoursBarCursor_Day = color, "Change Time Trace Color" + (DoDynamicHoursBarLine ? " Day" : ""));
-            // Night
-            GrayIfInactive(DrawHourBar && DrawHoursBarCursor && DoDynamicHoursBarLine);
-            DoColorPickButton(listingStandard, Color_HoursBarCursor_Night, (color, b) => Color_HoursBarCursor_Night = color, "Change Time Trace Color Night");
-
-            GrayIfInactive(DrawHourBar);
-            DoColorPickButton(listingStandard, Color_Night, (color, b) => Color_Night = color, "Change Night Color");
-            DoColorPickButton(listingStandard, Color_DawnDusk, (color, b) => Color_DawnDusk = color, "Change Dawn/Dusk Color");
-            DoColorPickButton(listingStandard, Color_SunriseSunset, (color, b) => Color_SunriseSunset = color, "Change Sunrise/Sunset Color");
-            DoColorPickButton(listingStandard, Color_Day, (color, b) => Color_Day = color, "Change Day Color");
-
-
+            GUI.color = Color.white;
         }
 
         #region This is completely wet (opposite of D.R.Y.) but I'm too dumb to figure out how to apply ref to a lambda expression (not allowed but there's workarounds) without completely ripping out the code and starting over.
@@ -564,80 +505,32 @@ namespace ChronosPointer
         {
             return (color, isClosing) =>
             {
-                if (color.a > 0.3f && DoFilledHourHighlight)
+                if (isClosing && color.a > 0.3f && DoFilledHourHighlight)
                 {
-
-                    if (!isClosing)
-                    {
 #if V1_5U
-                        Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color));
 #else
-                        Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () => Color_HourHighlight = color, "Cancel"));
 #endif
-                    }
-                    else
-                    {
-                        Find.WindowStack.Add(new Dialog_ColourPicker(color, ChangeCurrentHourHighlightAction()));
-#if V1_5U
-                        Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () =>
-                                 {
-                                     Find.WindowStack.TryGetWindow<Dialog_ColourPicker>(out var picker);
-                                     picker?.Close();
-                                     Color_HourHighlight = color;
-                     }));
-#else
-                        Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to use with a solid current hour highlight.", "Use anyway", () =>
-                                 {
-                                     Find.WindowStack.WindowOfType<Dialog_ColourPicker>()?.Close();
-                                     //picker?.Close();
-                                     Color_HourHighlight = color;
-                                 }, "Cancel"));
-#endif
-                    }
                 }
                 else
                 {
                     Color_HourHighlight = color;
                 }
-                
+
             };
         }
         private Action<Color, bool> ChangeCurrentVolacanicColorAction()
         {
             return (color, isClosing) =>
             {
-                if (color.a > 0.5f && DrawIncidentOverlay)
+                if (isClosing && color.a > 0.5f && DrawIncidentOverlay)
                 {
-
-                    if (!isClosing)
-                    {
 #if V1_5U
-                        Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color));
 #else
-                        Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_VolcanicWinter = color, "Cancel"));
 #endif
-                    }
-                    else
-                    {
-                        Find.WindowStack.Add(new Dialog_ColourPicker(color, ChangeCurrentVolacanicColorAction()));
-
-#if V1_5U
-                        Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () =>
-                        {
-                            Find.WindowStack.TryGetWindow<Dialog_ColourPicker>(out var picker);
-                            picker?.Close();
-                            Color_VolcanicWinter = color;
-                        }));
-         
-#else
-
-                        Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () =>
-                        {
-                            Find.WindowStack.WindowOfType<Dialog_ColourPicker>()?.Close();
-                            Color_VolcanicWinter = color;
-                        }, "Cancel"));
-#endif
-                    }
                 }
                 else
                 {
@@ -650,37 +543,13 @@ namespace ChronosPointer
         {
             return (color, isClosing) =>
             {
-                if (color.a > 0.5f && DrawIncidentOverlay)
+                if (isClosing && color.a > 0.5f && DrawIncidentOverlay)
                 {
-
-                    if (!isClosing)
-                    {
 #if V1_5U
-                        Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color));
+                    Find.WindowStack.Add(new Dialog_Confirm("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color));
 #else
-                        Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color, "Cancel"));
+                    Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has high transparency and may be hard to see the current hour's daylight.", "Use anyway", () => Color_ToxicFallout = color, "Cancel"));
 #endif
-                    }
-                    else
-                    {
-                        Find.WindowStack.Add(new Dialog_ColourPicker(color, ChangeCurrentToxicColorAction()));
-#if V1_5U
-             
-             Find.WindowStack.Add(new Dialog_Confirm("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () =>
-                        {
-                            Find.WindowStack.TryGetWindow<Dialog_ColourPicker>(out var picker);
-                            picker?.Close();
-                            Color_ToxicFallout = color;
-                        }));
-#else
-             Find.WindowStack.Add(new Dialog_MessageBox("The chosen color has hight transparency and may be hard to see the current hour's daylight.", "Use anyway", () =>
-                        {
-                            Find.WindowStack.WindowOfType<Dialog_ColourPicker>()?.Close();
-                            Color_ToxicFallout = color;
-                        }, "Cancel"));
-#endif
-                        
-                    }
                 }
                 else
                 {
@@ -689,13 +558,82 @@ namespace ChronosPointer
 
             };
         }
-#endregion
-        private static void DoColorPickButton(Listing_Standard listingStandard, Color color, Action<Color, bool> colorChangeOperation, string buttonText)
+        #endregion
+        private static void DoColorPickButton(Listing_Standard listingStandard, Color color, Action<Color, bool> colorChangeOperation, string buttonText, string settingFieldName)
         {
-            //listingStandard.Gap(10f);
             Widgets.DrawBoxSolid(listingStandard.GetRect(10), color);
             if (listingStandard.ButtonText(buttonText))
-                Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
+            {
+                // If not in a game, or can't find schedule, show normal picker.
+                if (Current.Game == null || Find.CurrentMap == null)
+                {
+                    Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
+                    return;
+                }
+
+                var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+                if (scheduleWindow == null)
+                {
+                    Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
+                    return;
+                }
+
+                // --- Live Preview Logic ---
+                var originalColor = color;
+                var fieldInfo = typeof(ChronosPointerSettings).GetField(settingFieldName, BindingFlags.Public | BindingFlags.Instance);
+                if (fieldInfo == null)
+                {
+                    Log.Error($"[ChronosPointer] Could not find setting field '{settingFieldName}' for live preview.");
+                    Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
+                    return;
+                }
+
+                // --- Temporary Incident Simulation Logic ---
+                Action incidentCleanupAction = null;
+                switch (settingFieldName)
+                {
+                    case nameof(Color_ToxicFallout):
+                        bool originalTF = Patch_ScheduleWindow.overrideIsToxicFallout;
+                        Patch_ScheduleWindow.overrideIsToxicFallout = true;
+                        incidentCleanupAction = () => { Patch_ScheduleWindow.overrideIsToxicFallout = originalTF; };
+                        break;
+                    case nameof(Color_VolcanicWinter):
+                        bool originalVW = Patch_ScheduleWindow.overrideIsVolcanicWinter;
+                        Patch_ScheduleWindow.overrideIsVolcanicWinter = true;
+                        incidentCleanupAction = () => { Patch_ScheduleWindow.overrideIsVolcanicWinter = originalVW; };
+                        break;
+                    case nameof(Color_Aurora1):
+                    case nameof(Color_Aurora2):
+                        bool originalA = Patch_ScheduleWindow.overrideIsAurora;
+                        Patch_ScheduleWindow.overrideIsAurora = true;
+                        incidentCleanupAction = () => { Patch_ScheduleWindow.overrideIsAurora = originalA; };
+                        break;
+                }
+
+                // --- Setup Actions for the Live Preview Window ---
+                Action onCancel = () =>
+                {
+                    fieldInfo.SetValue(ChronosPointerMod.Settings, originalColor);
+
+                    Patch_ScheduleWindow.IsInTestMode = false;
+                };
+
+                Action onPostClose = () =>
+                {
+                    Find.WindowStack.TryRemove(scheduleWindow);
+                    incidentCleanupAction?.Invoke();
+
+                    Patch_ScheduleWindow.IsInTestMode = false;
+                };
+
+                // Open the schedule window as a non-modal sub-window
+                scheduleWindow.layer = WindowLayer.SubSuper;
+                Find.WindowStack.Add(scheduleWindow);
+
+                // Create and add our new custom preview dialog
+                var previewDialog = new Dialog_LivePreview(color, colorChangeOperation, onCancel, onPostClose);
+                Find.WindowStack.Add(previewDialog);
+            }
             listingStandard.Gap(10f);
         }
 

@@ -16,7 +16,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.5.4409": {
+      "Krafs.Rimworld.Ref/1.3.3389": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -26,20 +26,14 @@
           "ref/net472/Mono.Security.dll": {},
           "ref/net472/NAudio.dll": {},
           "ref/net472/NVorbis.dll": {},
-          "ref/net472/System.ComponentModel.Composition.dll": {},
           "ref/net472/System.Configuration.dll": {},
           "ref/net472/System.Core.dll": {},
           "ref/net472/System.Runtime.Serialization.dll": {},
-          "ref/net472/System.Runtime.dll": {},
           "ref/net472/System.Security.dll": {},
           "ref/net472/System.ServiceModel.Internals.dll": {},
           "ref/net472/System.Xml.Linq.dll": {},
           "ref/net472/System.Xml.dll": {},
           "ref/net472/System.dll": {},
-          "ref/net472/Unity.Burst.Unsafe.dll": {},
-          "ref/net472/Unity.Burst.dll": {},
-          "ref/net472/Unity.Mathematics.dll": {},
-          "ref/net472/Unity.MemoryProfiler.dll": {},
           "ref/net472/Unity.TextMeshPro.dll": {},
           "ref/net472/UnityEngine.AIModule.dll": {},
           "ref/net472/UnityEngine.ARModule.dll": {},
@@ -135,7 +129,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.5.4409": {
+      "Krafs.Rimworld.Ref/1.3.3389": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -145,20 +139,14 @@
           "ref/net472/Mono.Security.dll": {},
           "ref/net472/NAudio.dll": {},
           "ref/net472/NVorbis.dll": {},
-          "ref/net472/System.ComponentModel.Composition.dll": {},
           "ref/net472/System.Configuration.dll": {},
           "ref/net472/System.Core.dll": {},
           "ref/net472/System.Runtime.Serialization.dll": {},
-          "ref/net472/System.Runtime.dll": {},
           "ref/net472/System.Security.dll": {},
           "ref/net472/System.ServiceModel.Internals.dll": {},
           "ref/net472/System.Xml.Linq.dll": {},
           "ref/net472/System.Xml.dll": {},
           "ref/net472/System.dll": {},
-          "ref/net472/Unity.Burst.Unsafe.dll": {},
-          "ref/net472/Unity.Burst.dll": {},
-          "ref/net472/Unity.Mathematics.dll": {},
-          "ref/net472/Unity.MemoryProfiler.dll": {},
           "ref/net472/Unity.TextMeshPro.dll": {},
           "ref/net472/UnityEngine.AIModule.dll": {},
           "ref/net472/UnityEngine.ARModule.dll": {},
@@ -254,7 +242,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.5.4409": {
+      "Krafs.Rimworld.Ref/1.3.3389": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -264,20 +252,14 @@
           "ref/net472/Mono.Security.dll": {},
           "ref/net472/NAudio.dll": {},
           "ref/net472/NVorbis.dll": {},
-          "ref/net472/System.ComponentModel.Composition.dll": {},
           "ref/net472/System.Configuration.dll": {},
           "ref/net472/System.Core.dll": {},
           "ref/net472/System.Runtime.Serialization.dll": {},
-          "ref/net472/System.Runtime.dll": {},
           "ref/net472/System.Security.dll": {},
           "ref/net472/System.ServiceModel.Internals.dll": {},
           "ref/net472/System.Xml.Linq.dll": {},
           "ref/net472/System.Xml.dll": {},
           "ref/net472/System.dll": {},
-          "ref/net472/Unity.Burst.Unsafe.dll": {},
-          "ref/net472/Unity.Burst.dll": {},
-          "ref/net472/Unity.Mathematics.dll": {},
-          "ref/net472/Unity.MemoryProfiler.dll": {},
           "ref/net472/Unity.TextMeshPro.dll": {},
           "ref/net472/UnityEngine.AIModule.dll": {},
           "ref/net472/UnityEngine.ARModule.dll": {},
@@ -373,7 +355,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.5.4409": {
+      "Krafs.Rimworld.Ref/1.3.3389": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -383,20 +365,14 @@
           "ref/net472/Mono.Security.dll": {},
           "ref/net472/NAudio.dll": {},
           "ref/net472/NVorbis.dll": {},
-          "ref/net472/System.ComponentModel.Composition.dll": {},
           "ref/net472/System.Configuration.dll": {},
           "ref/net472/System.Core.dll": {},
           "ref/net472/System.Runtime.Serialization.dll": {},
-          "ref/net472/System.Runtime.dll": {},
           "ref/net472/System.Security.dll": {},
           "ref/net472/System.ServiceModel.Internals.dll": {},
           "ref/net472/System.Xml.Linq.dll": {},
           "ref/net472/System.Xml.dll": {},
           "ref/net472/System.dll": {},
-          "ref/net472/Unity.Burst.Unsafe.dll": {},
-          "ref/net472/Unity.Burst.dll": {},
-          "ref/net472/Unity.Mathematics.dll": {},
-          "ref/net472/Unity.MemoryProfiler.dll": {},
           "ref/net472/Unity.TextMeshPro.dll": {},
           "ref/net472/UnityEngine.AIModule.dll": {},
           "ref/net472/UnityEngine.ARModule.dll": {},
@@ -492,7 +468,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.5.4409": {
+      "Krafs.Rimworld.Ref/1.3.3389": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -502,20 +478,14 @@
           "ref/net472/Mono.Security.dll": {},
           "ref/net472/NAudio.dll": {},
           "ref/net472/NVorbis.dll": {},
-          "ref/net472/System.ComponentModel.Composition.dll": {},
           "ref/net472/System.Configuration.dll": {},
           "ref/net472/System.Core.dll": {},
           "ref/net472/System.Runtime.Serialization.dll": {},
-          "ref/net472/System.Runtime.dll": {},
           "ref/net472/System.Security.dll": {},
           "ref/net472/System.ServiceModel.Internals.dll": {},
           "ref/net472/System.Xml.Linq.dll": {},
           "ref/net472/System.Xml.dll": {},
           "ref/net472/System.dll": {},
-          "ref/net472/Unity.Burst.Unsafe.dll": {},
-          "ref/net472/Unity.Burst.dll": {},
-          "ref/net472/Unity.Mathematics.dll": {},
-          "ref/net472/Unity.MemoryProfiler.dll": {},
           "ref/net472/Unity.TextMeshPro.dll": {},
           "ref/net472/UnityEngine.AIModule.dll": {},
           "ref/net472/UnityEngine.ARModule.dll": {},
@@ -616,17 +586,17 @@
         "krafs.publicizer.nuspec"
       ]
     },
-    "Krafs.Rimworld.Ref/1.5.4409": {
-      "sha512": "0Sn9Ow0hbsQ1pmwHoKmcAzhMkv/BjHrIpZOH4eyUwHx238a3+2jDqNwCggKR8E3BouNeIOQuNcyMrc78slOtaA==",
+    "Krafs.Rimworld.Ref/1.3.3389": {
+      "sha512": "6wL5qhEtuqk9Nit+STjcmJtz8wZbw/UKM17FCppBI0EaVYtLqUg5ioN8BBzwrG57VUnkISERqtwgDBeDa5OlQw==",
       "type": "package",
-      "path": "krafs.rimworld.ref/1.5.4409",
+      "path": "krafs.rimworld.ref/1.3.3389",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.md",
         "README.md",
         "icon.png",
-        "krafs.rimworld.ref.1.5.4409.nupkg.sha512",
+        "krafs.rimworld.ref.1.3.3389.nupkg.sha512",
         "krafs.rimworld.ref.nuspec",
         "ref/net472/Assembly-CSharp-firstpass.dll",
         "ref/net472/Assembly-CSharp.dll",
@@ -635,20 +605,14 @@
         "ref/net472/Mono.Security.dll",
         "ref/net472/NAudio.dll",
         "ref/net472/NVorbis.dll",
-        "ref/net472/System.ComponentModel.Composition.dll",
         "ref/net472/System.Configuration.dll",
         "ref/net472/System.Core.dll",
         "ref/net472/System.Runtime.Serialization.dll",
-        "ref/net472/System.Runtime.dll",
         "ref/net472/System.Security.dll",
         "ref/net472/System.ServiceModel.Internals.dll",
         "ref/net472/System.Xml.Linq.dll",
         "ref/net472/System.Xml.dll",
         "ref/net472/System.dll",
-        "ref/net472/Unity.Burst.Unsafe.dll",
-        "ref/net472/Unity.Burst.dll",
-        "ref/net472/Unity.Mathematics.dll",
-        "ref/net472/Unity.MemoryProfiler.dll",
         "ref/net472/Unity.TextMeshPro.dll",
         "ref/net472/UnityEngine.AIModule.dll",
         "ref/net472/UnityEngine.ARModule.dll",
@@ -767,12 +731,12 @@
   "projectFileDependencyGroups": {
     ".NETFramework,Version=v4.7.2": [
       "Krafs.Publicizer >= 2.3.0",
-      "Krafs.Rimworld.Ref >= 1.5.4409",
+      "Krafs.Rimworld.Ref >= 1.3.3389",
       "Lib.Harmony >= 2.3.6"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\CASPI\\.nuget\\packages\\": {},
+    "C:\\Users\\optim\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -781,7 +745,7 @@
       "projectUniqueName": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
       "projectName": "ChronosPointer",
       "projectPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
-      "packagesPath": "C:\\Users\\CASPI\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\optim\\.nuget\\packages\\",
       "outputPath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\obj\\",
       "projectStyle": "PackageReference",
       "skipContentFileWrite": true,
@@ -790,7 +754,7 @@
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\CASPI\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\optim\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -823,7 +787,7 @@
           },
           "Krafs.Rimworld.Ref": {
             "target": "Package",
-            "version": "[1.5.4409, )"
+            "version": "[1.3.3389, )"
           },
           "Lib.Harmony": {
             "target": "Package",

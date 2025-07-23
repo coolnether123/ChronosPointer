@@ -4,24 +4,21 @@ using LudeonTK;
 #endif
 using RimWorld;
 using RimWorld.Planet;
-using RimWorld.QuestGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using Verse;
 using static UnityEngine.GUI;
-using static UnityStandardAssets.ImageEffects.BloomOptimized;
 
 namespace ChronosPointer
 {
 
-    public class Patch_ScheduleWindow : MainTabWindow_Schedule
+    [HarmonyPatch(typeof(MainTabWindow_Schedule), nameof(MainTabWindow_Schedule.DoWindowContents))]
+    public static class Patch_ScheduleWindow
     {
         #region Values
-        public static Rect UseMeForTheXYPosOfDayNightBar;
+        
 
         // Where the schedule grid starts
         private static float BaseOffsetX = 1f;
@@ -43,25 +40,25 @@ namespace ChronosPointer
         // Flag to track if the day/night colors have been calculated
         public static bool dayNightColorsCalculated = false;
 
-        // Flag to track if the pawn count has been calculated
-        public static bool pawnCountCalculated = false;
+        
 
-        //Sumarbrander to CoolNether123: removed these because colors are no longer cached. It would be good if the daylight colors were.
 
-        // Array to store the colors for each hour
-        //private static Color[] dayNightColors = new Color[24];
-        //private static Color[] incidentColors = new Color[24];
+        
 
         // Add a static variable to store the last known map
         private static Map lastKnownMap = null;
 
+        private static readonly Color[][] _seasonDaylightCache = new Color[5][];
+        public static Season _cachedSeason = Season.Undefined;
+        public static Map _cachedMap = null;
 
 
-        private static bool isSolarFlare = false;
-        private static bool isEclipse = false;
-        private static bool isToxicFallout = false;
-        private static bool isVolcanicWinter = false;
-        private static bool isAurora = false;
+        // These are now internal so Dialog_IncidentTesting can see them
+        internal static bool isSolarFlare = false;
+        internal static bool isEclipse = false;
+        internal static bool isToxicFallout = false;
+        internal static bool isVolcanicWinter = false;
+        internal static bool isAurora = false;
 
         public static bool AuroraActive => isAurora || overrideIsAurora;
         public static bool SolarFlareActive => isSolarFlare || overrideIsSolarFlare;
@@ -82,119 +79,114 @@ namespace ChronosPointer
         public static bool overrideDrawRegularBar = true;
         private static bool debugDrawOverlayBar = true;
 
-        //private static bool incidentsDirty = false; // Flag to track if incidents need recalculation
+        
 
         #endregion
 
-
-        //[HarmonyPostfix]
-        public override void DoWindowContents(Rect fillRect)
+        [HarmonyPostfix]
+        public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
-            base.DoWindowContents(fillRect);
-            try
-            {
-                if (Find.CurrentMap == null) return;
+            bool shouldDrawThisFrame = IsInTestMode || Find.MainTabsRoot.OpenTab == __instance.def;
 
-                var instanceTable = table;
+            
+
+            if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
+            {
+                return; // Skip drawing if not active tab and not in test mode
+            }
+
+
+            if (Find.CurrentMap == null) return;
+
+            var instanceTable = __instance.table;
+            if (instanceTable == null) return;
+
 #if V1_3
             var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
-                var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
+            var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #endif
-                float hourBoxWidth = 19f; // default width for each hour box
+            float hourBoxWidth = 19f; // default width for each hour box
 
-                //Sumarbrander to CoolNether123: if we could eliminate this for loop, that would be great.
-                for (var i = 0; i < instanceTableColumns.Count; i++)
+            //Sumarbrander to CoolNether123: if we could eliminate this for loop, that would be great.
+            for (var i = 0; i < instanceTableColumns.Count; i++)
+            {
+                if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
                 {
-                    if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
-                    {
-                        hourBoxWidth = (instanceTable.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
-                        break;
-                    }
-                    var width = instanceTable.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
-
-                    fillRect.x += width;
-                    fillRect.width -= width;
+                    hourBoxWidth = (instanceTable.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
+                    break;
                 }
-                try
+                var width = instanceTable.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
+
+                fillRect.x += width;
+                fillRect.width -= width;
+            }
+
+            //int incident = IncidentHappening() + incidentSimulator;
+
+            float windowHeight = Mathf.Max(instanceTable.cachedSize.y - instanceTable.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
+
+            foreach (var def in instanceTableColumns)
+            {
+                if (def.defName == "PawnColumnWorker_Timetable")
                 {
-
-                    //int incident = IncidentHappening() + incidentSimulator;
-
-                    float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
-
-                    foreach (var def in instanceTableColumns)
-                    {
-                        if (def.defName == "PawnColumnWorker_Timetable")
-                        {
-                            // If the column is a timetable, set the BaseOffsetX to its width
-                            BaseOffsetX = def.width + 1f; // Add 1px for the gap
-                            break;
-                        }
-                    }
-
-                    // Check if the current map has changed
-                    if (Find.CurrentMap != lastKnownMap)
-                    {
-                        // Reset the flag and update the last known map
-                        dayNightColorsCalculated = false;
-                        //incidentsDirty = true; // Reset incident colors
-                        pawnCountCalculated = false;
-                        lastKnownMap = Find.CurrentMap;
-                    }
-
-                    // 1) Day/Night Bar
-                    if (Settings.DrawHourBar)
-                    {
-                        bool incidentHappening = IncidentHappening();
-
-                        if (overrideDrawRegularBar)
-                        {
-                            //draw regular day/night bar
-                            DrawDayNightBar(fillRect, GetDaylightColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-
-                        // Draw incident effects ON TOP of the previously drawn day/night bar.
-                        if (Settings.DrawIncidentOverlay && debugDrawOverlayBar && incidentHappening)
-                        {
-                            Rect otherRect = fillRect;
-                            //otherRect.y -= HOUR_BOX_HEIGHT / 2f;
-                            DrawDayNightBar(otherRect, GetIncidentColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-
-                        if (Settings.DrawHoursBarCursor)
-                        {
-                            DrawDayNightTimeIndicator(fillRect, hourBoxWidth, HOUR_BOX_HEIGHT);
-                        }
-                    }
-                    // 2) Arrow and time-trace
-                    if (Settings.DrawArrow)
-                    {
-                        DrawArrowTexture(fillRect, hourBoxWidth);
-                    }
-
-
-                    // 3) Highlight bar
-                    if (Settings.DrawCurrentHourHighlight)
-                    {
-                        DrawHighlight(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
-                    }
-
-                    // 4) Full-height vertical line
-                    if (Settings.DrawMainCursor)
-                    {
-                        DrawFullHeightCursor(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"ChronosPointer: Error in schedule patch - {e.Message}\n{e.StackTrace}");
+                    // If the column is a timetable, set the BaseOffsetX to its width
+                    BaseOffsetX = def.width + 1f; // Add 1px for the gap
+                    break;
                 }
             }
-            catch (Exception e)
-            {
-                Log.Error($"ChronosPointer: Error in DoWindowContents - {e.Message}\n{e.StackTrace}");
 
+            // Check if the current map has changed
+            if (Find.CurrentMap != lastKnownMap)
+            {
+                // Reset the flag and update the last known map
+                dayNightColorsCalculated = false;
+                //incidentsDirty = true; // Reset incident colors
+                //pawnCountCalculated = false;
+                lastKnownMap = Find.CurrentMap;
+            }
+
+            // 1) Day/Night Bar
+            if (Settings.DrawHourBar)
+            {
+                bool incidentHappening = IncidentHappening();
+
+                if (overrideDrawRegularBar)
+                {
+                    //draw regular day/night bar
+                    DrawDayNightBar(fillRect, GetDaylightColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+
+                // Draw incident effects ON TOP of the previously drawn day/night bar.
+                if (Settings.DrawIncidentOverlay && debugDrawOverlayBar && incidentHappening)
+                {
+                    Rect otherRect = fillRect;
+                    //otherRect.y -= HOUR_BOX_HEIGHT / 2f;
+                    DrawDayNightBar(otherRect, GetIncidentColors(), hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+
+                if (Settings.DrawHoursBarCursor)
+                {
+                    DrawDayNightTimeIndicator(fillRect, hourBoxWidth, HOUR_BOX_HEIGHT);
+                }
+            }
+            // 2) Arrow and time-trace
+            if (Settings.DrawArrow)
+            {
+                DrawArrowTexture(fillRect, hourBoxWidth);
+            }
+
+
+            // 3) Highlight bar
+            if (Settings.DrawCurrentHourHighlight)
+            {
+                DrawHighlight(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
+            }
+
+            // 4) Full-height vertical line
+            if (Settings.DrawMainCursor)
+            {
+                DrawFullHeightCursor(fillRect, windowHeight, hourBoxWidth, HOUR_BOX_HEIGHT);
             }
         }
         #region Compatability Patches
@@ -226,14 +218,37 @@ namespace ChronosPointer
         #region Day/Night Bar
         private static Color[] GetDaylightColors()
         {
-            Color[] colors = new Color[24];
-            for (int localHour = 0; localHour < 24; localHour++)
-            {
-                colors[localHour] = GetColorForSunlight(GetCurrentDaylightForHour(localHour)); // Get the normal color for this hour
-            }
-            dayNightColorsCalculated = true;
+            Map map = Find.CurrentMap;
+            Season season = GenLocalDate.Season(map);
 
-            return colors;
+            // Invalidate cache on map or season change
+            if (_cachedMap != map || _cachedSeason != season)
+            {
+                _cachedMap = map;
+                _cachedSeason = season;
+                for (int i = 0; i < _seasonDaylightCache.Length; i++) _seasonDaylightCache[i] = null;
+            }
+
+            int idx = (int)season;
+            if (idx < 1 || idx >= _seasonDaylightCache.Length) idx = 1; // fallback to Spring if Undefined
+            if (_seasonDaylightCache[idx] == null)
+            {
+                Color[] colors = new Color[24];
+                long currentAbsTick = GenTicks.TicksAbs;
+                float dayPercent = GenLocalDate.DayPercent(map);
+                long ticksIntoLocalDay = (long)(dayPercent * (float)GenDate.TicksPerDay);
+                long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay;
+
+                for (int h = 0; h < 24; h++)
+                {
+                    long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)h * GenDate.TicksPerHour;
+                    float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForThisLocalHour);
+                    
+                    colors[h] = GetColorForSunlight(sunlight);
+                }
+                _seasonDaylightCache[idx] = colors;
+            }
+            return _seasonDaylightCache[idx];
         }
         private static float GetCurrentDaylightForHour(int localHour)
         {
@@ -244,6 +259,7 @@ namespace ChronosPointer
             long startOfCurrentLocalDayAbsTick = currentAbsTick - ticksIntoLocalDay;
 
             long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
+
             return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
         }
 
@@ -273,7 +289,7 @@ namespace ChronosPointer
 
                 if (isVolcanicWinter)
                 {
-                    if(hourColor.r == Settings._DefaultTransparentColor.r && hourColor.g == Settings._DefaultTransparentColor.g && hourColor.b == Settings._DefaultTransparentColor.b) // mixing white with black makes gray, so if the hourColor is white, set it to black
+                    if (hourColor.r == Settings._DefaultTransparentColor.r && hourColor.g == Settings._DefaultTransparentColor.g && hourColor.b == Settings._DefaultTransparentColor.b) // mixing white with black makes gray, so if the hourColor is white, set it to black
                     {
                         hourColor = Settings.Color_VolcanicWinter;
                     }
@@ -317,7 +333,7 @@ namespace ChronosPointer
             isVolcanicWinter = IsInTestMode ? overrideIsVolcanicWinter : Find.CurrentMap.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter) || overrideIsVolcanicWinter;
 
 
-            if(isEclipse || isSolarFlare)
+            if (isEclipse || isSolarFlare)
                 dayNightColorsCalculated = false;
 
             return isSolarFlare || isEclipse || isToxicFallout || isVolcanicWinter || isAurora;
@@ -348,7 +364,7 @@ namespace ChronosPointer
                 }
             }
             // Deep night
-            if (sunlightForHour == Settings.SunlightThreshold_Night)
+            if (sunlightForHour <= Settings.SunlightThreshold_Night)
                 return Settings.Color_Night;  // Deep Blue
 
             // Dawn/Dusk
@@ -394,8 +410,8 @@ namespace ChronosPointer
             }
 
         }
-        
-#endregion
+
+        #endregion
 
         #region Time Trace Line
 
@@ -471,7 +487,7 @@ namespace ChronosPointer
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
         }
-#endregion
+        #endregion
 
         #region Full Height Cursor
         private static void DrawFullHeightCursor(Rect fillRect, float windowHeight, float hourBoxWidth, float hourBoxHeight)
@@ -513,9 +529,7 @@ namespace ChronosPointer
             Widgets.DrawBoxSolid(cursorRect, Settings.Color_MainCursor);
         }
 
-        
+
     }
     #endregion
-
-
 }
