@@ -22,7 +22,7 @@
     <DebugType>none</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\1.6\Assemblies\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;V1_6; V1_6U;  V1_6U; V1_5U; V1_4U; V1_3U; </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
@@ -37,24 +37,33 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5|AnyCPU'">
     <OutputPath>..\1.5\Assemblies\</OutputPath>
-    <DefineConstants>rw_1_5</DefineConstants>
+    <DefineConstants>V1_5; V1_5U; V1_5D; V1_4U; V1_3U; V1_6D;  </DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.3|AnyCPU'">
     <OutputPath>..\1.3\Assemblies\</OutputPath>
-    <DefineConstants>rw_1_3</DefineConstants>
+    <DefineConstants>V1_3; V1_3U; V1_3DU;V1_4D;  V1_5D; V1_6D; </DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4|AnyCPU'">
     <OutputPath>..\1.4\Assemblies\</OutputPath>
-    <DefineConstants>rw_1_4</DefineConstants>
+    <DefineConstants>V1_4; V1_4U;  V1_4D; V1_3U;V1_5D;V1_6D;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2|AnyCPU'">
     <OutputPath>bin\1.2\</OutputPath>
+    <DefineConstants>V1_2; V1_3D</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6|AnyCPU'">
+    <OutputPath>..\1.6\Assemblies\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="ColorPicker\Dialog_ColourPicker.cs" />
+    <Compile Include="ColorPicker\Dialog_LivePreview.cs" />
+    <Compile Include="ColorPicker\RecentColours.cs" />
+    <Compile Include="ColorPicker\TextField.cs" />
+    <Compile Include="Dialog_IncidentTesting.cs" />
     <Compile Include="Patch_ScheduleWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChronosPointerMod.cs" />
@@ -65,19 +74,19 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4409" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.3.3389" />
     <PackageReference Include="Lib.Harmony">
       <Version>2.3.6</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0ColourPicker">
-      <HintPath>..\1.5\Assemblies\0ColourPicker.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_PawnTable.table" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.table" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.Pawns" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeightNoScrollbar" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
+    <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

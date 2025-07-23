@@ -1,12 +1,94 @@
+using ColourPicker;
+using HarmonyLib;
+using RimWorld;
+using System;
 using UnityEngine;
 using Verse;
-using RimWorld;
-using ColourPicker;
-using UnityEngine.UI;
-using System;
 
 namespace ChronosPointer
 {
+
+    class Dialog_ModWarning : Dialog_MessageBox
+    {
+        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title, layer: layer)
+        {
+            if (fixAction != null)
+            {
+                buttonCAction = fixAction;
+                buttonCText = fixActionText;
+            }
+            buttonAText = "OK";
+            buttonAAction = null;
+            buttonBText = "Disable Warnings";
+            buttonBAction = () =>
+            {
+                ChronosPointerMod.Settings.DoLoadWarnings = false;
+                ChronosPointerMod.Settings?.Write();
+            };
+
+
+        }
+    }
+
+    [HarmonyPatch(typeof(UIRoot_Entry), "Init")]
+    public static class Patch_OnGameLoad
+    {
+        public static bool playerWarned = false;
+        [HarmonyPostfix]
+        public static void UIRootEntryInit_Prefix()
+        {
+            if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
+                return;
+
+            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
+                ApplyFixForMysteriusCustomSchedules();
+            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
+                ApplyFixForScheduleClock();
+            //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
+            if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
+                ApplyFixForGroupedPawnsList();
+            playerWarned = true;
+        }
+        private static void ApplyFixForMysteriusCustomSchedules()
+        {
+            // Implement the fix logic for Mysterius.CustomSchedules
+            var message = new Dialog_ModWarning("CustomSchedules (Continued) is Active", "Chronos Pointer will overlap the additional schedule buttons. You can hide this overlap by disabling the arrow the Day/Night bar.", () =>
+            {
+                ChronosPointerMod.Settings.DrawHourBar = false;
+                ChronosPointerMod.Settings.DrawArrow = false;
+                ChronosPointerMod.Settings?.Write();
+            });
+
+            Find.WindowStack?.Add(message);
+
+        }
+
+        private static void ApplyFixForScheduleClock()
+        {
+            // Implement the fix logic for Mysterius.CustomSchedules
+            var message = new Dialog_MessageBox("Chronos Pointer will overlap the time indicator. You can hide the overlap by disabling the Pawn Section Time Indicator.", "OK", null, "Don't show again", () =>
+            {
+                ChronosPointerMod.Settings.DoLoadWarnings = false;
+                ChronosPointerMod.Settings?.Write();
+            }, title: "ScheduleClock is Active");
+            message.buttonCText = "Disable Overlap";
+            message.buttonCAction = () =>
+            {
+                ChronosPointerMod.Settings.DrawMainCursor = false;
+                ChronosPointerMod.Settings?.Write();
+            };
+            Find.WindowStack?.Add(message);
+
+        }
+        private static void ApplyFixForGroupedPawnsList()
+        {
+            // Implement the fix logic for Mysterius.CustomSchedules
+            var message = new Dialog_ModWarning("Grouped Pawns Lists is Active", "Chronos Pointer may not be properly lined up in the schedule window. To ensure proper placement, please disable \"Restrict\" in Grouped Pawns List mod settings.");
+            Find.WindowStack?.Add(message);
+
+        }
+    }
+
     public class ChronosPointerMod : Mod
     {
         public static ChronosPointerSettings Settings;
@@ -16,10 +98,22 @@ namespace ChronosPointer
         public ChronosPointerMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<ChronosPointerSettings>();
-            // Harmony patch
-            var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
-            harmony.PatchAll();
-            Log.Message("[ChronosPointer] Harmony patches applied.");
+
+            if (ModsConfig.IsActive("brrainz.harmony"))
+            {
+                // Harmony patch
+                var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
+                harmony.PatchAll();
+                Log.Message("[ChronosPointer] Harmony patches applied.");
+            }
+
+            // Subscribe to sunlight threshold changes
+            ChronosPointerSettings.OnSunlightThresholdChanged += () =>
+            {
+                Patch_ScheduleWindow.dayNightColorsCalculated = false;
+                Patch_ScheduleWindow._cachedSeason = Season.Undefined;
+                Patch_ScheduleWindow._cachedMap = null;
+            };
         }
 
         public override string SettingsCategory()
@@ -29,130 +123,21 @@ namespace ChronosPointer
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            float height = 1000f;
-            Rect viewRect = new Rect(0f, 40f, inRect.width - 16f, height);
-
-            Listing_Standard listingStandard = new Listing_Standard();
-            listingStandard.Begin(viewRect);
-
-
-            if (listingStandard.ButtonText("Reset to Default"))
-            {
-                Settings.ResetToDefaults();
-            }
-            listingStandard.Gap(20f);
-
-            listingStandard.CheckboxLabeled("- Show Arrow", ref Settings.enableArrow);
-            listingStandard.CheckboxLabeled("- Show Day/Night Bar", ref Settings.showDayNightBar);
-
-            // Gray out unapplicable settings
-            if (!Settings.showDayNightBar) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("    Show Day/Night Bar Time Indicator", ref Settings.showDayNightIndicator);
-            GUI.color = Color.white;
-
-            if (!Settings.showDayNightIndicator || !Settings.showDayNightBar) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("    Dynamic Day/Night Bar Cursor Color", ref Settings.useDynamicTimeTraceLine);
-            GUI.color = Color.white;
-
-            listingStandard.CheckboxLabeled("- Show Pawn Section Time Indicator", ref Settings.showPawnLine);
-            listingStandard.CheckboxLabeled("- Show Current Hour Highlight", ref Settings.showHighlight);
-            if (!Settings.showHighlight) GUI.color = Color.gray;
-            listingStandard.CheckboxLabeled("- Hollow Current Hour Highlight", ref Settings.hollowHourHighlight);
-            GUI.color = Color.white;
-
-            listingStandard.Gap(25);
-
-            // Add a slider for cursor thickness
-            if (Settings.showPawnLine)
-            {
-                listingStandard.Label($"Pawn Section Time Indicator Thickness: {Settings.cursorThickness:F1}");
-                float newThickness = listingStandard.Slider(Settings.cursorThickness, 2f, 10f);
-                Settings.cursorThickness = Mathf.Round(newThickness / 2f) * 2f; // Round to nearest even number
-            }
-
-            // If the setting isn't being used, gray the color picker out so it's obvious it's not being used.
-            if (!Settings.enableArrow)
-            {
-                GUI.color = Color.gray;
-            }
-
-            // Arrow Color
-            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.arrowColor);
-            if (listingStandard.ButtonText("Change arrow color", "Tag"))
-                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.arrowColor, newColor =>
-                {
-                    Settings.arrowColor = newColor;
-                }));
-            listingStandard.Gap(10f);
-
-            // Reset GUI color after to make sure the next color is the right color
-            GUI.color = Color.white;
-
-            // Day/Night bar day and night colors
-            if (!Settings.showDayNightBar)
-            {
-                GUI.color = Color.gray;
-            }
-            if (!Settings.showDayNightIndicator)
-            {
-                GUI.color = Color.gray;
-            }
-
-            // Day/Default
-            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorDay);
-            if (listingStandard.ButtonText("Change Time Trace Color" + (Settings.useDynamicTimeTraceLine ? " Day" : "")))
-                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorDay, newColor =>
-                {
-                    Settings.timeTraceColorDay = newColor;
-                }));
-
-            if (!Settings.useDynamicTimeTraceLine)
-            {
-                GUI.color = Color.gray;
-            }
-            if (!Settings.useDynamicTimeTraceLine) GUI.color = Color.gray;
-
-            // Night
-            listingStandard.Gap(10f); Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.timeTraceColorNight);
-            if (listingStandard.ButtonText("Change Time Trace Color Night"))
-                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.timeTraceColorNight, newColor =>
-                {
-                    Settings.timeTraceColorNight = newColor;
-                }));
-            listingStandard.Gap(10f);
-
-            GUI.color = Color.white;
-            // Pawn cursor
-            if (!Settings.showPawnLine)
-            {
-                GUI.color = Color.gray;
-            }
-            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.bottomCursorColor);
-            if (listingStandard.ButtonText("Change pawn section time indicator color"))
-                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.bottomCursorColor, newColor =>
-                {
-                    Settings.bottomCursorColor = newColor;
-                }));
-            listingStandard.Gap(10f);
-            GUI.color = Color.white;
-
-            if (!Settings.showHighlight)
-            {
-                GUI.color = Color.gray;
-            }
-
-            // Current hour highlight
-            Widgets.DrawBoxSolid(listingStandard.GetRect(10), Settings.highlightColor);
-            if (listingStandard.ButtonText("Change current-hour color"))
-                Find.WindowStack.Add(new Dialog_ColourPicker(Settings.highlightColor, newColor =>
-                {
-                    Settings.highlightColor = newColor;
-                }));
-            listingStandard.Gap(10f);
-
-            GUI.color = Color.white;
-
-            listingStandard.End();
+            Settings.DoWindowContents(inRect);
         }
+        public override void WriteSettings()
+        {
+            base.WriteSettings();
+            Patch_ScheduleWindow.dayNightColorsCalculated = false;
+            Patch_ScheduleWindow.overrideIsAurora = false;
+            Patch_ScheduleWindow.overrideIsEclipse = false;
+            Patch_ScheduleWindow.overrideIsSolarFlare = false;
+            Patch_ScheduleWindow.overrideIsToxicFallout = false;
+            Patch_ScheduleWindow.overrideIsVolcanicWinter = false;
+            Patch_ScheduleWindow.IsInTestMode = false;
+
+        }
+
     }
+    
 }
