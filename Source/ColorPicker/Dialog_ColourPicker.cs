@@ -793,11 +793,13 @@ namespace ColourPicker {
             base.OnCancelKeyPressed();
         }
 
-        public override void Notify_ClickOutsideWindow()
-        {
-            onCancel?.Invoke();
-            base.Notify_ClickOutsideWindow();
-        }
+#if !(V1_2)
+    public override void Notify_ClickOutsideWindow()
+    {
+        onCancel?.Invoke();
+        base.Notify_ClickOutsideWindow();
+    }
+#endif
 
         public override void PostClose()
         {

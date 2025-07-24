@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChronosPointer", "ChronosPo
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		1.2|Any CPU = 1.2|Any CPU
 		1.3|Any CPU = 1.3|Any CPU
 		1.4|Any CPU = 1.4|Any CPU
 		1.5|Any CPU = 1.5|Any CPU
@@ -15,6 +16,8 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D33872C6-430D-4494-B005-6ADFB0C092C2}.1.2|Any CPU.ActiveCfg = 1.2|Any CPU
+		{D33872C6-430D-4494-B005-6ADFB0C092C2}.1.2|Any CPU.Build.0 = 1.2|Any CPU
 		{D33872C6-430D-4494-B005-6ADFB0C092C2}.1.3|Any CPU.ActiveCfg = 1.3|Any CPU
 		{D33872C6-430D-4494-B005-6ADFB0C092C2}.1.3|Any CPU.Build.0 = 1.3|Any CPU
 		{D33872C6-430D-4494-B005-6ADFB0C092C2}.1.4|Any CPU.ActiveCfg = 1.4|Any CPU

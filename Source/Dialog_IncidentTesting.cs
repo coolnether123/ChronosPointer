@@ -3,12 +3,23 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
+#if V1_2 
+using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
+#endif
 
 namespace ChronosPointer
 {
     public class Dialog_IncidentTesting : Dialog_MessageBox
     {
-        public Dialog_IncidentTesting(TaggedString text, string buttonAText = null, Action buttonAAction = null, WindowLayer layer = WindowLayer.Dialog) : base(text, buttonAText, buttonAAction, layer: layer)
+        public Dialog_IncidentTesting(TaggedString text, string buttonAText = null, Action buttonAAction = null
+#if !(V1_2) // `layer` parameter not available in 1.2 Dialog_MessageBox constructor
+            , WindowLayer layer = WindowLayer.Dialog
+#endif
+        ) : base(text, buttonAText, buttonAAction
+#if !(V1_2)
+            , layer: layer
+#endif
+        )
         {
         }
 
@@ -117,14 +128,16 @@ namespace ChronosPointer
             Close();
         }
 
-        public override void Notify_ClickOutsideWindow()
-        {
-            base.Notify_ClickOutsideWindow();
-            if (!closeOnClickedOutside)
-                return;
-            CloseAction();
-            Close();
-        }
+#if !(V1_2)
+    public override void Notify_ClickOutsideWindow()
+    {
+        base.Notify_ClickOutsideWindow();
+        if (!closeOnClickedOutside)
+            return;
+        CloseAction();
+        Close();
+    }
+#endif
 
         public override void PostClose()
         {

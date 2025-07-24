@@ -4,6 +4,9 @@ using System;
 using UnityEngine;
 using Verse;
 using System.Linq;
+#if V1_2 
+using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
+#endif
 
 namespace ChronosPointer
 {
@@ -106,11 +109,13 @@ namespace ChronosPointer
         }
 
         // When the user clicks outside the window
-        public override void Notify_ClickOutsideWindow()
-        {
-            onCancelAction?.Invoke();
-            base.Notify_ClickOutsideWindow();
-        }
+#if !(V1_2)
+    public override void Notify_ClickOutsideWindow()
+    {
+        onCancelAction?.Invoke();
+        base.Notify_ClickOutsideWindow();
+    }
+#endif
 
         // This is called AFTER the window is removed from the stack, for final cleanup.
         public override void PostClose()

@@ -10,6 +10,9 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using static UnityEngine.GUI;
+#if V1_2
+using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
+#endif
 
 namespace ChronosPointer
 {
@@ -101,7 +104,7 @@ namespace ChronosPointer
             var instanceTable = __instance.table;
             if (instanceTable == null) return;
 
-#if V1_3
+#if V1_3 || V1_2
             var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
             var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
@@ -242,8 +245,12 @@ namespace ChronosPointer
                 for (int h = 0; h < 24; h++)
                 {
                     long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)h * GenDate.TicksPerHour;
-                    float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForThisLocalHour);
-                    
+#if V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
+                    float sunlight = GenCelestial.CelestialSunGlow(map, (int)absTickForThisLocalHour);
+#else
+                float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForThisLocalHour);
+#endif
+
                     colors[h] = GetColorForSunlight(sunlight);
                 }
                 _seasonDaylightCache[idx] = colors;
@@ -260,7 +267,11 @@ namespace ChronosPointer
 
             long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
 
+#if V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
+            return GenCelestial.CelestialSunGlow(Find.CurrentMap, (int)absTickForThisLocalHour);
+#else
             return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
+#endif
         }
 
         private static Color[] GetIncidentColors()
@@ -392,7 +403,17 @@ namespace ChronosPointer
             if (Settings.DoFilledHourHighlight)
                 Widgets.DrawBoxSolid(highlightRect, Settings.Color_HourHighlight);
             else
+#if V1_2 || V1_3
+            {
+                // In older versions, we use Widgets.DrawBox() to create an outline.
+                // We must set GUI.color before the call.
+                GUI.color = Settings.Color_HourHighlight;
+                Widgets.DrawBox(highlightRect, 2); // Draws a 2-pixel wide box outline.
+                GUI.color = Color.white; // Always reset GUI.color afterwards.
+            }
+#else
                 Widgets.DrawBoxSolidWithOutline(highlightRect, Settings._HighlightInteriorColor, Settings.Color_HourHighlight, 2);
+#endif
         }
 
         private static void DrawDayNightBar(Rect fillRect, Color[] colors, float hourBoxWidth, float hourBoxHeight)
@@ -432,7 +453,11 @@ namespace ChronosPointer
 
             // For sunlight calculation for the dynamic line color, use the current absolute tick:
             long currentAbsoluteTick = GenTicks.TicksAbs;
+#if V1_2
+            float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap, (int)currentAbsoluteTick);
+#else
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);
+#endif
 
             Color lineColor = !Settings.DoDynamicHoursBarLine ? Settings.Color_HoursBarCursor_Day : (sunlight >= Settings.SunlightThreshold_SunriseSunset) ? Settings.Color_HoursBarCursor_Day : Settings.Color_HoursBarCursor_Night;
 

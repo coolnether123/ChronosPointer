@@ -5,6 +5,9 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Verse;
+#if V1_2
+using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
+#endif
 
 namespace ChronosPointer
 {
@@ -92,7 +95,7 @@ namespace ChronosPointer
         }
 
         public bool DrawCurrentHourHighlight = true;
-        public bool DoFilledHourHighlight = true;
+        public bool DoFilledHourHighlight = false;
 
         public bool DrawCurrentHourHighlightGetSet
         {
@@ -303,6 +306,11 @@ namespace ChronosPointer
                 {
                     ResetToDefaults();
                 }));
+#elif V1_2 // 1.2 use Dialog_MessageBox without 'layer' param
+                Find.WindowStack.Add(new Dialog_MessageBox("Are you sure you want to reset all settings to defaults?", "Confirm", () =>
+                {
+                    ResetToDefaults();
+                }, "Cancel"));
 #else
                 Find.WindowStack.Add(new Dialog_MessageBox("Are you sure you want to reset all settings to defaults?", "Confirm", () =>
                 {
@@ -352,31 +360,25 @@ namespace ChronosPointer
             listL.Label($"Cursor thicknesses:");
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
-#if !V1_3
+#if V1_2 || V1_3 // For 1.2 and 1.3, use the custom slider function as `SliderLabeled` with tooltip isn't available
+            CursorThickness = (int)Do1_3LabeledSlider($"- Main Cursor ({CursorThickness:F1})", listL, ref CursorThickness, 2f, 10f, true);
+            GrayIfInactive(DrawHoursBarCursor);
+            HoursBarCursorThickness = (int)Do1_3LabeledSlider($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", listL, ref HoursBarCursorThickness, 2f, 10f, true);
+            GrayIfInactive(DrawCurrentHourHighlight);
+            HighlightBorderThickness = (int)Do1_3LabeledSlider($"- Highlight Border ({HighlightBorderThickness:F1})", listL, ref HighlightBorderThickness, 2f, 10f, true);
+#else // For 1.4 and newer, use the built-in SliderLabeled with tooltip
             CursorThickness = listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
             GrayIfInactive(DrawHoursBarCursor);
             HoursBarCursorThickness = listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
             GrayIfInactive(DrawCurrentHourHighlight);
-#else
-            ;
-
-            CursorThickness = (int) Do1_3LabeledSlider($"- Main Cursor ({CursorThickness:F1})", listL, ref CursorThickness, 2f, 10f, true);
-            GrayIfInactive(DrawHoursBarCursor);
-            HoursBarCursorThickness = (int) Do1_3LabeledSlider($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", listL, ref HoursBarCursorThickness, 2f, 10f, true);
-            GrayIfInactive(DrawCurrentHourHighlight);
-            HighlightBorderThickness = (int) Do1_3LabeledSlider($"- Highlight Border ({HighlightBorderThickness:F1})", listL, ref HighlightBorderThickness, 2f, 10f, true);
+            HighlightBorderThickness = listL.SliderLabeled($"- Highlight Border ({HighlightBorderThickness:F1})", HighlightBorderThickness, 2f, 10f, tooltip: "Thickness of the highlight border."); // Added for consistency
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
             GrayIfInactive(DrawHourBar);
             listL.Label("Sunlight thresholds (0.0 = no sunlight, 1.0 = full sunlight):");
             Text.Font = GameFont.Tiny;
-#if !V1_3
-            SunlightThreshold_Night = listL.SliderLabeled($"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
-            //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
-            SunlightThreshold_DawnDusk = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
-            SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
-#else
+#if V1_2 || V1_3
             float night = SunlightThreshold_Night;
             night = Do1_3LabeledSlider($"- Night ({night:F2})", listL, ref night, 0.0f, 1.0f);
             SunlightThreshold_Night = night;
@@ -388,6 +390,11 @@ namespace ChronosPointer
             float sunriseSunset = SunlightThreshold_SunriseSunset;
             sunriseSunset = Do1_3LabeledSlider($"- Sunrise/Sunset ({sunriseSunset:F2})", listL, ref sunriseSunset, 0.0f, 1.0f);
             SunlightThreshold_SunriseSunset = sunriseSunset;
+#else
+            SunlightThreshold_Night = listL.SliderLabeled($"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
+            //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
+            SunlightThreshold_DawnDusk = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
+            SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
 #endif
             Text.Font = GameFont.Small;
             listL.Gap();
@@ -395,15 +402,14 @@ namespace ChronosPointer
             Text.Font = GameFont.Tiny;
 
             GrayIfInactive(DrawIncidentOverlay);
-#if !V1_3
+#if V1_2 || V1_3
+            AuroraMinOpacity = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
+            GrayIfInactive(DrawIncidentOverlay);
+            AuroraMaxOpacity = Do1_3LabeledSlider($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", listL, ref AuroraMaxOpacity, 0.0f, 1.0f);
+#else
             AuroraMinOpacity = listL.SliderLabeled($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", AuroraMinOpacity, 0.0f, 1.0f, tooltip: "The minimum transparancy the aurora effect gets.");
             GrayIfInactive(DrawIncidentOverlay);
             AuroraMaxOpacity = listL.SliderLabeled($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
-#else
-            AuroraMinOpacity                = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
-            GrayIfInactive(DrawIncidentOverlay);
-            AuroraMaxOpacity                = Do1_3LabeledSlider($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", listL, ref AuroraMaxOpacity, 0.0f, 1.0f);
-            //do the 1.3 stuff
 #endif
             GUI.color = Color.white;
             Text.Font = GameFont.Small;
@@ -461,7 +467,7 @@ namespace ChronosPointer
 
         }
 
-#if V1_3
+#if V1_2 || V1_3
         public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
         {
             // Remove 'ref' from ValidateCursorThickness call
@@ -479,12 +485,45 @@ namespace ChronosPointer
                     var fakeSchedule = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule)?.TabWindow;
                     if (fakeSchedule != null)
                     {
+#if V1_2
+                        // --- Logic for RimWorld 1.2 ---
+                        // We must manually set window layers because the constructor doesn't support it.
+
+                        // 1. Set the schedule window's layer to SubSuper. This tells the game to
+                        //    draw it behind the next dialog window.
+                        fakeSchedule.layer = WindowLayer.SubSuper;
+                        Find.WindowStack.Add(fakeSchedule);
+
+                        // 2. Create the incident dialog. It defaults to the standard 'Dialog' layer.
+                        var confirmWindow = new Dialog_IncidentTesting("", "Done", () =>
+                        {
+                            Find.WindowStack.TryRemove(fakeSchedule);
+                        });
+
+                        // 3. Manually promote the incident dialog to the 'Super' layer. This ensures
+                        //    it's drawn on top of the schedule window AND the settings window.
+                        confirmWindow.layer = WindowLayer.Super;
+
+                        confirmWindow.absorbInputAroundWindow = true;
+                        confirmWindow.doCloseButton = false;
+                        confirmWindow.draggable = true;
+
+                        // 4. Add the top-most dialog to the stack last.
+                        Find.WindowStack.Add(confirmWindow);
+#else
+                        // --- This is the original, working logic for RimWorld 1.3 and newer ---
                         fakeSchedule.layer = WindowLayer.SubSuper;
                         Find.WindowStack.Add(fakeSchedule);
                         var confirmWindow = new Dialog_IncidentTesting("", "Done", () =>
                         {
                             Find.WindowStack.TryRemove(fakeSchedule);
                         }, layer: WindowLayer.Super);
+                        confirmWindow.absorbInputAroundWindow = true;
+                        confirmWindow.doCloseButton = false;
+                        confirmWindow.draggable = true;
+                        Find.WindowStack.Add(confirmWindow);
+#endif
+
                         confirmWindow.absorbInputAroundWindow = true;
                         confirmWindow.doCloseButton = false;
                         confirmWindow.draggable = true;

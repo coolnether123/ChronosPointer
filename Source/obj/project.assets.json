@@ -16,7 +16,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.3.3389": {
+      "Krafs.Rimworld.Ref/1.2.3062": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -49,6 +49,7 @@
           "ref/net472/UnityEngine.CrashReportingModule.dll": {},
           "ref/net472/UnityEngine.DSPGraphModule.dll": {},
           "ref/net472/UnityEngine.DirectorModule.dll": {},
+          "ref/net472/UnityEngine.FileSystemHttpModule.dll": {},
           "ref/net472/UnityEngine.GameCenterModule.dll": {},
           "ref/net472/UnityEngine.GridModule.dll": {},
           "ref/net472/UnityEngine.HotReloadModule.dll": {},
@@ -69,7 +70,6 @@
           "ref/net472/UnityEngine.SpriteShapeModule.dll": {},
           "ref/net472/UnityEngine.StreamingModule.dll": {},
           "ref/net472/UnityEngine.SubstanceModule.dll": {},
-          "ref/net472/UnityEngine.SubsystemsModule.dll": {},
           "ref/net472/UnityEngine.TLSModule.dll": {},
           "ref/net472/UnityEngine.TerrainModule.dll": {},
           "ref/net472/UnityEngine.TerrainPhysicsModule.dll": {},
@@ -96,7 +96,6 @@
           "ref/net472/UnityEngine.WindModule.dll": {},
           "ref/net472/UnityEngine.XRModule.dll": {},
           "ref/net472/UnityEngine.dll": {},
-          "ref/net472/com.rlabrecque.steamworks.net.dll": {},
           "ref/net472/mscorlib.dll": {}
         }
       },
@@ -129,7 +128,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.3.3389": {
+      "Krafs.Rimworld.Ref/1.2.3062": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -162,6 +161,7 @@
           "ref/net472/UnityEngine.CrashReportingModule.dll": {},
           "ref/net472/UnityEngine.DSPGraphModule.dll": {},
           "ref/net472/UnityEngine.DirectorModule.dll": {},
+          "ref/net472/UnityEngine.FileSystemHttpModule.dll": {},
           "ref/net472/UnityEngine.GameCenterModule.dll": {},
           "ref/net472/UnityEngine.GridModule.dll": {},
           "ref/net472/UnityEngine.HotReloadModule.dll": {},
@@ -182,7 +182,6 @@
           "ref/net472/UnityEngine.SpriteShapeModule.dll": {},
           "ref/net472/UnityEngine.StreamingModule.dll": {},
           "ref/net472/UnityEngine.SubstanceModule.dll": {},
-          "ref/net472/UnityEngine.SubsystemsModule.dll": {},
           "ref/net472/UnityEngine.TLSModule.dll": {},
           "ref/net472/UnityEngine.TerrainModule.dll": {},
           "ref/net472/UnityEngine.TerrainPhysicsModule.dll": {},
@@ -209,7 +208,6 @@
           "ref/net472/UnityEngine.WindModule.dll": {},
           "ref/net472/UnityEngine.XRModule.dll": {},
           "ref/net472/UnityEngine.dll": {},
-          "ref/net472/com.rlabrecque.steamworks.net.dll": {},
           "ref/net472/mscorlib.dll": {}
         }
       },
@@ -242,7 +240,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.3.3389": {
+      "Krafs.Rimworld.Ref/1.2.3062": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -275,6 +273,7 @@
           "ref/net472/UnityEngine.CrashReportingModule.dll": {},
           "ref/net472/UnityEngine.DSPGraphModule.dll": {},
           "ref/net472/UnityEngine.DirectorModule.dll": {},
+          "ref/net472/UnityEngine.FileSystemHttpModule.dll": {},
           "ref/net472/UnityEngine.GameCenterModule.dll": {},
           "ref/net472/UnityEngine.GridModule.dll": {},
           "ref/net472/UnityEngine.HotReloadModule.dll": {},
@@ -295,7 +294,6 @@
           "ref/net472/UnityEngine.SpriteShapeModule.dll": {},
           "ref/net472/UnityEngine.StreamingModule.dll": {},
           "ref/net472/UnityEngine.SubstanceModule.dll": {},
-          "ref/net472/UnityEngine.SubsystemsModule.dll": {},
           "ref/net472/UnityEngine.TLSModule.dll": {},
           "ref/net472/UnityEngine.TerrainModule.dll": {},
           "ref/net472/UnityEngine.TerrainPhysicsModule.dll": {},
@@ -322,7 +320,6 @@
           "ref/net472/UnityEngine.WindModule.dll": {},
           "ref/net472/UnityEngine.XRModule.dll": {},
           "ref/net472/UnityEngine.dll": {},
-          "ref/net472/com.rlabrecque.steamworks.net.dll": {},
           "ref/net472/mscorlib.dll": {}
         }
       },
@@ -355,7 +352,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.3.3389": {
+      "Krafs.Rimworld.Ref/1.2.3062": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -388,6 +385,7 @@
           "ref/net472/UnityEngine.CrashReportingModule.dll": {},
           "ref/net472/UnityEngine.DSPGraphModule.dll": {},
           "ref/net472/UnityEngine.DirectorModule.dll": {},
+          "ref/net472/UnityEngine.FileSystemHttpModule.dll": {},
           "ref/net472/UnityEngine.GameCenterModule.dll": {},
           "ref/net472/UnityEngine.GridModule.dll": {},
           "ref/net472/UnityEngine.HotReloadModule.dll": {},
@@ -408,7 +406,6 @@
           "ref/net472/UnityEngine.SpriteShapeModule.dll": {},
           "ref/net472/UnityEngine.StreamingModule.dll": {},
           "ref/net472/UnityEngine.SubstanceModule.dll": {},
-          "ref/net472/UnityEngine.SubsystemsModule.dll": {},
           "ref/net472/UnityEngine.TLSModule.dll": {},
           "ref/net472/UnityEngine.TerrainModule.dll": {},
           "ref/net472/UnityEngine.TerrainPhysicsModule.dll": {},
@@ -435,7 +432,6 @@
           "ref/net472/UnityEngine.WindModule.dll": {},
           "ref/net472/UnityEngine.XRModule.dll": {},
           "ref/net472/UnityEngine.dll": {},
-          "ref/net472/com.rlabrecque.steamworks.net.dll": {},
           "ref/net472/mscorlib.dll": {}
         }
       },
@@ -468,7 +464,7 @@
           "build/Krafs.Publicizer.targets": {}
         }
       },
-      "Krafs.Rimworld.Ref/1.3.3389": {
+      "Krafs.Rimworld.Ref/1.2.3062": {
         "type": "package",
         "compile": {
           "ref/net472/Assembly-CSharp-firstpass.dll": {},
@@ -501,6 +497,7 @@
           "ref/net472/UnityEngine.CrashReportingModule.dll": {},
           "ref/net472/UnityEngine.DSPGraphModule.dll": {},
           "ref/net472/UnityEngine.DirectorModule.dll": {},
+          "ref/net472/UnityEngine.FileSystemHttpModule.dll": {},
           "ref/net472/UnityEngine.GameCenterModule.dll": {},
           "ref/net472/UnityEngine.GridModule.dll": {},
           "ref/net472/UnityEngine.HotReloadModule.dll": {},
@@ -521,7 +518,6 @@
           "ref/net472/UnityEngine.SpriteShapeModule.dll": {},
           "ref/net472/UnityEngine.StreamingModule.dll": {},
           "ref/net472/UnityEngine.SubstanceModule.dll": {},
-          "ref/net472/UnityEngine.SubsystemsModule.dll": {},
           "ref/net472/UnityEngine.TLSModule.dll": {},
           "ref/net472/UnityEngine.TerrainModule.dll": {},
           "ref/net472/UnityEngine.TerrainPhysicsModule.dll": {},
@@ -548,7 +544,6 @@
           "ref/net472/UnityEngine.WindModule.dll": {},
           "ref/net472/UnityEngine.XRModule.dll": {},
           "ref/net472/UnityEngine.dll": {},
-          "ref/net472/com.rlabrecque.steamworks.net.dll": {},
           "ref/net472/mscorlib.dll": {}
         }
       },
@@ -586,17 +581,16 @@
         "krafs.publicizer.nuspec"
       ]
     },
-    "Krafs.Rimworld.Ref/1.3.3389": {
-      "sha512": "6wL5qhEtuqk9Nit+STjcmJtz8wZbw/UKM17FCppBI0EaVYtLqUg5ioN8BBzwrG57VUnkISERqtwgDBeDa5OlQw==",
+    "Krafs.Rimworld.Ref/1.2.3062": {
+      "sha512": "ItISxBOg2uIGQ3hkDRHZqmqtDwqugXJRIXM0/VWeyi9dF9+4SsE4vKUnybCNRH9E3tU5t+Dl6lW39eKurEFxoA==",
       "type": "package",
-      "path": "krafs.rimworld.ref/1.3.3389",
+      "path": "krafs.rimworld.ref/1.2.3062",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "LICENSE.md",
-        "README.md",
+        "LICENSE.txt",
         "icon.png",
-        "krafs.rimworld.ref.1.3.3389.nupkg.sha512",
+        "krafs.rimworld.ref.1.2.3062.nupkg.sha512",
         "krafs.rimworld.ref.nuspec",
         "ref/net472/Assembly-CSharp-firstpass.dll",
         "ref/net472/Assembly-CSharp.dll",
@@ -628,6 +622,7 @@
         "ref/net472/UnityEngine.CrashReportingModule.dll",
         "ref/net472/UnityEngine.DSPGraphModule.dll",
         "ref/net472/UnityEngine.DirectorModule.dll",
+        "ref/net472/UnityEngine.FileSystemHttpModule.dll",
         "ref/net472/UnityEngine.GameCenterModule.dll",
         "ref/net472/UnityEngine.GridModule.dll",
         "ref/net472/UnityEngine.HotReloadModule.dll",
@@ -648,7 +643,6 @@
         "ref/net472/UnityEngine.SpriteShapeModule.dll",
         "ref/net472/UnityEngine.StreamingModule.dll",
         "ref/net472/UnityEngine.SubstanceModule.dll",
-        "ref/net472/UnityEngine.SubsystemsModule.dll",
         "ref/net472/UnityEngine.TLSModule.dll",
         "ref/net472/UnityEngine.TerrainModule.dll",
         "ref/net472/UnityEngine.TerrainPhysicsModule.dll",
@@ -675,7 +669,6 @@
         "ref/net472/UnityEngine.WindModule.dll",
         "ref/net472/UnityEngine.XRModule.dll",
         "ref/net472/UnityEngine.dll",
-        "ref/net472/com.rlabrecque.steamworks.net.dll",
         "ref/net472/mscorlib.dll"
       ]
     },
@@ -731,7 +724,7 @@
   "projectFileDependencyGroups": {
     ".NETFramework,Version=v4.7.2": [
       "Krafs.Publicizer >= 2.3.0",
-      "Krafs.Rimworld.Ref >= 1.3.3389",
+      "Krafs.Rimworld.Ref >= 1.2.3062",
       "Lib.Harmony >= 2.3.6"
     ]
   },
@@ -787,7 +780,7 @@
           },
           "Krafs.Rimworld.Ref": {
             "target": "Package",
-            "version": "[1.3.3389, )"
+            "version": "[1.2.3062, )"
           },
           "Lib.Harmony": {
             "target": "Package",

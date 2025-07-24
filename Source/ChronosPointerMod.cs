@@ -10,7 +10,13 @@ namespace ChronosPointer
 
     class Dialog_ModWarning : Dialog_MessageBox
     {
-        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title, layer: layer)
+#if V1_2
+        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
+            : base(text, fixActionText, fixAction, null, null, title, false, null, null) // Omit 'layer' parameter
+#else
+        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
+            : base(text, fixActionText, fixAction, null, null, title, false, null, null, layer) // Keep 'layer' parameter
+#endif
         {
             if (fixAction != null)
             {
