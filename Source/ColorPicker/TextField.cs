@@ -28,13 +28,32 @@ namespace ColourPicker {
             _spinner = spinner;
         }
 
-        public T Value {
-            get => _value;
-            set {
+#if V1_0
+        public T Value
+        {
+            get { return _value; }
+            set
+            {
                 _value = value;
-                _temp = _toString?.Invoke(value) ?? value.ToString();
+                if (_toString != null)
+                {
+                    _temp = _toString(value);
+                }
+                else
+                {
+                    _temp = value.ToString();
+                }
             }
         }
+#else
+public T Value {
+    get => _value;
+    set {
+        _value = value;
+        _temp = _toString?.Invoke(value) ?? value.ToString();
+    }
+}
+#endif
 
         public static TextField<float> Float01(float value, string id, Action<float> callback) {
             return new TextField<float>(value, id, callback, float.Parse, Validate01, f => Round(f).ToString(), true);
@@ -44,21 +63,55 @@ namespace ColourPicker {
             return new TextField<string>(value, id, callback, hex => hex, ValidateHex);
         }
 
-        public void Draw(Rect rect) {
-            bool valid = _validator?.Invoke( _temp ) ?? true;
+#if V1_0
+        public void Draw(Rect rect)
+        {
+            bool valid = true;
+            if (_validator != null)
+            {
+                valid = _validator(_temp);
+            }
             GUI.color = valid ? Color.white : Color.red;
             GUI.SetNextControlName(_id);
-            string temp = Widgets.TextField( rect, _temp );
+            string temp = Widgets.TextField(rect, _temp);
             GUI.color = Color.white;
 
-            if (temp != _temp) {
+            if (temp != _temp)
+            {
                 _temp = temp;
-                if (_validator?.Invoke(_temp) ?? true) {
+                bool tempValid = true;
+                if (_validator != null)
+                {
+                    tempValid = _validator(_temp);
+                }
+
+                if (tempValid)
+                {
                     _value = _parser(_temp);
-                    _callback?.Invoke(_value);
+                    if (_callback != null)
+                    {
+                        _callback(_value);
+                    }
                 }
             }
         }
+#else
+public void Draw(Rect rect) {
+    bool valid = _validator?.Invoke( _temp ) ?? true;
+    GUI.color = valid ? Color.white : Color.red;
+    GUI.SetNextControlName(_id);
+    string temp = Widgets.TextField( rect, _temp );
+    GUI.color = Color.white;
+
+    if (temp != _temp) {
+        _temp = temp;
+        if (_validator?.Invoke(_temp) ?? true) {
+            _value = _parser(_temp);
+            _callback?.Invoke(_value);
+        }
+    }
+}
+#endif
 
         private static bool Validate01(string value) {
             if (!float.TryParse(value, out float parsed)) {
@@ -68,9 +121,17 @@ namespace ColourPicker {
             return parsed >= 0f && parsed <= 1f;
         }
 
-        private static bool ValidateHex(string value) {
-            return ColorUtility.TryParseHtmlString(value, out _);
+#if V1_0
+        private static bool ValidateHex(string value)
+        {
+            Color color;
+            return ColorUtility.TryParseHtmlString(value, out color);
         }
+#else
+private static bool ValidateHex(string value) {
+    return ColorUtility.TryParseHtmlString(value, out _);
+}
+#endif
 
         private static float Round(float value, int digits = 2) {
             float exponent = Mathf.Pow( 10, digits );

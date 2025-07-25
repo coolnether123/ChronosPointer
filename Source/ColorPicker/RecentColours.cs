@@ -16,9 +16,13 @@ namespace ColourPicker {
             Read();
         }
 
+#if V1_0
+        public Color this[int index] { get { return _colors[index]; } }
+        public int Count { get { return _colors.Count; } }
+#else
         public Color this[int index] => _colors[index];
-
         public int Count => _colors.Count;
+#endif
 
         public void Add(Color color) {
             _colors.RemoveAll(c => c == color);

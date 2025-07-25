@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "vO0p+GEdgIo=",
+  "dgSpecHash": "656ZWSArGRc=",
   "success": true,
   "projectFilePath": "D:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\ChronosPointer\\Source\\ChronosPointer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\optim\\.nuget\\packages\\krafs.publicizer\\2.3.0\\krafs.publicizer.2.3.0.nupkg.sha512",
-    "C:\\Users\\optim\\.nuget\\packages\\krafs.rimworld.ref\\1.2.3062\\krafs.rimworld.ref.1.2.3062.nupkg.sha512",
-    "C:\\Users\\optim\\.nuget\\packages\\lib.harmony\\2.3.6\\lib.harmony.2.3.6.nupkg.sha512"
+    "C:\\Users\\optim\\.nuget\\packages\\krafs.rimworld.ref\\1.0.2551\\krafs.rimworld.ref.1.0.2551.nupkg.sha512"
   ],
   "logs": []
 }

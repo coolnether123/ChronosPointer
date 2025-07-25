@@ -56,6 +56,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6|AnyCPU'">
     <OutputPath>..\1.6\Assemblies\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1|AnyCPU'">
+    <OutputPath>..\1.1\Assemblies\</OutputPath>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DefineConstants>V1_1</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.0|AnyCPU'">
+    <OutputPath>..\1.0\Assemblies\</OutputPath>
+    <DefineConstants>V1_0</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChronosPointerSettings.cs" />
     <Compile Include="ChronosPointerTextures.cs" />
@@ -74,10 +83,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.2.3062" />
-    <PackageReference Include="Lib.Harmony">
-      <Version>2.3.6</Version>
-    </PackageReference>
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.0.2551" />
   </ItemGroup>
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
@@ -87,6 +93,12 @@
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeightNoScrollbar" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainTabWindow_Schedule.cachedHeaderHeight" />
     <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony, Version=1.2.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\1.0\Assemblies\0Harmony.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

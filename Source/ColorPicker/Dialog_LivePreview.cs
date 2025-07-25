@@ -4,7 +4,14 @@ using System;
 using UnityEngine;
 using Verse;
 using System.Linq;
-#if V1_2 
+#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
+using HarmonyLib;
+#endif
+
+#if V1_2 || V1_1 || V1_0
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -109,7 +116,7 @@ namespace ChronosPointer
         }
 
         // When the user clicks outside the window
-#if !(V1_2)
+#if !(V1_2 || V1_1 || V1_0)
     public override void Notify_ClickOutsideWindow()
     {
         onCancelAction?.Invoke();
@@ -123,8 +130,14 @@ namespace ChronosPointer
             base.PostClose();
             onPostCloseAction?.Invoke();
 
+#if V1_1 || V1_0
+            var allButtonsField = AccessTools.Field(typeof(MainButtonsRoot), "AllButtons");
+            var allButtons = (System.Collections.Generic.List<MainButtonDef>)allButtonsField.GetValue(null);
+            var scheduleWindow = allButtons.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+#else
             var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
                              .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+#endif
             if (scheduleWindow != null)
             {
                 // Reset the layer back to default so it behaves like a normal tab again.

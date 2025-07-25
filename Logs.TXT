@@ -1,0 +1,42 @@
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error (active)	CS0102	The type 'RecentColours' already contains a definition for 'Count'	ChronosPointer	D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\ColorPicker\RecentColours.cs	27
+Error (active)	CS0229	Ambiguity between 'RecentColours.Count' and 'RecentColours.Count'	ChronosPointer	D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\ColorPicker\Dialog_ColourPicker.cs	736
+
+
+
+ReflectionTypeLoadException getting types in assembly ChronosPointer: System.Reflection.ReflectionTypeLoadException: The classes in the module cannot be loaded.
+at (wrapper managed-to-native) System.Reflection.Assembly:GetTypes (bool)
+at System.Reflection.Assembly.GetTypes () [0x00000] in <filename unknown>:0
+at Verse.ModAssemblyHandler.AssemblyIsUsable (System.Reflection.Assembly asm) [0x00000] in <filename unknown>:0
+
+Loader exceptions:
+=> System.TypeLoadException: Could not load type 'ColourPicker.Dialog_ColourPicker' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ColourPicker.TextField`1[T]' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.ChronosPointerSettings' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.Dialog_LivePreview' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.ChronosPointerMod' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.Dialog_IncidentTesting+<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.Dialog_ModWarning+<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type 'ChronosPointer.Patch_OnGameLoad+<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass57_0' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass58_0' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass59_0' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass60_0' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass61_0' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c__DisplayClass61_1' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+=> System.TypeLoadException: Could not load type '<>c' from assembly 'ChronosPointer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+
+Verse.Log:Error(String, Boolean)
+Verse.ModAssemblyHandler:AssemblyIsUsable(Assembly)
+Verse.ModAssemblyHandler:ReloadAll()
+Verse.ModContentPack:ReloadContent()
+Verse.LoadedModManager:LoadModContent()
+Verse.LoadedModManager:LoadAllActiveMods()
+Verse.PlayDataLoader:DoPlayLoad()
+Verse.PlayDataLoader:LoadAllPlayData(Boolean)
+Verse.Root:<Start>m__1()
+Verse.LongEventHandler:RunEventFromAnotherThread(Action)
+Verse.LongEventHandler:<UpdateCurrentAsynchronousEvent>m__1()

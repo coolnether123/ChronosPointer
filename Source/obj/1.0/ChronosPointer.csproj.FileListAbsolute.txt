@@ -1,0 +1,7 @@
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\bin\1.0\ChronosPointer.dll
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\bin\1.0\0Harmony.dll
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\1.0\Assemblies\ChronosPointer.dll
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\obj\1.0\ChronosPointer.csproj.AssemblyReference.cache
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\obj\1.0\ChronosPointer.csproj.CoreCompileInputs.cache
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\obj\1.0\ChronosP.6180E5FD.Up2Date
+D:\SteamLibrary\steamapps\common\RimWorld\Mods\ChronosPointer\Source\obj\1.0\ChronosPointer.dll

@@ -1,11 +1,17 @@
 ﻿using ColourPicker;
+#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Verse;
-#if V1_2
+#if V1_0 || V1_1 || V1_2
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -122,11 +128,20 @@ namespace ChronosPointer
         private float _sunlightThreshold_Night = 0.0f;
         public float SunlightThreshold_Night
         {
-            get => _sunlightThreshold_Night;
+#if V1_0
+            get { return _sunlightThreshold_Night; }
+#else
+    get => _sunlightThreshold_Night;
+#endif
             set
             {
                 _sunlightThreshold_Night = value;
-                OnSunlightThresholdChanged?.Invoke();
+#if V1_0
+                if (OnSunlightThresholdChanged != null)
+                    OnSunlightThresholdChanged();
+#else
+        OnSunlightThresholdChanged?.Invoke();
+#endif
             }
         }
 
@@ -360,12 +375,20 @@ namespace ChronosPointer
             listL.Label($"Cursor thicknesses:");
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
-#if V1_2 || V1_3 // For 1.2 and 1.3, use the custom slider function as `SliderLabeled` with tooltip isn't available
+#if V1_0 || V1_1 || V1_2 || V1_3 // For 1.2 and 1.3, use the custom slider function as `SliderLabeled` with tooltip isn't available
+#if V1_0
+            CursorThickness = (int)Do1_3LabeledSlider(string.Format("- Main Cursor ({0:F1})", CursorThickness), listL, ref CursorThickness, 2f, 10f, true);
+            GrayIfInactive(DrawHoursBarCursor);
+            HoursBarCursorThickness = (int)Do1_3LabeledSlider(string.Format("- Hours Bar Cursor ({0:F1})", HoursBarCursorThickness), listL, ref HoursBarCursorThickness, 2f, 10f, true);
+            GrayIfInactive(DrawCurrentHourHighlight);
+            HighlightBorderThickness = (int)Do1_3LabeledSlider(string.Format("- Highlight Border ({0:F1})", HighlightBorderThickness), listL, ref HighlightBorderThickness, 2f, 10f, true);
+#else
             CursorThickness = (int)Do1_3LabeledSlider($"- Main Cursor ({CursorThickness:F1})", listL, ref CursorThickness, 2f, 10f, true);
             GrayIfInactive(DrawHoursBarCursor);
             HoursBarCursorThickness = (int)Do1_3LabeledSlider($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", listL, ref HoursBarCursorThickness, 2f, 10f, true);
             GrayIfInactive(DrawCurrentHourHighlight);
             HighlightBorderThickness = (int)Do1_3LabeledSlider($"- Highlight Border ({HighlightBorderThickness:F1})", listL, ref HighlightBorderThickness, 2f, 10f, true);
+#endif
 #else // For 1.4 and newer, use the built-in SliderLabeled with tooltip
             CursorThickness = listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
             GrayIfInactive(DrawHoursBarCursor);
@@ -378,7 +401,7 @@ namespace ChronosPointer
             GrayIfInactive(DrawHourBar);
             listL.Label("Sunlight thresholds (0.0 = no sunlight, 1.0 = full sunlight):");
             Text.Font = GameFont.Tiny;
-#if V1_2 || V1_3
+#if  V1_0 || V1_1 || V1_2 || V1_3
             float night = SunlightThreshold_Night;
             night = Do1_3LabeledSlider($"- Night ({night:F2})", listL, ref night, 0.0f, 1.0f);
             SunlightThreshold_Night = night;
@@ -402,7 +425,7 @@ namespace ChronosPointer
             Text.Font = GameFont.Tiny;
 
             GrayIfInactive(DrawIncidentOverlay);
-#if V1_2 || V1_3
+#if V1_0 || V1_1 || V1_2 || V1_3
             AuroraMinOpacity = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
             GrayIfInactive(DrawIncidentOverlay);
             AuroraMaxOpacity = Do1_3LabeledSlider($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", listL, ref AuroraMaxOpacity, 0.0f, 1.0f);
@@ -467,7 +490,19 @@ namespace ChronosPointer
 
         }
 
-#if V1_2 || V1_3
+#if V1_0
+        public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
+        {
+            Rect rect = list.GetRect(24f); // A reasonable height for a slider control
+            Widgets.Label(rect, label); // Draw the label in the allocated space
+
+            // Perform the slider operation on the right half of the rect
+            float result = Widgets.HorizontalSlider(rect.RightHalf(), validateThickness ? ValidateCursorThickness(value) : value, min, max);
+
+            list.Gap(list.verticalSpacing); // Manually advance the listing
+            return result;
+        }
+#elif V1_1 || V1_2 || V1_3
         public static float Do1_3LabeledSlider(string label, Listing_Standard list, ref float value, float min, float max, bool validateThickness = false)
         {
             // Remove 'ref' from ValidateCursorThickness call
@@ -482,10 +517,29 @@ namespace ChronosPointer
                 GUI.color = Color.green;
                 if (Widgets.ButtonText(buttonRect, "Incident Preview..."))
                 {
+#if V1_1 || V1_0
+                    Verse.Window fakeSchedule = null; // Initialize to null
+                    var allButtonsField = typeof(MainButtonsRoot).GetField("AllButtons", BindingFlags.NonPublic | BindingFlags.Static);
+                    // Add null-check for the reflected field's value
+                    if (allButtonsField != null)
+                    {
+                        var allButtonsObj = allButtonsField.GetValue(null);
+                        if (allButtonsObj is System.Collections.Generic.List<MainButtonDef>)
+                        {
+                            var allButtons = (System.Collections.Generic.List<MainButtonDef>)allButtonsObj;
+                            var buttonDef = allButtons.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule);
+                            if (buttonDef != null)
+                            {
+                                fakeSchedule = buttonDef.TabWindow;
+                            }
+                        }
+                    }
+#else
                     var fakeSchedule = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+# endif             
                     if (fakeSchedule != null)
                     {
-#if V1_2
+#if V1_0 || V1_1 || V1_2
                         // --- Logic for RimWorld 1.2 ---
                         // We must manually set window layers because the constructor doesn't support it.
 
@@ -610,7 +664,25 @@ namespace ChronosPointer
                     return;
                 }
 
+#if V1_1 || V1_0
+                Verse.Window fakeSchedule = null;
+                var allButtonsField = typeof(MainButtonsRoot).GetField("AllButtons", BindingFlags.NonPublic | BindingFlags.Static);
+                if (allButtonsField != null)
+                {
+                    var allButtonsObj = allButtonsField.GetValue(null);
+                    var allButtons = allButtonsObj as System.Collections.Generic.List<MainButtonDef>;
+                    if (allButtons != null)
+                    {
+                        var buttonDef = allButtons.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule);
+                        if (buttonDef != null)
+                        {
+                            fakeSchedule = buttonDef.TabWindow;
+                        }
+                    }
+                }
+#else
                 var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+# endif         
                 if (scheduleWindow == null)
                 {
                     Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));

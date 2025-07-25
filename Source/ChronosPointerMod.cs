@@ -1,5 +1,10 @@
 using ColourPicker;
+#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
 using HarmonyLib;
+#endif
 using RimWorld;
 using System;
 using UnityEngine;
@@ -10,12 +15,15 @@ namespace ChronosPointer
 
     class Dialog_ModWarning : Dialog_MessageBox
     {
-#if V1_2
-        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
+#if V1_0
+        public Dialog_ModWarning(string title, string text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
             : base(text, fixActionText, fixAction, null, null, title, false, null, null) // Omit 'layer' parameter
+#elif V1_1 || V1_2
+    public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
+        : base(text, fixActionText, fixAction, null, null, title, false, null, null) // Omit 'layer' parameter
 #else
-        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
-            : base(text, fixActionText, fixAction, null, null, title, false, null, null, layer) // Keep 'layer' parameter
+    public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog)
+        : base(text, fixActionText, fixAction, null, null, title, false, null, null, layer) // Keep 'layer' parameter
 #endif
         {
             if (fixAction != null)
@@ -43,17 +51,19 @@ namespace ChronosPointer
         [HarmonyPostfix]
         public static void UIRootEntryInit_Prefix()
         {
-            if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
-                return;
+#if !(V1_0)
+        if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
+            return;
 
-            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
-                ApplyFixForMysteriusCustomSchedules();
-            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
-                ApplyFixForScheduleClock();
-            //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
-            if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
-                ApplyFixForGroupedPawnsList();
-            playerWarned = true;
+        if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
+            ApplyFixForMysteriusCustomSchedules();
+        if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
+            ApplyFixForScheduleClock();
+        //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
+        if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
+            ApplyFixForGroupedPawnsList();
+        playerWarned = true;
+#endif
         }
         private static void ApplyFixForMysteriusCustomSchedules()
         {
@@ -105,12 +115,32 @@ namespace ChronosPointer
         {
             Settings = GetSettings<ChronosPointerSettings>();
 
-            if (ModsConfig.IsActive("brrainz.harmony"))
+#if V1_1 || V1_0
+            // For older versions, check if the Harmony 1.x library type exists, as it might be bundled, not a formal mod.
+            // The assembly name for Harmony 1.x is "0Harmony".
+            bool harmonyLoaded = Type.GetType("Harmony.HarmonyInstance, 0Harmony") != null;
+#else
+            // For modern versions, checking the active mod list is the standard and correct way.
+            bool harmonyLoaded = ModsConfig.IsActive("brrainz.harmony");
+#endif
+
+            if (harmonyLoaded)
             {
                 // Harmony patch
+#if V1_1 || V1_0
+                // Harmony 1.x initialization
+                var harmony = HarmonyInstance.Create("com.coolnether123.ChronosPointer");
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+#else
+                // Harmony 2.x initialization
                 var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
                 harmony.PatchAll();
+#endif
                 Log.Message("[ChronosPointer] Harmony patches applied.");
+            }
+            else
+            {
+                Log.Warning("[ChronosPointer] Harmony library not found. The mod will not function.");
             }
 
             // Subscribe to sunlight threshold changes

@@ -1,4 +1,9 @@
-﻿using HarmonyLib;
+﻿#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
+using HarmonyLib;
+#endif
 #if V1_5U
 using LudeonTK;
 #endif
@@ -10,7 +15,7 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using static UnityEngine.GUI;
-#if V1_2
+#if V1_2 || V1_1 || V1_0
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -91,7 +96,7 @@ namespace ChronosPointer
         {
             bool shouldDrawThisFrame = IsInTestMode || Find.MainTabsRoot.OpenTab == __instance.def;
 
-            
+
 
             if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
             {
@@ -101,14 +106,28 @@ namespace ChronosPointer
 
             if (Find.CurrentMap == null) return;
 
+#if V1_1 || V1_0
+            // In 1.1, the 'table' field is private. We use reflection to access it.
+            var tableFieldInfo = AccessTools.Field(typeof(MainTabWindow_PawnTable), "table");
+            var instanceTable = (PawnTable)tableFieldInfo.GetValue(__instance);
+#else
             var instanceTable = __instance.table;
+#endif
             if (instanceTable == null) return;
 
-#if V1_3 || V1_2
+#if V1_3 || V1_2 || V1_1 || V1_0
             var instanceTableColumns = instanceTable.ColumnsListForReading; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #else
             var instanceTableColumns = instanceTable.Columns; // Change to instanceTable.ColumnsListForReading for version 1.3 | Use instanceTable.Columns for version 1.4 >
 #endif
+
+#if V1_1 || V1_0
+            // In 1.1, these fields are private. Get them once via reflection before they are used.
+            var v1_1_cachedColumnWidths = (List<float>)AccessTools.Field(typeof(PawnTable), "cachedColumnWidths").GetValue(instanceTable);
+            var v1_1_cachedSize = (Vector2)AccessTools.Field(typeof(PawnTable), "cachedSize").GetValue(instanceTable);
+            var v1_1_cachedHeaderHeight = (float)AccessTools.Field(typeof(PawnTable), "cachedHeaderHeight").GetValue(instanceTable);
+#endif
+
             float hourBoxWidth = 19f; // default width for each hour box
 
             //Sumarbrander to CoolNether123: if we could eliminate this for loop, that would be great.
@@ -116,10 +135,18 @@ namespace ChronosPointer
             {
                 if (instanceTableColumns[i].workerClass == typeof(PawnColumnWorker_Timetable))
                 {
+#if V1_1 || V1_0
+                    hourBoxWidth = (v1_1_cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP;
+#else
                     hourBoxWidth = (instanceTable.cachedColumnWidths[i] / 24f) - HOUR_BOX_GAP; //24 hours in a day
+#endif
                     break;
                 }
+#if V1_1 || V1_0
+                var width = v1_1_cachedColumnWidths[i];
+#else
                 var width = instanceTable.cachedColumnWidths[i]; //instanceTableColumns.First().width; 
+#endif
 
                 fillRect.x += width;
                 fillRect.width -= width;
@@ -127,7 +154,11 @@ namespace ChronosPointer
 
             //int incident = IncidentHappening() + incidentSimulator;
 
+#if V1_1 || V1_0
+            float windowHeight = Mathf.Max(v1_1_cachedSize.y - v1_1_cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
+#else
             float windowHeight = Mathf.Max(instanceTable.cachedSize.y - instanceTable.cachedHeaderHeight - PAWN_AREA_BOTTOM_TRIM, 0);
+#endif
 
             foreach (var def in instanceTableColumns)
             {
@@ -245,7 +276,7 @@ namespace ChronosPointer
                 for (int h = 0; h < 24; h++)
                 {
                     long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)h * GenDate.TicksPerHour;
-#if V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
+#if V1_0 || V1_1 || V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
                     float sunlight = GenCelestial.CelestialSunGlow(map, (int)absTickForThisLocalHour);
 #else
                 float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForThisLocalHour);
@@ -267,7 +298,7 @@ namespace ChronosPointer
 
             long absTickForThisLocalHour = startOfCurrentLocalDayAbsTick + (long)localHour * GenDate.TicksPerHour;
 
-#if V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
+#if V1_0 || V1_1 || V1_2 // GenCelestial.CelestialSunGlow in 1.2 takes Map not Tile
             return GenCelestial.CelestialSunGlow(Find.CurrentMap, (int)absTickForThisLocalHour);
 #else
             return GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)absTickForThisLocalHour);
@@ -403,7 +434,7 @@ namespace ChronosPointer
             if (Settings.DoFilledHourHighlight)
                 Widgets.DrawBoxSolid(highlightRect, Settings.Color_HourHighlight);
             else
-#if V1_2 || V1_3
+#if V1_0 || V1_1 || V1_2 || V1_3
             {
                 // In older versions, we use Widgets.DrawBox() to create an outline.
                 // We must set GUI.color before the call.
@@ -453,7 +484,7 @@ namespace ChronosPointer
 
             // For sunlight calculation for the dynamic line color, use the current absolute tick:
             long currentAbsoluteTick = GenTicks.TicksAbs;
-#if V1_2
+#if V1_0 || V1_1 || V1_2
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap, (int)currentAbsoluteTick);
 #else
             float sunlight = GenCelestial.CelestialSunGlow(Find.CurrentMap.Tile, (int)currentAbsoluteTick);

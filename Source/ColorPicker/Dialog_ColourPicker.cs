@@ -4,7 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
 using HarmonyLib;
+#endif
 using UnityEngine;
 using Verse;
 using Object = UnityEngine.Object;
@@ -124,15 +129,29 @@ namespace ColourPicker {
             }
         }
 
-        public Texture2D AlphaPickerBG {
-            get {
-                if (_alphaPickerBG == null) {
+#if V1_0
+        public Texture2D AlphaPickerBG
+        {
+            get
+            {
+                if (_alphaPickerBG == null)
+                {
                     CreateAlphaPickerBG();
                 }
-
                 return _alphaPickerBG;
             }
         }
+#else
+public Texture2D AlphaPickerBG {
+    get {
+        if (_alphaPickerBG == null) {
+            CreateAlphaPickerBG();
+        }
+
+        return _alphaPickerBG;
+    }
+}
+#endif
 
         public float B {
             get => tempColour.b;
@@ -164,23 +183,49 @@ namespace ColourPicker {
             }
         }
 
-        public float H {
-            get => _h;
-            set {
+#if V1_0
+        public float H
+        {
+            get { return _h; }
+            set
+            {
                 _h = Mathf.Clamp(value, 0f, 1f);
                 NotifyHSVUpdated();
                 CreateColourPickerBG();
                 CreateAlphaPickerBG();
             }
         }
+#else
+public float H {
+    get => _h;
+    set {
+        _h = Mathf.Clamp(value, 0f, 1f);
+        NotifyHSVUpdated();
+        CreateColourPickerBG();
+        CreateAlphaPickerBG();
+    }
+}
+#endif
 
-        public string Hex {
-            get => $"#{ColorUtility.ToHtmlStringRGBA(tempColour)}";
-            set {
+#if V1_0
+        public string Hex
+        {
+            get { return "#" + ColorUtility.ToHtmlStringRGBA(tempColour); }
+            set
+            {
                 _hex = value;
                 NotifyHexUpdated();
             }
         }
+#else
+public string Hex {
+    get => $"#{ColorUtility.ToHtmlStringRGBA(tempColour)}";
+    set {
+        _hex = value;
+        NotifyHexUpdated();
+    }
+}
+#endif
 
         public Texture2D HuePickerBG {
             get {
@@ -192,9 +237,21 @@ namespace ColourPicker {
             }
         }
 
-        public Vector2 InitialPosition => _initialPosition ??
-                                          new Vector2(UI.screenWidth - InitialSize.x,
-                                                      UI.screenHeight - InitialSize.y) / 2f;
+#if V1_0
+        public Vector2 InitialPosition
+        {
+            get
+            {
+                return _initialPosition != null ? _initialPosition.Value :
+                    new Vector2(UI.screenWidth - InitialSize.x,
+                                UI.screenHeight - InitialSize.y) / 2f;
+            }
+        }
+#else
+public Vector2 InitialPosition => _initialPosition ??
+                                  new Vector2(UI.screenWidth - InitialSize.x,
+                                              UI.screenHeight - InitialSize.y) / 2f;
+#endif
 
         public override Vector2 InitialSize
         {
@@ -417,14 +474,18 @@ namespace ColourPicker {
             SwapTexture(ref bg, SolidColorMaterials.NewSolidColorTexture(col));
         }
 
+#if !(V1_0 || V1_1)
         [Conditional("DEBUG")]
-        public static void Debug(string msg) { 
-            if (Traverse.Create(typeof(Log)).Field("reachedMaxMessagesLimit").GetValue<bool>()) {
+        public static void Debug(string msg)
+        {
+            if (Traverse.Create(typeof(Log)).Field("reachedMaxMessagesLimit").GetValue<bool>())
+            {
                 Log.ResetMessageCount();
             }
 
             Log.Message($"ColourPicker :: {msg}");
         }
+#endif
 
         public override void DoWindowContents(Rect inRect)
         {
@@ -713,9 +774,16 @@ namespace ColourPicker {
 
         public void NotifyHexUpdated()
         {
+#if !V1_0
             Debug($"HEX updated ({Hex})");
+#endif
 
+#if V1_0
+            Color color;
+            if (ColorUtility.TryParseHtmlString(_hex, out color))
+#else
             if (ColorUtility.TryParseHtmlString(_hex, out Color color))
+#endif
             {
                 // set rgb colour;
                 tempColour = color;
@@ -732,7 +800,9 @@ namespace ColourPicker {
 
         public void NotifyHSVUpdated()
         {
+#if !V1_0
             Debug($"HSV updated: ({_h}, {_s}, {_v})");
+#endif
 
             // update rgb colour
             Color color = Color.HSVToRGB(H, S, V);
@@ -757,7 +827,9 @@ namespace ColourPicker {
 
         public void NotifyRGBUpdated()
         {
+#if !V1_0
             Debug($"RGB updated: ({R}, {G}, {B})");
+#endif
 
             // Set HSV from RGB
             Color.RGBToHSV(tempColour, out _h, out _s, out _v);
@@ -793,12 +865,12 @@ namespace ColourPicker {
             base.OnCancelKeyPressed();
         }
 
-#if !(V1_2)
-    public override void Notify_ClickOutsideWindow()
-    {
-        onCancel?.Invoke();
-        base.Notify_ClickOutsideWindow();
-    }
+#if !(V1_2 || V1_1 || V1_0)
+        public override void Notify_ClickOutsideWindow()
+        {
+            onCancel?.Invoke();
+            base.Notify_ClickOutsideWindow();
+        }
 #endif
 
         public override void PostClose()
@@ -828,7 +900,14 @@ namespace ColourPicker {
         {
             curColour = tempColour;
             _recentColours.Add(tempColour);
+#if V1_0
+            if (_callback != null)
+            {
+                _callback(curColour, closing);
+            }
+#else
             _callback?.Invoke(curColour, closing);
+#endif
             CreatePreviewBG(ref _previewBG, tempColour);
         }
 

@@ -1,9 +1,15 @@
-﻿using RimWorld;
+﻿#if V1_1 || V1_0
+using Harmony;
+using System.Reflection; // Required for manual reflection in 1.1
+#else
+using HarmonyLib;
+#endif
+using RimWorld;
 using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
-#if V1_2 
+#if V1_2 || V1_1 || V1_0
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -11,13 +17,19 @@ namespace ChronosPointer
 {
     public class Dialog_IncidentTesting : Dialog_MessageBox
     {
-        public Dialog_IncidentTesting(TaggedString text, string buttonAText = null, Action buttonAAction = null
-#if !(V1_2) // `layer` parameter not available in 1.2 Dialog_MessageBox constructor
-            , WindowLayer layer = WindowLayer.Dialog
+        public Dialog_IncidentTesting(
+#if V1_0
+        string text,
+#else
+        TaggedString text,
+#endif
+        string buttonAText = null, Action buttonAAction = null
+#if !(V1_2 || V1_1 || V1_0)
+        , WindowLayer layer = WindowLayer.Dialog
 #endif
         ) : base(text, buttonAText, buttonAAction
-#if !(V1_2)
-            , layer: layer
+#if !(V1_2 || V1_1 || V1_0)
+        , layer: layer
 #endif
         )
         {
@@ -109,8 +121,16 @@ namespace ChronosPointer
                 buttonAAction();
             }
 
+#if V1_1 || V1_0
+            // For 1.1, AllButtons is a private static field in MainButtonsRoot. We use reflection to access it.
+            var allButtonsFieldInfo = Harmony.AccessTools.Field(typeof(MainButtonsRoot), "AllButtons");
+            var allButtons = (System.Collections.Generic.List<MainButtonDef>)allButtonsFieldInfo.GetValue(null);
+            var scheduleWindow = allButtons?.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+#else
             var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
                             .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+#endif
+
             if (scheduleWindow != null)
             {
                 // Reset the layer back to default.
@@ -128,7 +148,7 @@ namespace ChronosPointer
             Close();
         }
 
-#if !(V1_2)
+#if !(V1_2 || V1_1 || V1_0)
     public override void Notify_ClickOutsideWindow()
     {
         base.Notify_ClickOutsideWindow();
