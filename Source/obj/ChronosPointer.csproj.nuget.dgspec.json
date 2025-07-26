@@ -44,15 +44,9 @@
       "frameworks": {
         "net472": {
           "dependencies": {
-            "Krafs.Publicizer": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.3.0, )"
-            },
             "Krafs.Rimworld.Ref": {
               "target": "Package",
-              "version": "[1.0.2551, )"
+              "version": "[1.1.2654, )"
             }
           }
         }

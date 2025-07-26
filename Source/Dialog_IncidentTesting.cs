@@ -1,4 +1,5 @@
-﻿#if V1_1 || V1_0
+#if !V1_0
+#if V1_1
 using Harmony;
 using System.Reflection; // Required for manual reflection in 1.1
 #else
@@ -9,7 +10,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
-#if V1_2 || V1_1 || V1_0
+#if V1_2 || V1_1
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -35,6 +36,7 @@ namespace ChronosPointer
         {
         }
 
+#if V1_0
         public override Vector2 InitialSize
         {
             get
@@ -42,6 +44,15 @@ namespace ChronosPointer
                 return new Vector2(300f, 320f);
             }
         }
+#else
+        public override Vector2 InitialSize
+        {
+            get
+            {
+                return new Vector2(300f, 320f);
+            }
+        }
+#endif
 
         protected override void SetInitialSizeAndPosition()
         {
@@ -125,10 +136,10 @@ namespace ChronosPointer
             // For 1.1, AllButtons is a private static field in MainButtonsRoot. We use reflection to access it.
             var allButtonsFieldInfo = Harmony.AccessTools.Field(typeof(MainButtonsRoot), "AllButtons");
             var allButtons = (System.Collections.Generic.List<MainButtonDef>)allButtonsFieldInfo.GetValue(null);
-            var scheduleWindow = allButtons?.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+            var scheduleWindow = allButtons?.FirstOrDefault(b => b.TabWindow is MainTabWindow_Restrict)?.TabWindow;
 #else
             var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
-                            .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+                            .FirstOrDefault(b => b.TabWindow is MainTabWindow_Restrict)?.TabWindow;
 #endif
 
             if (scheduleWindow != null)
@@ -166,3 +177,4 @@ namespace ChronosPointer
         }
     }
 }
+#endif

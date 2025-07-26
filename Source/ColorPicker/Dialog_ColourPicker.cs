@@ -1,10 +1,11 @@
 // Copyright Karel Kroeze, 2018-2021.
 // ColourPicker/ColourPicker/Dialog_ColourPicker.cs
 
+#if !V1_0
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if V1_1 || V1_0
+#if V1_1
 using Harmony;
 using System.Reflection; // Required for manual reflection in 1.1
 #else
@@ -14,8 +15,10 @@ using UnityEngine;
 using Verse;
 using Object = UnityEngine.Object;
 
-namespace ColourPicker {
-    public class Dialog_ColourPicker : Window {
+namespace ColourPicker
+{
+    public class Dialog_ColourPicker : Window
+    {
         private controls _activeControl = controls.none;
 
         private Color _alphaBGColorA = Color.white,
@@ -91,7 +94,8 @@ namespace ColourPicker {
         /// <param name="color">The current colour</param>
         /// <param name="callback">Callback to be invoked with the selected colour when 'OK' or 'Apply' are pressed. Color is the selected color. Bool is true when OK is pressed.</param>
         /// <param name="position">Top left position of the colour picker (defaults to screen center)</param>
-        public Dialog_ColourPicker(Color color, Action<Color, bool> callback = null, Vector2? position = null) {
+        public Dialog_ColourPicker(Color color, Action<Color, bool> callback = null, Vector2? position = null)
+        {
             absorbInputAroundWindow = true;
             closeOnClickedOutside = true;
 
@@ -119,9 +123,15 @@ namespace ColourPicker {
             NotifyRGBUpdated();
         }
 
-        public float A {
+        public float A
+        {
+#if V1_0
+            get { return tempColour.a; }
+#else
             get => tempColour.a;
-            set {
+#endif
+            set
+            {
                 Color color = tempColour;
                 color.a = Mathf.Clamp(value, 0f, 1f);
                 tempColour = color;
@@ -153,9 +163,15 @@ public Texture2D AlphaPickerBG {
 }
 #endif
 
-        public float B {
+        public float B
+        {
+#if V1_0
+            get { return tempColour.b; }
+#else
             get => tempColour.b;
-            set {
+#endif
+            set
+            {
                 Color color = tempColour;
                 color.b = Mathf.Clamp(value, 0f, 1f);
                 tempColour = color;
@@ -163,6 +179,20 @@ public Texture2D AlphaPickerBG {
             }
         }
 
+#if V1_0
+        public Texture2D ColourPickerBG
+        {
+            get
+            {
+                if (_colourPickerBG == null)
+                {
+                    CreateColourPickerBG();
+                }
+
+                return _colourPickerBG;
+            }
+        }
+#else
         public Texture2D ColourPickerBG {
             get {
                 if (_colourPickerBG == null) {
@@ -172,10 +202,17 @@ public Texture2D AlphaPickerBG {
                 return _colourPickerBG;
             }
         }
+#endif
 
-        public float G {
+        public float G
+        {
+#if V1_0
+            get { return tempColour.g; }
+#else
             get => tempColour.g;
-            set {
+#endif
+            set
+            {
                 Color color = tempColour;
                 color.g = Mathf.Clamp(value, 0f, 1f);
                 tempColour = color;
@@ -227,6 +264,20 @@ public string Hex {
 }
 #endif
 
+#if V1_0
+        public Texture2D HuePickerBG
+        {
+            get
+            {
+                if (_huePickerBG == null)
+                {
+                    CreateHuePickerBG();
+                }
+
+                return _huePickerBG;
+            }
+        }
+#else
         public Texture2D HuePickerBG {
             get {
                 if (_huePickerBG == null) {
@@ -236,6 +287,7 @@ public string Hex {
                 return _huePickerBG;
             }
         }
+#endif
 
 #if V1_0
         public Vector2 InitialPosition
@@ -277,6 +329,21 @@ public Vector2 InitialPosition => _initialPosition ??
                     contentHeight + (StandardMargin * 2));
             }
         }
+
+#if V1_0
+        public Texture2D PickerAlphaBG
+        {
+            get
+            {
+                if (_pickerAlphaBG == null)
+                {
+                    CreateAlphaBG(ref _pickerAlphaBG, _pickerSize, _pickerSize);
+                }
+
+                return _pickerAlphaBG;
+            }
+        }
+#else
         public Texture2D PickerAlphaBG {
             get {
                 if (_pickerAlphaBG == null) {
@@ -286,7 +353,22 @@ public Vector2 InitialPosition => _initialPosition ??
                 return _pickerAlphaBG;
             }
         }
+#endif
 
+#if V1_0
+        public Texture2D PreviewAlphaBG
+        {
+            get
+            {
+                if (_previewAlphaBG == null)
+                {
+                    CreateAlphaBG(ref _previewAlphaBG, _previewSize, _previewSize);
+                }
+
+                return _previewAlphaBG;
+            }
+        }
+#else
         public Texture2D PreviewAlphaBG {
             get {
                 if (_previewAlphaBG == null) {
@@ -296,7 +378,22 @@ public Vector2 InitialPosition => _initialPosition ??
                 return _previewAlphaBG;
             }
         }
+#endif
 
+#if V1_0
+        public Texture2D PreviewBG
+        {
+            get
+            {
+                if (_previewBG == null)
+                {
+                    CreatePreviewBG(ref _previewBG, curColour);
+                }
+
+                return _previewBG;
+            }
+        }
+#else
         public Texture2D PreviewBG {
             get {
                 if (_previewBG == null) {
@@ -306,10 +403,17 @@ public Vector2 InitialPosition => _initialPosition ??
                 return _previewBG;
             }
         }
+#endif
 
-        public float R {
+        public float R
+        {
+#if V1_0
+            get { return tempColour.r; }
+#else
             get => tempColour.r;
-            set {
+#endif
+            set
+            {
                 Color color = tempColour;
                 color.r = Mathf.Clamp(value, 0f, 1f);
                 tempColour = color;
@@ -317,9 +421,15 @@ public Vector2 InitialPosition => _initialPosition ??
             }
         }
 
-        public float S {
+        public float S
+        {
+#if V1_0
+            get { return _s; }
+#else
             get => _s;
-            set {
+#endif
+            set
+            {
                 _s = Mathf.Clamp(value, 0f, 1f);
                 NotifyHSVUpdated();
                 CreateAlphaPickerBG();
@@ -327,6 +437,20 @@ public Vector2 InitialPosition => _initialPosition ??
         }
 
 
+#if V1_0
+        public Texture2D SliderAlphaBG
+        {
+            get
+            {
+                if (_sliderAlphaBG == null)
+                {
+                    CreateAlphaBG(ref _sliderAlphaBG, _sliderWidth, _pickerSize);
+                }
+
+                return _sliderAlphaBG;
+            }
+        }
+#else
         public Texture2D SliderAlphaBG {
             get {
                 if (_sliderAlphaBG == null) {
@@ -336,17 +460,39 @@ public Vector2 InitialPosition => _initialPosition ??
                 return _sliderAlphaBG;
             }
         }
+#endif
 
-        public Color tempColour {
+        public Color tempColour
+        {
+#if V1_0
+            get { return _tempColour; }
+#else
             get => _tempColour;
-            set {
+#endif
+            set
+            {
                 _tempColour = value;
-                if (autoApply || minimalistic) {
+                if (autoApply || minimalistic)
+                {
                     SetColor(false);
                 }
             }
         }
 
+#if V1_0
+        public Texture2D TempPreviewBG
+        {
+            get
+            {
+                if (_tempPreviewBG == null)
+                {
+                    CreatePreviewBG(ref _tempPreviewBG, tempColour);
+                }
+
+                return _tempPreviewBG;
+            }
+        }
+#else
         public Texture2D TempPreviewBG {
             get {
                 if (_tempPreviewBG == null) {
@@ -356,10 +502,14 @@ public Vector2 InitialPosition => _initialPosition ??
                 return _tempPreviewBG;
             }
         }
+#endif
 
-        public float UnitsPerPixel {
-            get {
-                if (_unitsPerPixel == 0.0f) {
+        public float UnitsPerPixel
+        {
+            get
+            {
+                if (_unitsPerPixel == 0.0f)
+                {
                     _unitsPerPixel = 1f / _pickerSize;
                 }
 
@@ -367,45 +517,57 @@ public Vector2 InitialPosition => _initialPosition ??
             }
         }
 
-        public float V {
+        public float V
+        {
+#if V1_0
+            get { return _v; }
+#else
             get => _v;
-            set {
+#endif
+            set
+            {
                 _v = Mathf.Clamp(value, 0f, 1f);
                 NotifyHSVUpdated();
                 CreateAlphaPickerBG();
             }
         }
 
-        public void AlphaAction(float pos) {
+        public void AlphaAction(float pos)
+        {
             // only changing one value, property should work fine
             A = 1 - (UnitsPerPixel * pos);
             _alphaPosition = pos;
         }
 
-        private void CreateAlphaBG(ref Texture2D bg, int width, int height) {
+        private void CreateAlphaBG(ref Texture2D bg, int width, int height)
+        {
             Texture2D tex = new Texture2D(width, height);
 
             // initialize color arrays for blocks
             Color[] bgA = new Color[_alphaBGBlockSize * _alphaBGBlockSize];
-            for (int i = 0; i < bgA.Length; i++) {
+            for (int i = 0; i < bgA.Length; i++)
+            {
                 bgA[i] = _alphaBGColorA;
             }
 
             Color[] bgB = new Color[_alphaBGBlockSize * _alphaBGBlockSize];
-            for (int i = 0; i < bgB.Length; i++) {
+            for (int i = 0; i < bgB.Length; i++)
+            {
                 bgB[i] = _alphaBGColorB;
             }
 
             // set blocks of pixels at a time
             // this also sets border blocks, meaning it'll try to set out of bounds pixels.
             int row = 0;
-            for (int x = 0; x < width; x += _alphaBGBlockSize) {
+            for (int x = 0; x < width; x += _alphaBGBlockSize)
+            {
                 int column = row;
-                for (int y = 0; y < height; y += _alphaBGBlockSize) {
+                for (int y = 0; y < height; y += _alphaBGBlockSize)
+                {
                     int blockWidth = Mathf.Min(_alphaBGBlockSize, width - x);
                     int blockHeight = Mathf.Min(_alphaBGBlockSize, height - y);
                     tex.SetPixels(x, y, blockWidth, blockHeight, column % 2 == 0 ? bgA : bgB);
-                        column++;
+                    column++;
                 }
 
                 row++;
@@ -415,14 +577,16 @@ public Vector2 InitialPosition => _initialPosition ??
             SwapTexture(ref bg, tex);
         }
 
-        private void CreateAlphaPickerBG() {
+        private void CreateAlphaPickerBG()
+        {
             Texture2D tex = new Texture2D(1, _pickerSize);
 
             int h = _pickerSize;
             float hu = 1f / h;
 
             // RGB color from cache, alternate a
-            for (int y = 0; y < h; y++) {
+            for (int y = 0; y < h; y++)
+            {
                 tex.SetPixel(0, y, new Color(tempColour.r, tempColour.g, tempColour.b, y * hu));
             }
 
@@ -431,7 +595,8 @@ public Vector2 InitialPosition => _initialPosition ??
             SwapTexture(ref _alphaPickerBG, tex);
         }
 
-        private void CreateColourPickerBG() {
+        private void CreateColourPickerBG()
+        {
             float S, V;
             int w = _pickerSize;
             int h = _pickerSize;
@@ -441,8 +606,10 @@ public Vector2 InitialPosition => _initialPosition ??
             Texture2D tex = new Texture2D(w, h);
 
             // HSV colours, H in slider, S horizontal, V vertical.
-            for (int x = 0; x < w; x++) {
-                for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++)
+            {
+                for (int y = 0; y < h; y++)
+                {
                     S = x * wu;
                     V = y * hu;
                     tex.SetPixel(x, y, HSVAToRGB(H, S, V, A));
@@ -454,14 +621,16 @@ public Vector2 InitialPosition => _initialPosition ??
             SwapTexture(ref _colourPickerBG, tex);
         }
 
-        private void CreateHuePickerBG() {
+        private void CreateHuePickerBG()
+        {
             Texture2D tex = new Texture2D(1, _pickerSize);
 
             int h = _pickerSize;
             float hu = 1f / h;
 
             // HSV colours, S = V = 1
-            for (int y = 0; y < h; y++) {
+            for (int y = 0; y < h; y++)
+            {
                 tex.SetPixel(0, y, Color.HSVToRGB(hu * y, 1f, 1f));
             }
 
@@ -470,11 +639,12 @@ public Vector2 InitialPosition => _initialPosition ??
             SwapTexture(ref _huePickerBG, tex);
         }
 
-        public void CreatePreviewBG(ref Texture2D bg, Color col) {
+        public void CreatePreviewBG(ref Texture2D bg, Color col)
+        {
             SwapTexture(ref bg, SolidColorMaterials.NewSolidColorTexture(col));
         }
 
-#if !(V1_0 || V1_1)
+#if !(V1_0)
         [Conditional("DEBUG")]
         public static void Debug(string msg)
         {
@@ -620,7 +790,11 @@ public Vector2 InitialPosition => _initialPosition ??
 
             if (Widgets.ButtonText(cancelRect, "Cancel"))
             {
+#if V1_0
+                if (onCancel != null) onCancel();
+#else
                 onCancel?.Invoke();
+#endif
                 Accepted = false;
                 WantsToClose = true;
             }
@@ -861,7 +1035,11 @@ public Vector2 InitialPosition => _initialPosition ??
         public override void OnCancelKeyPressed()
         {
             Event.current.Use();
+#if V1_0
+            if (onCancel != null) onCancel();
+#else
             onCancel?.Invoke();
+#endif
             base.OnCancelKeyPressed();
         }
 
@@ -876,7 +1054,11 @@ public Vector2 InitialPosition => _initialPosition ??
         public override void PostClose()
         {
             base.PostClose();
+#if V1_0
+            if (onPostClose != null) onPostClose();
+#else
             onPostClose?.Invoke();
+#endif
         }
 
         public void PickerAction(Vector2 pos)
@@ -949,3 +1131,4 @@ public Vector2 InitialPosition => _initialPosition ??
         }
     }
 }
+#endif

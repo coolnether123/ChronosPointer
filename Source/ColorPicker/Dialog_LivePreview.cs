@@ -1,17 +1,18 @@
-﻿using ColourPicker;
+﻿#if !V1_0
+using ColourPicker;
 using RimWorld;
 using System;
 using UnityEngine;
 using Verse;
 using System.Linq;
-#if V1_1 || V1_0
+#if V1_1
 using Harmony;
 using System.Reflection; // Required for manual reflection in 1.1
 #else
 using HarmonyLib;
 #endif
 
-#if V1_2 || V1_1 || V1_0
+#if V1_2 || V1_1
 using MainTabWindow_Schedule = RimWorld.MainTabWindow_Restrict;
 #endif
 
@@ -33,18 +34,19 @@ namespace ChronosPointer
             this.onCancelAction = onCancel;
             this.onPostCloseAction = onPostClose;
 
-            // Create an instance of the color picker to "embed" its GUI
             colourPicker = new Dialog_ColourPicker(initialColor, callback)
             {
                 autoApply = true,
-                // Link the picker's cancel/close buttons to our main dialog's Close() method
                 onCancel = () => { this.Close(true); },
             };
-            // Manually set curColour for the "Old" color swatch in the picker
             colourPicker.curColour = initialColor;
         }
 
+#if V1_0
+        public override Vector2 InitialSize { get { return new Vector2(800f, 450f); } }
+#else
         public override Vector2 InitialSize => new Vector2(800f, 450f);
+#endif
 
         protected override void SetInitialSizeAndPosition()
         {
@@ -75,7 +77,6 @@ namespace ChronosPointer
             Rect leftRect = new Rect(inRect.x, inRect.y, 200, inRect.height);
             Rect rightRect = new Rect(leftRect.xMax + 20, inRect.y, inRect.width - leftRect.width - 20, inRect.height);
 
-            // --- Left Panel: Incident Toggles ---
             var listing = new Listing_Standard();
             listing.Begin(leftRect);
 
@@ -92,30 +93,32 @@ namespace ChronosPointer
 
             listing.End();
 
-            // --- Right Panel: Color Picker ---
-            // We "embed" the color picker's UI here by calling its drawing method directly.
             colourPicker.DoWindowContents(rightRect);
 
-            // Handle the color picker's internal close requests
             if (colourPicker.WantsToClose)
             {
-                // If it wants to close because of "OK", don't run the cancel action
                 if (!colourPicker.Accepted)
                 {
+#if V1_0
+                    if (onCancelAction != null) onCancelAction();
+#else
                     onCancelAction?.Invoke();
+#endif
                 }
                 this.Close(false);
             }
         }
 
-        // When Escape is pressed or the window is closed via the 'x'
         public override void OnCancelKeyPressed()
         {
+#if V1_0
+            if (onCancelAction != null) onCancelAction();
+#else
             onCancelAction?.Invoke();
+#endif
             base.OnCancelKeyPressed();
         }
 
-        // When the user clicks outside the window
 #if !(V1_2 || V1_1 || V1_0)
     public override void Notify_ClickOutsideWindow()
     {
@@ -124,23 +127,25 @@ namespace ChronosPointer
     }
 #endif
 
-        // This is called AFTER the window is removed from the stack, for final cleanup.
         public override void PostClose()
         {
             base.PostClose();
+#if V1_0
+            if (onPostCloseAction != null) onPostCloseAction();
+#else
             onPostCloseAction?.Invoke();
+#endif
 
 #if V1_1 || V1_0
-            var allButtonsField = AccessTools.Field(typeof(MainButtonsRoot), "AllButtons");
+            var allButtonsField = Harmony.AccessTools.Field(typeof(MainButtonsRoot), "AllButtons");
             var allButtons = (System.Collections.Generic.List<MainButtonDef>)allButtonsField.GetValue(null);
-            var scheduleWindow = allButtons.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+            var scheduleWindow = allButtons.FirstOrDefault(b => b.TabWindow is MainTabWindow_Restrict)?.TabWindow;
 #else
             var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
-                             .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+                             .FirstOrDefault(b => b.TabWindow is MainTabWindow_Restrict)?.TabWindow;
 #endif
             if (scheduleWindow != null)
             {
-                // Reset the layer back to default so it behaves like a normal tab again.
                 scheduleWindow.layer = WindowLayer.GameUI;
             }
 
@@ -148,3 +153,4 @@ namespace ChronosPointer
         }
     }
 }
+#endif
