@@ -37,7 +37,7 @@ namespace ChronosPointer
         // Colors    
         public static Color Color_Arrow = Color.red;
         public static Color Color_MainCursor = Color.white;
-        public static Color Color_HourHighlight = new Color(0.737f, 0.737f, 0.114f, 0.812f);
+        public static Color Color_HourHighlight = new Color(0.50f, 0.50f, 0.12f, 0.62f);
         public static Color Color_HoursBarCursor_Day = Color.black;
         public static Color Color_HoursBarCursor_Night = Color.white;
         public static Color Color_Night = new Color(0f, 0f, 0.5f); //Deep blue
@@ -57,6 +57,7 @@ namespace ChronosPointer
 
     public class ChronosPointerSettings : ModSettings
     {
+        private static readonly Color LegacyBrightHourHighlight = new Color(0.737f, 0.737f, 0.114f, 0.812f);
 
 
         // Method to ensure cursorThickness is always an even number
@@ -167,7 +168,7 @@ namespace ChronosPointer
 
         // Colors
         public Color Color_Arrow = Color.red;
-        public Color Color_HourHighlight = new Color(0.737f, 0.737f, 0.114f, 0.812f);
+        public Color Color_HourHighlight = Defaults.Color_HourHighlight;
         public Color Color_MainCursor = Color.white;
         public Color Color_HoursBarCursor_Day = Color.black;
         public Color Color_HoursBarCursor_Night = Color.white;
@@ -210,6 +211,7 @@ namespace ChronosPointer
             Scribe_Values.Look(ref Color_ToxicFallout, "ToxicFalloutColor", Defaults.Color_ToxicFallout);
             Scribe_Values.Look(ref Color_Aurora1, "AuroraColor1", Defaults.Color_Aurora1);
             Scribe_Values.Look(ref Color_Aurora2, "AuroraColor2", Defaults.Color_Aurora2);
+            MigrateLegacyDefaults();
 
             float writeCursorThickness = CursorThickness;
             float writeHoursBarThickness = HoursBarCursorThickness;
@@ -245,6 +247,23 @@ namespace ChronosPointer
             CursorThickness = ValidateCursorThickness(CursorThickness);
             HoursBarCursorThickness = ValidateCursorThickness(HoursBarCursorThickness);
         }
+
+        private void MigrateLegacyDefaults()
+        {
+            if (ColorsMatch(Color_HourHighlight, LegacyBrightHourHighlight))
+            {
+                Color_HourHighlight = Defaults.Color_HourHighlight;
+            }
+        }
+
+        private static bool ColorsMatch(Color first, Color second)
+        {
+            return Mathf.Abs(first.r - second.r) < 0.001f &&
+                   Mathf.Abs(first.g - second.g) < 0.001f &&
+                   Mathf.Abs(first.b - second.b) < 0.001f &&
+                   Mathf.Abs(first.a - second.a) < 0.001f;
+        }
+
         public void ResetToDefaults()
         {
             DrawArrow = Defaults.DrawArrow;

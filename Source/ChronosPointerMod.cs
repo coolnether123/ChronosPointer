@@ -1,4 +1,5 @@
 using ColourPicker;
+using ChronosPointer.Api;
 using HarmonyLib;
 using RimWorld;
 using System;
@@ -114,6 +115,8 @@ namespace ChronosPointer
                 Patch_ScheduleWindow._cachedSeason = Season.Undefined;
                 Patch_ScheduleWindow._cachedMap = null;
             };
+
+            ChronosPointerApi.NotifyReady();
         }
 
         public override string SettingsCategory()
@@ -135,6 +138,7 @@ namespace ChronosPointer
             Patch_ScheduleWindow.overrideIsToxicFallout = false;
             Patch_ScheduleWindow.overrideIsVolcanicWinter = false;
             Patch_ScheduleWindow.IsInTestMode = false;
+            ChronosPointerApi.NotifySettingsChanged();
 
         }
 
