@@ -1,25 +1,28 @@
 <#
 .SYNOPSIS
-Runs the Chronos Pointer support-branch build cascade.
+Runs the Chronos Pointer all-version support-branch build cascade.
 
 .DESCRIPTION
-Starting from Dev, this script builds the source branch 1.6 payload, then merges
-down the supported Chronos Pointer branch chain:
+Starting from Dev, this script builds the 1.6 payload, then cascades through
+every RimWorld support branch used by the Better Work Tab archive:
 
-  Dev -> Support/1.5 -> Support/1.4 -> Support/1.3
+  Dev -> Support/1.5 -> Support/1.4 -> Support/1.3 -> Support/1.2
+      -> Support/1.1 -> Support/1.0 -> Support/0.19 -> Support/0.18
+      -> Support/0.17 -> Support/0.16 -> Support/0.15 -> Support/0.14
+      -> Support/0.13 -> Support/Alpha4
 
-Each support branch is built after its merge and committed locally. After the
-final support build, versioned payload assembly folders are copied back to Dev
-without merging support source code. Missing support branches are created from
-the previous branch, which keeps the workflow usable while the repo is being
-bootstrapped to the Better Work Tab style.
+The old 0.x/Alpha4 builds use Better Work Tab's decompiled RimWorld managed
+folders through the ChronosPointer.csproj LegacyRimWorldManagedDir settings.
+After the final branch build, versioned payload assembly folders are copied back
+to Dev without merging support source code back upward.
 #>
 [CmdletBinding()]
 param(
     [string]$SourceBranch = "Dev",
     [string]$Remote = "origin",
-    [string]$ReleaseLabel = "api-refactor",
-    [string[]]$SupportVersions = @("1.5", "1.4", "1.3"),
+    [string]$ReleaseLabel = "all-version-support",
+    [string[]]$SupportVersions = @("1.5", "1.4", "1.3", "1.2", "1.1", "1.0", "0.19", "0.18", "0.17", "0.16", "0.15", "0.14", "0.13", "Alpha4"),
+    [string]$MSBuildPath,
     [switch]$SkipSourceBuild,
     [switch]$SkipPayloadCopyBackToDev,
     [switch]$Push
@@ -30,12 +33,24 @@ Set-StrictMode -Version Latest
 
 $ProjectPath = "Source\ChronosPointer.csproj"
 $PayloadCopyBackPaths = @(
+    "0.13/Assemblies",
+    "0.14/Assemblies",
+    "0.15/Assemblies",
+    "0.16/Assemblies",
+    "0.17/Assemblies",
+    "0.18/Assemblies",
+    "0.19/Assemblies",
+    "1.0/Assemblies",
+    "1.1/Assemblies",
+    "1.2/Assemblies",
     "1.3/Assemblies",
     "1.4/Assemblies",
     "1.5/Assemblies",
-    "1.6/Assemblies"
+    "1.6/Assemblies",
+    "Alpha4/Assemblies"
 )
 $AutoResolvableConflictPatterns = @(
+    "^Assemblies/ChronosPointer\.dll$",
     "^[^/]+/Assemblies/ChronosPointer\.dll$"
 )
 
@@ -79,6 +94,40 @@ function Assert-CleanWorktree {
     }
 }
 
+function Resolve-MSBuildPath {
+    if ($MSBuildPath) {
+        if (!(Test-Path -LiteralPath $MSBuildPath)) {
+            throw "MSBuildPath does not exist: $MSBuildPath"
+        }
+
+        return (Resolve-Path -LiteralPath $MSBuildPath).Path
+    }
+
+    $programFilesX86 = [Environment]::GetEnvironmentVariable("ProgramFiles(x86)")
+    $vswhere = Join-Path $programFilesX86 "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path -LiteralPath $vswhere) {
+        $found = & $vswhere -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" |
+            Select-Object -First 1
+        if ($LASTEXITCODE -eq 0 -and $found) {
+            return $found
+        }
+    }
+
+    $knownPaths = @(
+        "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+        "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe",
+        "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+    )
+
+    foreach ($path in $knownPaths) {
+        if (Test-Path -LiteralPath $path) {
+            return $path
+        }
+    }
+
+    throw "Could not locate MSBuild. Pass -MSBuildPath explicitly."
+}
+
 function Test-BranchExists {
     param([Parameter(Mandatory = $true)][string]$Branch)
 
@@ -93,6 +142,21 @@ function Get-SupportBranchName {
 
 function Get-PayloadPath {
     param([Parameter(Mandatory = $true)][string]$Version)
+
+    if ($Version -eq "Alpha4" -or $Version.StartsWith("0.")) {
+        return "Assemblies"
+    }
+
+    return "$Version/Assemblies"
+}
+
+function Get-VersionedPayloadPath {
+    param([Parameter(Mandatory = $true)][string]$Version)
+
+    if ($Version -eq "Debug" -or $Version -eq "Release") {
+        return "Assemblies"
+    }
+
     return "$Version/Assemblies"
 }
 
@@ -141,9 +205,12 @@ function Invoke-MergeOrStopAtConflict {
 }
 
 function Build-Version {
-    param([Parameter(Mandatory = $true)][string]$Version)
+    param(
+        [Parameter(Mandatory = $true)][string]$MSBuild,
+        [Parameter(Mandatory = $true)][string]$Version
+    )
 
-    Invoke-Native dotnet build $ProjectPath -c $Version --no-restore
+    Invoke-Native $MSBuild $ProjectPath /t:Build /p:Configuration=$Version /p:Platform=AnyCPU /v:minimal
 }
 
 function Clear-BuildIntermediates {
@@ -151,6 +218,37 @@ function Clear-BuildIntermediates {
         Invoke-Git restore -- Source\obj
         Invoke-Git clean -fd -- Source\obj
     }
+}
+
+function Copy-PayloadFileIfPresent {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceDir,
+        [Parameter(Mandatory = $true)][string]$DestinationDir,
+        [Parameter(Mandatory = $true)][string]$FileName
+    )
+
+    $source = Join-Path $SourceDir $FileName
+    if (!(Test-Path -LiteralPath $source)) {
+        return
+    }
+
+    if (!(Test-Path -LiteralPath $DestinationDir)) {
+        New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
+    }
+
+    Copy-Item -LiteralPath $source -Destination (Join-Path $DestinationDir $FileName) -Force
+}
+
+function Sync-VersionedPayloadFolder {
+    param([Parameter(Mandatory = $true)][string]$Version)
+
+    $buildPayloadPath = Get-PayloadPath $Version
+    $versionedPayloadPath = Get-VersionedPayloadPath $Version
+    if ($buildPayloadPath -eq $versionedPayloadPath) {
+        return
+    }
+
+    Copy-PayloadFileIfPresent -SourceDir $buildPayloadPath -DestinationDir $versionedPayloadPath -FileName "ChronosPointer.dll"
 }
 
 function Commit-IfChanged {
@@ -177,18 +275,24 @@ function Commit-IfChanged {
 
 function Build-And-CommitPayload {
     param(
+        [Parameter(Mandatory = $true)][string]$MSBuild,
         [Parameter(Mandatory = $true)][string]$Version,
         [Parameter(Mandatory = $true)][string]$Header
     )
 
-    Build-Version -Version $Version
+    Build-Version -MSBuild $MSBuild -Version $Version
     Clear-BuildIntermediates
+    Sync-VersionedPayloadFolder $Version
+
+    $payloadPaths = @((Get-PayloadPath $Version), (Get-VersionedPayloadPath $Version)) |
+        Select-Object -Unique
+
     Commit-IfChanged `
-        -Paths @((Get-PayloadPath $Version)) `
+        -Paths $payloadPaths `
         -Header $Header `
         -Body @(
             "Rebuild the RimWorld $Version assembly as part of the $ReleaseLabel support cascade.",
-            "Only payload files under $(Get-PayloadPath $Version) are staged for this build commit."
+            "Only payload files under $($payloadPaths -join ', ') are staged for this build commit."
         )
 }
 
@@ -196,7 +300,7 @@ function Assert-PayloadOnlyChanges {
     $changed = @()
     $changed += @(Get-GitOutput diff --cached --name-only)
     $changed += @(Get-GitOutput diff --name-only)
-    $unexpected = @($changed | Where-Object { $_ -notmatch "^1\.[3-6]/Assemblies/" })
+    $unexpected = @($changed | Where-Object { $_ -notmatch "^(1\.[0-6]/Assemblies/|0\.(13|14|15|16|17|18|19)/Assemblies/|Alpha4/Assemblies/)" })
 
     if ($unexpected.Count -gt 0) {
         throw "Payload copy-back touched non-payload paths:`n$($unexpected -join [Environment]::NewLine)"
@@ -204,11 +308,15 @@ function Assert-PayloadOnlyChanges {
 }
 
 Assert-CleanWorktree
+$resolvedMSBuild = Resolve-MSBuildPath
+Write-Host "Using MSBuild: $resolvedMSBuild"
+
 Invoke-Git checkout $SourceBranch
 Assert-CleanWorktree
 
 if (!$SkipSourceBuild) {
     Build-And-CommitPayload `
+        -MSBuild $resolvedMSBuild `
         -Version "1.6" `
         -Header "Build RimWorld 1.6 payload for $ReleaseLabel"
     Assert-CleanWorktree
@@ -231,9 +339,13 @@ foreach ($version in $SupportVersions) {
         -Message $mergeMessage
 
     if ($mergeNeedsBuildResolution) {
-        Build-Version -Version $version
+        Build-Version -MSBuild $resolvedMSBuild -Version $version
         Clear-BuildIntermediates
-        Invoke-Git add -- (Get-PayloadPath $version)
+        Sync-VersionedPayloadFolder $version
+
+        $payloadPaths = @((Get-PayloadPath $version), (Get-VersionedPayloadPath $version)) |
+            Select-Object -Unique
+        Invoke-Git add -- @payloadPaths
 
         $remainingConflicts = @(Get-UnmergedPaths)
         if ($remainingConflicts.Count -gt 0) {
@@ -242,10 +354,11 @@ foreach ($version in $SupportVersions) {
 
         Invoke-Git commit `
             -m $mergeMessage `
-            -m "Resolve expected payload DLL conflicts by rebuilding RimWorld $version."
+            -m "Resolve expected payload DLL conflicts by rebuilding RimWorld $version and syncing its versioned payload folder."
     }
     else {
         Build-And-CommitPayload `
+            -MSBuild $resolvedMSBuild `
             -Version $version `
             -Header "Build RimWorld $version payload for $ReleaseLabel"
     }
