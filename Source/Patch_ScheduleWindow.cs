@@ -10,11 +10,7 @@ using Verse;
 
 namespace ChronosPointer
 {
-#if V1_3U
     [HarmonyPatch(typeof(MainTabWindow_Schedule), nameof(MainTabWindow_Schedule.DoWindowContents))]
-#else
-    [HarmonyPatch(typeof(MainTabWindow_Restrict), nameof(MainTabWindow_Restrict.DoWindowContents))]
-#endif
     public static class Patch_ScheduleWindow
     {
         private static Map lastKnownMap;
@@ -45,14 +41,14 @@ namespace ChronosPointer
         public static bool overrideDrawRegularBar = true;
 
         [HarmonyPostfix]
-        public static void Postfix(MainTabWindow_PawnTable __instance, Rect fillRect)
+        public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
             {
                 return;
             }
 
-            Map map = ChronosPointer.RimWorld.ChronosRimWorldCompat.CurrentMap();
+            Map map = Find.CurrentMap;
             if (map == null)
             {
                 return;
