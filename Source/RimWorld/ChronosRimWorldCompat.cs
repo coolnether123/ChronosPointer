@@ -10,7 +10,7 @@ namespace ChronosPointer.RimWorld
 {
     internal static class ChronosRimWorldCompat
     {
-#if V0_16U || V0_15U || V0_14U || V0_13U
+#if VALPHA4 || V0_16U || V0_15U || V0_14U || V0_13U
         public static Window GetScheduleTabWindow()
         {
             return null;
@@ -18,7 +18,16 @@ namespace ChronosPointer.RimWorld
 
         public static float CelestialSunGlow(Map map, int ticksAbs)
         {
-#if V0_16U
+#if VALPHA4
+            int ticksIntoDay = ticksAbs % DateHandler.TicksPerDay;
+            if (ticksIntoDay < 0)
+            {
+                ticksIntoDay += DateHandler.TicksPerDay;
+            }
+
+            float dayPercent = (float)ticksIntoDay / DateHandler.TicksPerDay;
+            return Mathf.Clamp01(Mathf.Sin(dayPercent * Mathf.PI));
+#elif V0_16U
             return map != null ? GenCelestial.CurCelestialSunGlow(map) : 0f;
 #else
             return GenCelestial.CurCelestialSunGlow();
@@ -27,7 +36,9 @@ namespace ChronosPointer.RimWorld
 
         public static Map CurrentMap()
         {
-#if V0_16U
+#if VALPHA4
+            return Find.Map;
+#elif V0_16U
             return Find.VisibleMap;
 #else
             return Find.Map;
@@ -36,12 +47,18 @@ namespace ChronosPointer.RimWorld
 
         public static int TicksAbs()
         {
+#if VALPHA4
+            return Find.TickManager != null ? Find.TickManager.tickCount : 0;
+#else
             return GenTicks.TicksAbs;
+#endif
         }
 
         public static float DayPercent(Map map)
         {
-#if V0_16U
+#if VALPHA4
+            return DateHandler.CurDayPercent;
+#elif V0_16U
             return map != null ? GenLocalDate.DayPercent(map) : 0f;
 #else
             return GenDate.CurrentDayPercent;
@@ -50,7 +67,9 @@ namespace ChronosPointer.RimWorld
 
         public static Season Season(Map map)
         {
-#if V0_16U
+#if VALPHA4
+            return global::RimWorld.Season.Undefined;
+#elif V0_16U
             return map != null ? GenLocalDate.Season(map) : (Season)0;
 #else
             return GenDate.CurrentSeason;
@@ -59,7 +78,9 @@ namespace ChronosPointer.RimWorld
 
         public static int MapTile(Map map)
         {
-#if V0_16U
+#if VALPHA4
+            return -1;
+#elif V0_16U
             return map != null ? map.Tile : -1;
 #else
             return -1;
@@ -78,10 +99,14 @@ namespace ChronosPointer.RimWorld
 
         public static void DrawBoxSolid(Rect rect, Color color)
         {
-#if V0_13U
+#if VALPHA4 || V0_13U
             Color oldColor = GUI.color;
             GUI.color = color;
+#if VALPHA4
+            GUI.DrawTexture(rect, GenUI.WhiteTex);
+#else
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
+#endif
             GUI.color = oldColor;
 #else
             Widgets.DrawBoxSolid(rect, color);
@@ -93,7 +118,11 @@ namespace ChronosPointer.RimWorld
             DrawBoxSolid(rect, interiorColor);
             Color oldColor = GUI.color;
             GUI.color = outlineColor;
+#if VALPHA4
+            GenUI.DrawBox(rect, thickness);
+#else
             Widgets.DrawBox(rect, thickness);
+#endif
             GUI.color = oldColor;
         }
 #else
