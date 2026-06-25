@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ChronosPointer.Api;
 using ChronosPointer.ModSupport;
+using ChronosPointer.RimWorld;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -36,7 +37,7 @@ namespace ChronosPointer.Core
             for (int hour = 0; hour < 24; hour++)
             {
                 long absTickForHour = startOfCurrentLocalDayAbsTick + (long)hour * ticksPerHour;
-                float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForHour);
+                float sunlight = ChronosRimWorldCompat.CelestialSunGlow(map, (int)absTickForHour);
                 ChronosLightBand band = GetLightBand(sunlight, settingsSnapshot);
                 Color baseColor = GetBaseColorForSunlight(sunlight, settingsSnapshot, incidents);
                 Color overlayColor = GetIncidentOverlayColor(hour, settingsSnapshot, incidents);
@@ -67,7 +68,11 @@ namespace ChronosPointer.Core
 
             bool aurora = Patch_ScheduleWindow.IsInTestMode
                 ? Patch_ScheduleWindow.overrideIsAurora
+#if V0_17 || V0_16 || V0_15 || V0_14 || V0_13 || VALPHA4
+                : Patch_ScheduleWindow.overrideIsAurora;
+#else
                 : map.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora) || Patch_ScheduleWindow.overrideIsAurora;
+#endif
 
             bool eclipse = Patch_ScheduleWindow.IsInTestMode
                 ? Patch_ScheduleWindow.overrideIsEclipse
@@ -115,7 +120,7 @@ namespace ChronosPointer.Core
                 return settings.ColorHoursBarCursorDay;
             }
 
-            float sunlight = GenCelestial.CelestialSunGlow(map.Tile, GenTicks.TicksAbs);
+            float sunlight = ChronosRimWorldCompat.CelestialSunGlow(map, GenTicks.TicksAbs);
             return sunlight >= settings.SunlightThresholdSunriseSunset
                 ? settings.ColorHoursBarCursorDay
                 : settings.ColorHoursBarCursorNight;
