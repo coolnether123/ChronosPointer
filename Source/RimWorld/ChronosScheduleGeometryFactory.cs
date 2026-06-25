@@ -25,11 +25,7 @@ namespace ChronosPointer.RimWorld
             }
 
             PawnTable table = scheduleWindow.table;
-#if V1_3
-            var columns = table.ColumnsListForReading;
-#else
             var columns = table.Columns;
-#endif
             if (columns == null)
             {
                 return false;
