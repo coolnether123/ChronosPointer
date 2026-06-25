@@ -11,7 +11,7 @@ namespace ChronosPointer.Core
 {
     internal static class ChronosTimelineService
     {
-#if !(V0_16U || V0_15U || V0_14U || V0_13U)
+#if !(VALPHA4 || V0_16U || V0_15U || V0_14U || V0_13U)
         private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamedSilentFail("SolarFlare");
 #endif
 
@@ -68,7 +68,7 @@ namespace ChronosPointer.Core
                 return new ChronosIncidentState(false, false, false, false, false);
             }
 
-#if V0_16U || V0_15U || V0_14U || V0_13U
+#if VALPHA4 || V0_16U || V0_15U || V0_14U || V0_13U
             bool aurora = Patch_ScheduleWindow.overrideIsAurora;
             bool eclipse = Patch_ScheduleWindow.overrideIsEclipse;
             bool solarFlare = Patch_ScheduleWindow.overrideIsSolarFlare;
