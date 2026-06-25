@@ -404,7 +404,28 @@
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13' Or '$(Configuration)' == 'Alpha4'">
+  <ItemGroup Condition="'$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13'">
+    <Compile Remove="ChronosPointerSettings.cs" />
+    <Compile Remove="ChronosPointerMod.cs" />
+    <Compile Remove="Patch_ScheduleWindow.cs" />
+    <Compile Remove="Dialog_IncidentTesting.cs" />
+    <Compile Remove="ColorPicker\Dialog_ColourPicker.cs" />
+    <Compile Remove="ColorPicker\Dialog_LivePreview.cs" />
+    <Compile Remove="ColorPicker\RecentColours.cs" />
+    <Compile Remove="ColorPicker\TextField.cs" />
+    <Compile Remove="Mod Support\IChronosTimeScaleSupport.cs" />
+    <Compile Remove="Mod Support\IModSupportModule.cs" />
+    <Compile Remove="Mod Support\ModSupportManager.cs" />
+    <Compile Remove="Mod Support\ModSupportModuleBase.cs" />
+    <Compile Remove="Mod Support\Mods\Clockwork\ClockworkSupport.cs" />
+    <Compile Remove="Mod Support\Mods\DayStretch\DayStretchSupport.cs" />
+    <Compile Remove="RimWorld\ChronosScheduleGeometryFactory.cs" />
+    <Compile Include="Legacy\ChronosLegacySettings.cs" />
+    <Compile Include="Legacy\ChronosLegacyMod.cs" />
+    <Compile Include="Legacy\Patch_ScheduleWindow.Legacy.cs" />
+    <Compile Include="Legacy\ChronosLegacyModSupportManager.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Alpha4'">
     <Compile Remove="@(Compile)" />
     <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
