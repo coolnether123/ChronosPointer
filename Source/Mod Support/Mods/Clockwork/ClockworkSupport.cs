@@ -90,7 +90,8 @@ namespace ChronosPointer.ModSupport
 
         private static bool TryDrawEmbeddedChronosHeader(Rect rect)
         {
-            if (Find.CurrentMap == null || rect.width <= 1f || rect.height <= 1f)
+            Map map = ChronosPointer.RimWorld.ChronosRimWorldCompat.CurrentMap();
+            if (map == null || rect.width <= 1f || rect.height <= 1f)
             {
                 return false;
             }
@@ -106,7 +107,7 @@ namespace ChronosPointer.ModSupport
                 pawnAreaTopOffset: 0f,
                 headerHeight: 0f);
 
-            bool drawn = ChronosPointerApi.TryDrawEmbeddedTimeline(Find.CurrentMap, geometry, drawIncidentOverlay: true);
+            bool drawn = ChronosPointerApi.TryDrawEmbeddedTimeline(map, geometry, drawIncidentOverlay: true);
             GUI.color = Color.white;
             Text.Anchor = TextAnchor.UpperLeft;
             Text.Font = GameFont.Small;
