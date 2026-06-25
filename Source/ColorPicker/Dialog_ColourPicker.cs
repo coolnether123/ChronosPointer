@@ -420,7 +420,9 @@ namespace ColourPicker {
         [Conditional("DEBUG")]
         public static void Debug(string msg) { 
             if (Traverse.Create(typeof(Log)).Field("reachedMaxMessagesLimit").GetValue<bool>()) {
+#if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
                 Log.ResetMessageCount();
+#endif
             }
 
             Log.Message($"ColourPicker :: {msg}");
@@ -780,6 +782,7 @@ namespace ColourPicker {
             HexField.Value = Hex;
         }
 
+#if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
         public override void OnAcceptKeyPressed()
         {
             base.OnAcceptKeyPressed();
@@ -792,12 +795,15 @@ namespace ColourPicker {
             onCancel?.Invoke();
             base.OnCancelKeyPressed();
         }
+#endif
 
+#if V1_3U
         public override void Notify_ClickOutsideWindow()
         {
             onCancel?.Invoke();
             base.Notify_ClickOutsideWindow();
         }
+#endif
 
         public override void PostClose()
         {

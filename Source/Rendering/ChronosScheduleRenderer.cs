@@ -1,5 +1,6 @@
 using ChronosPointer.Api;
 using ChronosPointer.Core;
+using ChronosPointer.RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -102,7 +103,7 @@ namespace ChronosPointer.Rendering
             }
             else
             {
-                Widgets.DrawBoxSolidWithOutline(highlightRect, settings.HighlightInteriorColor, settings.ColorHourHighlight, 2);
+                ChronosRimWorldCompat.DrawBoxSolidWithOutline(highlightRect, settings.HighlightInteriorColor, settings.ColorHourHighlight, 2);
             }
         }
 
