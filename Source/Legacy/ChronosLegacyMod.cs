@@ -12,6 +12,9 @@ namespace ChronosPointer
 
         static ChronosPointerMod()
         {
+#if VALPHA4
+            Log.Message("[ChronosPointer] Alpha4 settings store initialized.");
+#else
             try
             {
                 new Harmony("CoolNether123.ChronosPointer").PatchAll();
@@ -22,6 +25,7 @@ namespace ChronosPointer
             {
                 Log.Error("[ChronosPointer] Legacy Harmony patching failed: " + ex);
             }
+#endif
         }
     }
 }
