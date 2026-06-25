@@ -10,6 +10,93 @@ namespace ChronosPointer.RimWorld
 {
     internal static class ChronosRimWorldCompat
     {
+#if V0_16U || V0_15U || V0_14U || V0_13U
+        public static Window GetScheduleTabWindow()
+        {
+            return null;
+        }
+
+        public static float CelestialSunGlow(Map map, int ticksAbs)
+        {
+#if V0_16U
+            return map != null ? GenCelestial.CurCelestialSunGlow(map) : 0f;
+#else
+            return GenCelestial.CurCelestialSunGlow();
+#endif
+        }
+
+        public static Map CurrentMap()
+        {
+#if V0_16U
+            return Find.VisibleMap;
+#else
+            return Find.Map;
+#endif
+        }
+
+        public static int TicksAbs()
+        {
+            return GenTicks.TicksAbs;
+        }
+
+        public static float DayPercent(Map map)
+        {
+#if V0_16U
+            return map != null ? GenLocalDate.DayPercent(map) : 0f;
+#else
+            return GenDate.CurrentDayPercent;
+#endif
+        }
+
+        public static Season Season(Map map)
+        {
+#if V0_16U
+            return map != null ? GenLocalDate.Season(map) : (Season)0;
+#else
+            return GenDate.CurrentSeason;
+#endif
+        }
+
+        public static int MapTile(Map map)
+        {
+#if V0_16U
+            return map != null ? map.Tile : -1;
+#else
+            return -1;
+#endif
+        }
+
+        public static float SliderLabeled(Listing_Standard listing, string label, float value, float min, float max, string tooltip = null)
+        {
+            return value;
+        }
+
+        public static bool IsModActive(string packageId)
+        {
+            return false;
+        }
+
+        public static void DrawBoxSolid(Rect rect, Color color)
+        {
+#if V0_13U
+            Color oldColor = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = oldColor;
+#else
+            Widgets.DrawBoxSolid(rect, color);
+#endif
+        }
+
+        public static void DrawBoxSolidWithOutline(Rect rect, Color interiorColor, Color outlineColor, int thickness)
+        {
+            DrawBoxSolid(rect, interiorColor);
+            Color oldColor = GUI.color;
+            GUI.color = outlineColor;
+            Widgets.DrawBox(rect, thickness);
+            GUI.color = oldColor;
+        }
+#else
         public static Window GetScheduleTabWindow()
         {
             IEnumerable<MainButtonDef> buttons = GetMainButtons();
@@ -85,6 +172,31 @@ namespace ChronosPointer.RimWorld
 #else
             return GenCelestial.CurCelestialSunGlow(map);
 #endif
+        }
+
+        public static int TicksAbs()
+        {
+            return GenTicks.TicksAbs;
+        }
+
+        public static float DayPercent(Map map)
+        {
+            return GenLocalDate.DayPercent(map);
+        }
+
+        public static Season Season(Map map)
+        {
+            return GenLocalDate.Season(map);
+        }
+
+        public static int MapTile(Map map)
+        {
+            if (map == null)
+            {
+                return -1;
+            }
+
+            return map.Tile;
         }
 
         public static Map CurrentMap()
@@ -180,5 +292,11 @@ namespace ChronosPointer.RimWorld
             GUI.color = oldColor;
 #endif
         }
+
+        public static void DrawBoxSolid(Rect rect, Color color)
+        {
+            Widgets.DrawBoxSolid(rect, color);
+        }
+#endif
     }
 }
