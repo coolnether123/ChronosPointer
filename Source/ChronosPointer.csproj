@@ -391,6 +391,7 @@
     <Compile Include="Core\ChronosSettingsSnapshotFactory.cs" />
     <Compile Include="Core\ChronosTimelineService.cs" />
     <Compile Include="Dialog_IncidentTesting.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Bootstrap.cs" />
     <Compile Include="Mod Support\IChronosTimeScaleSupport.cs" />
     <Compile Include="Mod Support\IModSupportModule.cs" />
     <Compile Include="Mod Support\ModSupportManager.cs" />
@@ -427,8 +428,22 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Alpha4'">
     <Compile Remove="@(Compile)" />
-    <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
+    <Compile Include="Api\ChronosPointerApi.cs" />
+    <Compile Include="Api\ChronosPointerContracts.cs" />
+    <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="Core\ChronosColorUtility.cs" />
+    <Compile Include="Core\ChronosOverlayRegistry.cs" />
+    <Compile Include="Core\ChronosSettingsSnapshotFactory.cs" />
+    <Compile Include="Core\ChronosTimelineService.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Api.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Bootstrap.cs" />
+    <Compile Include="Legacy\Alpha4\Patch_Alpha4OverviewWork.cs" />
+    <Compile Include="Legacy\ChronosLegacyMod.cs" />
+    <Compile Include="Legacy\ChronosLegacyModSupportManager.cs" />
+    <Compile Include="Legacy\ChronosLegacySettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
+    <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
   </ItemGroup>
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
