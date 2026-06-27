@@ -105,7 +105,7 @@ namespace ChronosPointer
         {
             Settings = GetSettings<ChronosPointerSettings>();
 
-            if (ChronosRimWorldCompat.IsModActive("brrainz.harmony"))
+            if (ChronosRimWorldCompat.IsModActive("brrainz.harmony") || ChronosRimWorldCompat.IsModActive("Harmony"))
             {
                 // Harmony patch
                 var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
