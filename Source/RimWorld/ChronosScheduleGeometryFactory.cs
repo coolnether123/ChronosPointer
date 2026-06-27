@@ -46,7 +46,7 @@ namespace ChronosPointer.RimWorld
                 if (IsTimetableColumn(columns[i].workerClass))
                 {
                     hourBoxWidth = (width / 24f) - HourBoxGap;
-                    baseOffsetX = width + 1f;
+                    baseOffsetX = DefaultBaseOffsetX;
                     break;
                 }
 
