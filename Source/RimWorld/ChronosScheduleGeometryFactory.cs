@@ -1,6 +1,7 @@
 using ChronosPointer.Api;
 using HarmonyLib;
 using RimWorld;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -112,12 +113,11 @@ namespace ChronosPointer.RimWorld
 
         private static float GetColumnWidth(PawnTable table, PawnColumnDef column, int index)
         {
-#if V1_2U
-            if (table.cachedColumnWidths != null && index >= 0 && index < table.cachedColumnWidths.Count)
+            float cachedWidth = GetCachedColumnWidth(table, index);
+            if (cachedWidth > 0f)
             {
-                return table.cachedColumnWidths[index];
+                return cachedWidth;
             }
-#endif
 
             if (column == null)
             {
@@ -125,10 +125,36 @@ namespace ChronosPointer.RimWorld
             }
 
 #if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
-            return column.width;
-#else
-            return column.Worker.GetOptimalWidth(table);
+            if (column.width > 0f)
+            {
+                return column.width;
+            }
 #endif
+
+            return column.Worker.GetOptimalWidth(table);
+        }
+
+        private static float GetCachedColumnWidth(PawnTable table, int index)
+        {
+            if (table == null || index < 0)
+            {
+                return 0f;
+            }
+
+#if V1_2U
+            if (table.cachedColumnWidths != null && index >= 0 && index < table.cachedColumnWidths.Count)
+            {
+                return table.cachedColumnWidths[index];
+            }
+#else
+            List<float> cachedColumnWidths = AccessTools.Field(typeof(PawnTable), "cachedColumnWidths")?.GetValue(table) as List<float>;
+            if (cachedColumnWidths != null && index < cachedColumnWidths.Count)
+            {
+                return cachedColumnWidths[index];
+            }
+#endif
+
+            return 0f;
         }
     }
 }
