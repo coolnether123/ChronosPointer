@@ -41,7 +41,7 @@ namespace ChronosPointer.RimWorld
                 if (IsTimetableColumn(columns[i].workerClass))
                 {
                     hourBoxWidth = (width / 24f) - HourBoxGap;
-                    baseOffsetX = columns[i].width + 1f;
+                    baseOffsetX = DefaultBaseOffsetX;
                     break;
                 }
 
@@ -78,7 +78,7 @@ namespace ChronosPointer.RimWorld
                 return table.cachedColumnWidths[index];
             }
 
-            return column != null ? column.width : 0f;
+            return column != null ? (column.width > 0 ? column.width : table.GetOptimalWidth(column)) : 0f;
         }
     }
 }

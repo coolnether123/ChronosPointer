@@ -100,7 +100,7 @@ namespace ChronosPointer
         {
             Settings = GetSettings<ChronosPointerSettings>();
 
-            if (ModsConfig.IsActive("brrainz.harmony"))
+            if (ModsConfig.IsActive("brrainz.harmony") || ModsConfig.IsActive("Harmony"))
             {
                 // Harmony patch
                 var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
