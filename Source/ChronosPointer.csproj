@@ -9,6 +9,7 @@
     <BwtRimWorldDecompiledRoot Condition="'$(BwtRimWorldDecompiledRoot)' == '' And Exists('A:\Dev\Github\Coolnether123\Better-Work-Tab\Decompiled\RimWorld')">A:\Dev\Github\Coolnether123\Better-Work-Tab\Decompiled\RimWorld</BwtRimWorldDecompiledRoot>
     <RimWorldInstallPath Condition="'$(RimWorldInstallPath)' == '' And Exists('D:\Steam Library\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">D:\Steam Library\steamapps\common\RimWorld</RimWorldInstallPath>
     <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And '$(RimWorldInstallPath)' != ''">$(RimWorldInstallPath)\RimWorldWin64_Data\Managed</RimWorldManagedPath>
+    <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And Exists('$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\Assembly-CSharp.dll')">$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472</RimWorldManagedPath>
     <ProjectGuid>{D33872C6-430D-4494-B005-6ADFB0C092C2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -405,6 +406,9 @@
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '0.17' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.19'">
+    <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
+  </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13'">
     <Compile Remove="ChronosPointerSettings.cs" />
     <Compile Remove="ChronosPointerMod.cs" />
@@ -444,6 +448,17 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
     <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer">
+      <Version>2.3.0</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4850" />
+    <PackageReference Include="Lib.Harmony">
+      <Version>2.3.6</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" MemberPattern="^RimWorld\.PawnTable\..*" />
