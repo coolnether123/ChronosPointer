@@ -1,5 +1,6 @@
 using ChronosPointer.Api;
 using ChronosPointer.Core;
+using ChronosPointer.RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -88,7 +89,7 @@ namespace ChronosPointer.Rendering
             {
                 ChronosHourSegment segment = timeline.Hours[hour];
                 Color color = useIncidentOverlay ? segment.IncidentOverlayColor : segment.BaseColor;
-                Widgets.DrawBoxSolid(geometry.GetHourBarRect(hour), color);
+                ChronosRimWorldCompat.DrawBoxSolid(geometry.GetHourBarRect(hour), color);
             }
         }
 
@@ -98,11 +99,11 @@ namespace ChronosPointer.Rendering
             Rect highlightRect = geometry.GetPawnHourRect(timeline.CurrentHour);
             if (settings.DoFilledHourHighlight)
             {
-                Widgets.DrawBoxSolid(highlightRect, settings.ColorHourHighlight);
+                ChronosRimWorldCompat.DrawBoxSolid(highlightRect, settings.ColorHourHighlight);
             }
             else
             {
-                Widgets.DrawBoxSolidWithOutline(highlightRect, settings.HighlightInteriorColor, settings.ColorHourHighlight, 2);
+                ChronosRimWorldCompat.DrawBoxSolidWithOutline(highlightRect, settings.HighlightInteriorColor, settings.ColorHourHighlight, 2);
             }
         }
 
@@ -110,7 +111,7 @@ namespace ChronosPointer.Rendering
         {
             Rect traceRect = GetTimeCursorRect(timeline, geometry);
             Color lineColor = ChronosTimelineService.GetCurrentHoursBarCursorColor(timeline.Map, timeline);
-            Widgets.DrawBoxSolid(traceRect, lineColor);
+            ChronosRimWorldCompat.DrawBoxSolid(traceRect, lineColor);
         }
 
         private static void DrawArrowTexture(ChronosTimelineSnapshot timeline, ChronosScheduleGeometrySnapshot geometry)
@@ -129,7 +130,7 @@ namespace ChronosPointer.Rendering
                 barTopY - ArrowHeight - (!settings.DrawHourBar ? -2f : 4f),
                 ArrowWidth,
                 ArrowHeight);
-            Rect drawRect = arrowRect.ScaledBy(!settings.DrawHourBar ? 2 : 1);
+            Rect drawRect = ScaleAroundCenter(arrowRect, !settings.DrawHourBar ? 2f : 1f);
 
             Color oldColor = GUI.color;
             GUI.color = settings.ColorArrow;
@@ -151,7 +152,7 @@ namespace ChronosPointer.Rendering
             float cursorY = geometry.FillRect.y + geometry.BaseOffsetY + geometry.HourBoxHeight + geometry.PawnAreaTopOffset;
 
             Rect cursorRect = new Rect(cursorX, cursorY, cursorThickness, geometry.WindowHeight);
-            Widgets.DrawBoxSolid(cursorRect, settings.ColorMainCursor);
+            ChronosRimWorldCompat.DrawBoxSolid(cursorRect, settings.ColorMainCursor);
         }
 
         private static Rect GetTimeCursorRect(ChronosTimelineSnapshot timeline, ChronosScheduleGeometrySnapshot geometry)
@@ -161,6 +162,19 @@ namespace ChronosPointer.Rendering
             float cursorX = geometry.XAtLocalHour(timeline.LocalHour);
             float cursorY = geometry.FillRect.y + geometry.BaseOffsetY;
             return new Rect(cursorX, cursorY, cursorThickness, geometry.HourBoxHeight);
+        }
+
+        private static Rect ScaleAroundCenter(Rect rect, float scale)
+        {
+            if (scale == 1f)
+            {
+                return rect;
+            }
+
+            Vector2 center = rect.center;
+            float width = rect.width * scale;
+            float height = rect.height * scale;
+            return new Rect(center.x - width / 2f, center.y - height / 2f, width, height);
         }
     }
 }
