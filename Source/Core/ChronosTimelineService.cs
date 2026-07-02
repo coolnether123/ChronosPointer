@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ChronosPointer.Api;
 using ChronosPointer.ModSupport;
-using ChronosPointer.RimWorld;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -11,9 +10,7 @@ namespace ChronosPointer.Core
 {
     internal static class ChronosTimelineService
     {
-#if !(VALPHA4 || V0_16U || V0_15U || V0_14U || V0_13U)
         private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamedSilentFail("SolarFlare");
-#endif
 
         public static bool TryCreateTimeline(Map map, ChronosPointerSettings settings, out ChronosTimelineSnapshot snapshot, bool syncLegacyPatchState = false)
         {
@@ -25,11 +22,11 @@ namespace ChronosPointer.Core
 
             ChronosSettingsSnapshot settingsSnapshot = ChronosSettingsSnapshotFactory.Create(settings);
             ChronosIncidentState incidents = CreateIncidentState(map, syncLegacyPatchState);
-            float dayPercent = ChronosRimWorldCompat.DayPercent(map);
+            float dayPercent = GenLocalDate.DayPercent(map);
             float localHour = dayPercent * 24f;
             int currentHour = Mathf.Clamp((int)localHour, 0, 23);
-            long absoluteTick = ChronosRimWorldCompat.TicksAbs();
-            Season season = ChronosRimWorldCompat.Season(map);
+            long absoluteTick = GenTicks.TicksAbs;
+            Season season = GenLocalDate.Season(map);
             long ticksPerDay = ModSupportManager.GetTicksPerDay();
             long ticksPerHour = ModSupportManager.GetTicksPerHour();
 
@@ -39,7 +36,7 @@ namespace ChronosPointer.Core
             for (int hour = 0; hour < 24; hour++)
             {
                 long absTickForHour = startOfCurrentLocalDayAbsTick + (long)hour * ticksPerHour;
-                float sunlight = ChronosRimWorldCompat.CelestialSunGlow(map, (int)absTickForHour);
+                float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForHour);
                 ChronosLightBand band = GetLightBand(sunlight, settingsSnapshot);
                 Color baseColor = GetBaseColorForSunlight(sunlight, settingsSnapshot, incidents);
                 Color overlayColor = GetIncidentOverlayColor(hour, settingsSnapshot, incidents);
@@ -48,7 +45,7 @@ namespace ChronosPointer.Core
 
             snapshot = new ChronosTimelineSnapshot(
                 map,
-                ChronosRimWorldCompat.MapTile(map),
+                map.Tile,
                 absoluteTick,
                 dayPercent,
                 localHour,
@@ -68,20 +65,9 @@ namespace ChronosPointer.Core
                 return new ChronosIncidentState(false, false, false, false, false);
             }
 
-#if VALPHA4 || V0_16U || V0_15U || V0_14U || V0_13U
-            bool aurora = Patch_ScheduleWindow.overrideIsAurora;
-            bool eclipse = Patch_ScheduleWindow.overrideIsEclipse;
-            bool solarFlare = Patch_ScheduleWindow.overrideIsSolarFlare;
-            bool toxicFallout = Patch_ScheduleWindow.overrideIsToxicFallout;
-            bool volcanicWinter = Patch_ScheduleWindow.overrideIsVolcanicWinter;
-#else
             bool aurora = Patch_ScheduleWindow.IsInTestMode
                 ? Patch_ScheduleWindow.overrideIsAurora
-#if V0_17
-                : Patch_ScheduleWindow.overrideIsAurora;
-#else
                 : map.gameConditionManager.ConditionIsActive(GameConditionDefOf.Aurora) || Patch_ScheduleWindow.overrideIsAurora;
-#endif
 
             bool eclipse = Patch_ScheduleWindow.IsInTestMode
                 ? Patch_ScheduleWindow.overrideIsEclipse
@@ -98,7 +84,6 @@ namespace ChronosPointer.Core
             bool volcanicWinter = Patch_ScheduleWindow.IsInTestMode
                 ? Patch_ScheduleWindow.overrideIsVolcanicWinter
                 : map.gameConditionManager.ConditionIsActive(GameConditionDefOf.VolcanicWinter) || Patch_ScheduleWindow.overrideIsVolcanicWinter;
-#endif
 
             if (syncLegacyPatchState)
             {
@@ -130,7 +115,7 @@ namespace ChronosPointer.Core
                 return settings.ColorHoursBarCursorDay;
             }
 
-            float sunlight = ChronosRimWorldCompat.CelestialSunGlow(map, ChronosRimWorldCompat.TicksAbs());
+            float sunlight = GenCelestial.CelestialSunGlow(map.Tile, GenTicks.TicksAbs);
             return sunlight >= settings.SunlightThresholdSunriseSunset
                 ? settings.ColorHoursBarCursorDay
                 : settings.ColorHoursBarCursorNight;

@@ -98,23 +98,19 @@ namespace ChronosPointer
             }
         }
 
-#if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
         // When Escape is pressed or the window is closed via the 'x'
         public override void OnCancelKeyPressed()
         {
             onCancelAction?.Invoke();
             base.OnCancelKeyPressed();
         }
-#endif
 
-#if V1_3U
         // When the user clicks outside the window
         public override void Notify_ClickOutsideWindow()
         {
             onCancelAction?.Invoke();
             base.Notify_ClickOutsideWindow();
         }
-#endif
 
         // This is called AFTER the window is removed from the stack, for final cleanup.
         public override void PostClose()
@@ -122,7 +118,8 @@ namespace ChronosPointer
             base.PostClose();
             onPostCloseAction?.Invoke();
 
-            var scheduleWindow = ChronosPointer.RimWorld.ChronosRimWorldCompat.GetScheduleTabWindow();
+            var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
+                             .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
             if (scheduleWindow != null)
             {
                 // Reset the layer back to default so it behaves like a normal tab again.
