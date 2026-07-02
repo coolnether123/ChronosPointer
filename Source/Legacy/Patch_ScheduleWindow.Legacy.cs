@@ -4,21 +4,21 @@ using ChronosPointer.Rendering;
 using ChronosPointer.RimWorld;
 using HarmonyLib;
 using RimWorld;
-using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
 namespace ChronosPointer
 {
-#if V1_3U
-    [HarmonyPatch(typeof(MainTabWindow_Schedule), nameof(MainTabWindow_Schedule.DoWindowContents))]
-#else
     [HarmonyPatch(typeof(MainTabWindow_Restrict), nameof(MainTabWindow_Restrict.DoWindowContents))]
-#endif
     public static class Patch_ScheduleWindow
     {
+        private const float HeaderHeight = 65f;
+        private const float ScheduleX = 201f;
+        private const float HourWidth = 20.833334f;
+        private const float HourBarY = 52f;
+        private const float HourBarHeight = 10f;
+
         private static Map lastKnownMap;
-        private static bool debugDrawOverlayBar = true;
 
         public static bool dayNightColorsCalculated = false;
         public static Season _cachedSeason = Season.Undefined;
@@ -30,11 +30,11 @@ namespace ChronosPointer
         internal static bool isVolcanicWinter = false;
         internal static bool isAurora = false;
 
-        public static bool AuroraActive => isAurora || overrideIsAurora;
-        public static bool SolarFlareActive => isSolarFlare || overrideIsSolarFlare;
-        public static bool EclipseActive => isEclipse || overrideIsEclipse;
-        public static bool ToxicFalloutActive => isToxicFallout || overrideIsToxicFallout;
-        public static bool VolcanicWinterActive => isVolcanicWinter || overrideIsVolcanicWinter;
+        public static bool AuroraActive { get { return isAurora || overrideIsAurora; } }
+        public static bool SolarFlareActive { get { return isSolarFlare || overrideIsSolarFlare; } }
+        public static bool EclipseActive { get { return isEclipse || overrideIsEclipse; } }
+        public static bool ToxicFalloutActive { get { return isToxicFallout || overrideIsToxicFallout; } }
+        public static bool VolcanicWinterActive { get { return isVolcanicWinter || overrideIsVolcanicWinter; } }
 
         public static bool IsInTestMode = false;
         public static bool overrideIsSolarFlare = false;
@@ -45,20 +45,10 @@ namespace ChronosPointer
         public static bool overrideDrawRegularBar = true;
 
         [HarmonyPostfix]
-        public static void Postfix(MainTabWindow_PawnTable __instance, Rect fillRect)
+        public static void Postfix(Rect fillRect)
         {
-            if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
-            {
-                return;
-            }
-
-            Map map = ChronosPointer.RimWorld.ChronosRimWorldCompat.CurrentMap();
+            Map map = ChronosRimWorldCompat.CurrentMap();
             if (map == null)
-            {
-                return;
-            }
-
-            if (!ChronosScheduleGeometryFactory.TryCreate(__instance, fillRect, out ChronosScheduleGeometrySnapshot geometry))
             {
                 return;
             }
@@ -69,14 +59,26 @@ namespace ChronosPointer
                 lastKnownMap = map;
             }
 
-            if (!ChronosTimelineService.TryCreateTimeline(map, ChronosPointerMod.Settings, out ChronosTimelineSnapshot timeline, syncLegacyPatchState: true))
+            ChronosScheduleGeometrySnapshot geometry = ChronosPointerApi.CreateGeometry(
+                fillRect,
+                Mathf.Max(0f, fillRect.height - HeaderHeight),
+                HourWidth,
+                ScheduleX,
+                HourBarY,
+                0f,
+                HourBarHeight,
+                HeaderHeight - HourBarY - HourBarHeight,
+                HeaderHeight);
+
+            ChronosTimelineSnapshot timeline;
+            if (!ChronosTimelineService.TryCreateTimeline(map, ChronosPointerMod.Settings, out timeline, true))
             {
                 return;
             }
 
             ChronosPointerApi.SetLatestTimeline(timeline);
             ChronosPointerApi.SetLatestGeometry(geometry);
-            ChronosScheduleRenderer.DrawSchedule(timeline, geometry, overrideDrawRegularBar, debugDrawOverlayBar);
+            ChronosScheduleRenderer.DrawSchedule(timeline, geometry, overrideDrawRegularBar, false);
         }
     }
 }
