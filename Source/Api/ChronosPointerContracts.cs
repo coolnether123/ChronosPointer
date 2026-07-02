@@ -120,7 +120,7 @@ namespace ChronosPointer.Api
             int currentHour,
             Season season,
             ChronosIncidentState incidents,
-            IReadOnlyList<ChronosHourSegment> hours,
+            IList<ChronosHourSegment> hours,
             ChronosSettingsSnapshot settings)
         {
             Map = map;
@@ -143,7 +143,7 @@ namespace ChronosPointer.Api
         public int CurrentHour { get; private set; }
         public Season Season { get; private set; }
         public ChronosIncidentState Incidents { get; private set; }
-        public IReadOnlyList<ChronosHourSegment> Hours { get; private set; }
+        public IList<ChronosHourSegment> Hours { get; private set; }
         public ChronosSettingsSnapshot Settings { get; private set; }
     }
 

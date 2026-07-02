@@ -8,7 +8,7 @@ namespace ChronosPointer
 {
     public class Dialog_IncidentTesting : Dialog_MessageBox
     {
-        public Dialog_IncidentTesting(TaggedString text, string buttonAText = null, Action buttonAAction = null, WindowLayer layer = WindowLayer.Dialog) : base(text, buttonAText, buttonAAction, layer: layer)
+        public Dialog_IncidentTesting(string text, string buttonAText = null, Action buttonAAction = null, WindowLayer layer = WindowLayer.Dialog) : base(text, buttonAText, buttonAAction)
         {
         }
 
@@ -98,8 +98,7 @@ namespace ChronosPointer
                 buttonAAction();
             }
 
-            var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder
-                            .FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
+            var scheduleWindow = ChronosPointer.RimWorld.ChronosRimWorldCompat.GetScheduleTabWindow();
             if (scheduleWindow != null)
             {
                 // Reset the layer back to default.
@@ -110,13 +109,16 @@ namespace ChronosPointer
             Event.current.Use();
         }
 
+#if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
         public override void OnCancelKeyPressed()
         {
             base.OnCancelKeyPressed();
             CloseAction();
             Close();
         }
+#endif
 
+#if V1_3U
         public override void Notify_ClickOutsideWindow()
         {
             base.Notify_ClickOutsideWindow();
@@ -125,6 +127,7 @@ namespace ChronosPointer
             CloseAction();
             Close();
         }
+#endif
 
         public override void PostClose()
         {
