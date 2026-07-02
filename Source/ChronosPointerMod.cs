@@ -1,5 +1,6 @@
 using ColourPicker;
 using ChronosPointer.Api;
+using ChronosPointer.RimWorld;
 using HarmonyLib;
 using RimWorld;
 using System;
@@ -11,12 +12,14 @@ namespace ChronosPointer
 
     class Dialog_ModWarning : Dialog_MessageBox
     {
-        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title, layer: layer)
+        public Dialog_ModWarning(string title, string text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title)
         {
             if (fixAction != null)
             {
+#if V0_18U || V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
                 buttonCAction = fixAction;
                 buttonCText = fixActionText;
+#endif
             }
             buttonAText = "OK";
             buttonAAction = null;
@@ -41,12 +44,12 @@ namespace ChronosPointer
             if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
                 return;
 
-            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
+            if (ChronosRimWorldCompat.IsModActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
                 ApplyFixForMysteriusCustomSchedules();
-            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
+            if (ChronosRimWorldCompat.IsModActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
                 ApplyFixForScheduleClock();
             //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
-            if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
+            if (ChronosRimWorldCompat.IsModActive("name.krypt.rimworld.pawntablegrouped"))
                 ApplyFixForGroupedPawnsList();
             playerWarned = true;
         }
@@ -72,12 +75,14 @@ namespace ChronosPointer
                 ChronosPointerMod.Settings.DoLoadWarnings = false;
                 ChronosPointerMod.Settings?.Write();
             }, title: "ScheduleClock is Active");
+#if V0_18U || V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
             message.buttonCText = "Disable Overlap";
             message.buttonCAction = () =>
             {
                 ChronosPointerMod.Settings.DrawMainCursor = false;
                 ChronosPointerMod.Settings?.Write();
             };
+#endif
             Find.WindowStack?.Add(message);
 
         }
@@ -100,7 +105,7 @@ namespace ChronosPointer
         {
             Settings = GetSettings<ChronosPointerSettings>();
 
-            if (ModsConfig.IsActive("brrainz.harmony") || ModsConfig.IsActive("Harmony"))
+            if (ChronosRimWorldCompat.IsModActive("brrainz.harmony") || ChronosRimWorldCompat.IsModActive("Harmony"))
             {
                 // Harmony patch
                 var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
