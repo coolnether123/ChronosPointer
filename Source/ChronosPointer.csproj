@@ -120,6 +120,9 @@
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '0.17' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.19'">
+    <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer">
       <Version>2.3.0</Version>
