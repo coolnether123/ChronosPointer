@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ChronosPointer.RimWorld;
 using Verse;
 
 namespace ChronosPointer.ModSupport
@@ -25,7 +24,7 @@ namespace ChronosPointer.ModSupport
             for (int i = 0; i < allModules.Count; i++)
             {
                 IModSupportModule module = allModules[i];
-                if (!IsModActive(module.PackageId))
+                if (ModLister.GetActiveModWithIdentifier(module.PackageId, ignorePostfix: true) == null)
                 {
                     continue;
                 }
@@ -47,17 +46,6 @@ namespace ChronosPointer.ModSupport
                     Log.Warning($"[ChronosPointer][ModSupport] Failed to initialize module {module.DisplayName}: {ex.Message}");
                 }
             }
-        }
-
-        private static bool IsModActive(string packageId)
-        {
-#if V1_4U
-            return ModLister.GetActiveModWithIdentifier(packageId, true) != null;
-#elif V1_1U
-            return ModLister.GetActiveModWithIdentifier(packageId) != null;
-#else
-            return ChronosRimWorldCompat.IsModActive(packageId);
-#endif
         }
 
         public static long GetTicksPerDay()
