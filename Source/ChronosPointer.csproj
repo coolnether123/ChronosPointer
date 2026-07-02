@@ -6,6 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+    <BwtRimWorldDecompiledRoot Condition="'$(BwtRimWorldDecompiledRoot)' == '' And Exists('A:\Dev\Github\Coolnether123\Better-Work-Tab\Decompiled\RimWorld')">A:\Dev\Github\Coolnether123\Better-Work-Tab\Decompiled\RimWorld</BwtRimWorldDecompiledRoot>
     <RimWorldInstallPath Condition="'$(RimWorldInstallPath)' == '' And Exists('D:\Steam Library\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">D:\Steam Library\steamapps\common\RimWorld</RimWorldInstallPath>
     <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And '$(RimWorldInstallPath)' != ''">$(RimWorldInstallPath)\RimWorldWin64_Data\Managed</RimWorldManagedPath>
     <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And Exists('$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\Assembly-CSharp.dll')">$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472</RimWorldManagedPath>
@@ -41,57 +42,339 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5|AnyCPU'">
     <OutputPath>..\1.5\Assemblies\</OutputPath>
-    <DefineConstants>V1_5; V1_5U; V1_5D; V1_4U; V1_3U; V1_6D;  </DefineConstants>
+    <DefineConstants>TRACE;V1_5;V1_5U;V1_5D;V1_4U;V1_3U;V1_6D;</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.3|AnyCPU'">
     <OutputPath>..\1.3\Assemblies\</OutputPath>
-    <DefineConstants>V1_3; V1_3U; V1_3DU;V1_4D;  V1_5D; V1_6D; </DefineConstants>
+    <DefineConstants>TRACE;V1_3;V1_3U;V1_3DU;V1_4D;V1_5D;V1_6D;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4|AnyCPU'">
     <OutputPath>..\1.4\Assemblies\</OutputPath>
-    <DefineConstants>V1_4; V1_4U;  V1_4D; V1_3U;V1_5D;V1_6D;</DefineConstants>
+    <DefineConstants>TRACE;V1_4;V1_4U;V1_4D;V1_3U;V1_5D;V1_6D;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2|AnyCPU'">
-    <OutputPath>bin\1.2\</OutputPath>
-    <DefineConstants>V1_2; V1_3D</DefineConstants>
+    <OutputPath>..\1.2\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V1_2;V1_2U;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1|AnyCPU'">
+    <OutputPath>..\1.1\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V1_1;V1_1U;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.0|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\1.0\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V1_0;V1_0U;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.19|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_19U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.18|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_18;V0_18U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.17|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_17;V0_17U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.16|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_16;V0_16U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.15|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_16;V0_15;V0_15U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.14|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_16;V0_15;V0_14;V0_14U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '0.13|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;V0_19;V0_16;V0_15;V0_14;V0_13;V0_13U;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Alpha4|AnyCPU'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;VALPHA4;V0_13D;V0_14D;V0_15D;V0_16D;V0_17D;V0_18D;V0_19D;V1_0D;V1_1D;V1_2D;V1_3D;V1_4D;V1_5D;V1_6D;</DefineConstants>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6|AnyCPU'">
     <OutputPath>..\1.6\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;V1_6; V1_6U; V1_5U; V1_4U; V1_3U;</DefineConstants>
+    <DefineConstants>TRACE;V1_6;V1_6U;V1_5U;V1_4U;V1_3U;</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="Exists('$(RimWorldManagedPath)\Assembly-CSharp.dll')">
+  <PropertyGroup Condition="'$(Configuration)' == '0.19' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.19\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.19\RimWorldWin64_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.18' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.18\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.18\RimWorldWin64_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.17' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.17\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.17\RimWorldWin64_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.16' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.16\RimWorldWin_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.16\RimWorldWin_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.15' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.15\RimWorldWin_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.15\RimWorldWin_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.14' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.14\RimWorldWin_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.14\RimWorldWin_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == '0.13' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_0.13\RimWorldWin_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_0.13\RimWorldWin_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Alpha4' And '$(LegacyRimWorldManagedDir)' == '' And Exists('$(BwtRimWorldDecompiledRoot)\SteamInstall_Alpha4\RimWorldWin_Data\Managed\Assembly-CSharp.dll')">
+    <LegacyRimWorldManagedDir>$(BwtRimWorldDecompiledRoot)\SteamInstall_Alpha4\RimWorldWin_Data\Managed</LegacyRimWorldManagedDir>
+  </PropertyGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.6'">
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(RimWorldManagedPath)\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(RimWorldManagedPath)\UnityEngine.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(RimWorldManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(RimWorldManagedPath)\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(RimWorldManagedPath)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(RimWorldManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <ItemGroup Condition="Exists('$(NuGetPackageRoot)lib.harmony\2.3.6\lib\net472\0Harmony.dll')">
+  <ItemGroup Condition="'$(Configuration)' == '1.5'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.5.4409\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.4'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.4.3901\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.3'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.3.3389\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.2'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.2.3062\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.1'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.1.2654\ref\net472\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.0'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.0.2559\ref\net472\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.0.2559\ref\net472\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.0.2559\ref\net472\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(NuGetPackageRoot)krafs.rimworld.ref\1.0.2559\ref\net472\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '0.19' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.17' Or '$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13' Or '$(Configuration)' == 'Alpha4'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(LegacyRimWorldManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(LegacyRimWorldManagedDir)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(LegacyRimWorldManagedDir)\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI" Condition="'$(Configuration)' != 'Alpha4'">
+      <HintPath>$(LegacyRimWorldManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' != '1.0' And '$(Configuration)' != '0.19' And '$(Configuration)' != '0.18' And '$(Configuration)' != '0.17' And '$(Configuration)' != '0.16' And '$(Configuration)' != '0.15' And '$(Configuration)' != '0.14' And '$(Configuration)' != '0.13' And '$(Configuration)' != 'Alpha4'">
     <Reference Include="0Harmony">
       <HintPath>$(NuGetPackageRoot)lib.harmony\2.3.6\lib\net472\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '1.0' Or '$(Configuration)' == '0.19' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.17' Or '$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13' Or '$(Configuration)' == 'Alpha4'">
+    <Reference Include="0Harmony">
+      <HintPath>$(NuGetPackageRoot)lib.harmony\2.3.6\lib\net35\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -109,6 +392,7 @@
     <Compile Include="Core\ChronosSettingsSnapshotFactory.cs" />
     <Compile Include="Core\ChronosTimelineService.cs" />
     <Compile Include="Dialog_IncidentTesting.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Bootstrap.cs" />
     <Compile Include="Mod Support\IChronosTimeScaleSupport.cs" />
     <Compile Include="Mod Support\IModSupportModule.cs" />
     <Compile Include="Mod Support\ModSupportManager.cs" />
@@ -124,6 +408,46 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == '0.17' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.19'">
     <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13'">
+    <Compile Remove="ChronosPointerSettings.cs" />
+    <Compile Remove="ChronosPointerMod.cs" />
+    <Compile Remove="Patch_ScheduleWindow.cs" />
+    <Compile Remove="Dialog_IncidentTesting.cs" />
+    <Compile Remove="ColorPicker\Dialog_ColourPicker.cs" />
+    <Compile Remove="ColorPicker\Dialog_LivePreview.cs" />
+    <Compile Remove="ColorPicker\RecentColours.cs" />
+    <Compile Remove="ColorPicker\TextField.cs" />
+    <Compile Remove="Mod Support\IChronosTimeScaleSupport.cs" />
+    <Compile Remove="Mod Support\IModSupportModule.cs" />
+    <Compile Remove="Mod Support\ModSupportManager.cs" />
+    <Compile Remove="Mod Support\ModSupportModuleBase.cs" />
+    <Compile Remove="Mod Support\Mods\Clockwork\ClockworkSupport.cs" />
+    <Compile Remove="Mod Support\Mods\DayStretch\DayStretchSupport.cs" />
+    <Compile Remove="RimWorld\ChronosScheduleGeometryFactory.cs" />
+    <Compile Include="Legacy\ChronosLegacySettings.cs" />
+    <Compile Include="Legacy\ChronosLegacyMod.cs" />
+    <Compile Include="Legacy\Patch_ScheduleWindow.Legacy.cs" />
+    <Compile Include="Legacy\ChronosLegacyModSupportManager.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Alpha4'">
+    <Compile Remove="@(Compile)" />
+    <Compile Include="Api\ChronosPointerApi.cs" />
+    <Compile Include="Api\ChronosPointerContracts.cs" />
+    <Compile Include="ChronosPointerTextures.cs" />
+    <Compile Include="Core\ChronosColorUtility.cs" />
+    <Compile Include="Core\ChronosOverlayRegistry.cs" />
+    <Compile Include="Core\ChronosSettingsSnapshotFactory.cs" />
+    <Compile Include="Core\ChronosTimelineService.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Api.cs" />
+    <Compile Include="Legacy\Alpha4\ChronosAlpha4Bootstrap.cs" />
+    <Compile Include="Legacy\Alpha4\Patch_Alpha4OverviewWork.cs" />
+    <Compile Include="Legacy\ChronosLegacyMod.cs" />
+    <Compile Include="Legacy\ChronosLegacyModSupportManager.cs" />
+    <Compile Include="Legacy\ChronosLegacySettings.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
+    <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer">
