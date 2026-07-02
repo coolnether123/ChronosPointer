@@ -405,6 +405,9 @@
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == '0.17' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.19'">
+    <Compile Include="Legacy\ChronosLegacyBootstrap.cs" />
+  </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == '0.16' Or '$(Configuration)' == '0.15' Or '$(Configuration)' == '0.14' Or '$(Configuration)' == '0.13'">
     <Compile Remove="ChronosPointerSettings.cs" />
     <Compile Remove="ChronosPointerMod.cs" />
