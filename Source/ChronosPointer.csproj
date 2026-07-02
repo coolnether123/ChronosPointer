@@ -8,6 +8,7 @@
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
     <RimWorldInstallPath Condition="'$(RimWorldInstallPath)' == '' And Exists('D:\Steam Library\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp.dll')">D:\Steam Library\steamapps\common\RimWorld</RimWorldInstallPath>
     <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And '$(RimWorldInstallPath)' != ''">$(RimWorldInstallPath)\RimWorldWin64_Data\Managed</RimWorldManagedPath>
+    <RimWorldManagedPath Condition="'$(RimWorldManagedPath)' == '' And Exists('$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472\Assembly-CSharp.dll')">$(NuGetPackageRoot)krafs.rimworld.ref\1.6.4850\ref\net472</RimWorldManagedPath>
     <ProjectGuid>{D33872C6-430D-4494-B005-6ADFB0C092C2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
