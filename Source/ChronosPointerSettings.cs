@@ -372,9 +372,9 @@ namespace ChronosPointer
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
 #if !V1_3
-            CursorThickness = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
+            CursorThickness = listL.SliderLabeled($"- Main Cursor ({CursorThickness:F1})", ValidateCursorThickness(CursorThickness), 2f, 10f, tooltip: "Thickness of the Main Cursor.");
             GrayIfInactive(DrawHoursBarCursor);
-            HoursBarCursorThickness = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
+            HoursBarCursorThickness = listL.SliderLabeled($"- Hours Bar Cursor ({HoursBarCursorThickness:F1})", ValidateCursorThickness(HoursBarCursorThickness), 2f, 10f, tooltip: "Thickness of the Hours Bar cursor.");
             GrayIfInactive(DrawCurrentHourHighlight);
 #else
             ;
@@ -391,10 +391,10 @@ namespace ChronosPointer
             listL.Label("Sunlight thresholds (0.0 = no sunlight, 1.0 = full sunlight):");
             Text.Font = GameFont.Tiny;
 #if !V1_3
-            SunlightThreshold_Night = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
+            SunlightThreshold_Night = listL.SliderLabeled($"- Night ({SunlightThreshold_Night:F2})", SunlightThreshold_Night, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the night color.");
             //_SunlightThreshold_Any           = listL.SliderLabeled($"Any", _SunlightThreshold_Any, 0.0f, 1.0f, tooltip: "How light the map has to be to show the  color."); //Don't change the any sunlight threshold.
-            SunlightThreshold_DawnDusk = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
-            SunlightThreshold_SunriseSunset = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
+            SunlightThreshold_DawnDusk = listL.SliderLabeled($"- Dawn/Dusk ({SunlightThreshold_DawnDusk:F2})", SunlightThreshold_DawnDusk, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the dawn/dusk color.");
+            SunlightThreshold_SunriseSunset = listL.SliderLabeled($"- Sunrise/Sunset ({SunlightThreshold_SunriseSunset:F2})", SunlightThreshold_SunriseSunset, 0.0f, 1.0f, tooltip: "How dark the map has to be to show the sunrise/sunset color.");
 #else
             float night = SunlightThreshold_Night;
             night = Do1_3LabeledSlider($"- Night ({night:F2})", listL, ref night, 0.0f, 1.0f);
@@ -415,9 +415,9 @@ namespace ChronosPointer
 
             GrayIfInactive(DrawIncidentOverlay);
 #if !V1_3
-            AuroraMinOpacity = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Aurora Min Opacity ({AuroraMinOpacity:F2})", AuroraMinOpacity, 0.0f, 1.0f, tooltip: "The minimum transparancy the aurora effect gets.");
+            AuroraMinOpacity = listL.SliderLabeled($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", AuroraMinOpacity, 0.0f, 1.0f, tooltip: "The minimum transparancy the aurora effect gets.");
             GrayIfInactive(DrawIncidentOverlay);
-            AuroraMaxOpacity = ChronosPointer.RimWorld.ChronosRimWorldCompat.SliderLabeled(listL, $"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
+            AuroraMaxOpacity = listL.SliderLabeled($"- Aurora Max Opacity ({AuroraMaxOpacity:F2})", AuroraMaxOpacity, 0.0f, 1.0f, tooltip: "The maximum transparancy the aurora effect gets.");
 #else
             AuroraMinOpacity                = Do1_3LabeledSlider($"- Aurora Min Opacity ({AuroraMinOpacity:F2})", listL, ref AuroraMinOpacity, 0.0f, 1.0f);
             GrayIfInactive(DrawIncidentOverlay);
@@ -495,7 +495,7 @@ namespace ChronosPointer
                 GUI.color = Color.green;
                 if (Widgets.ButtonText(buttonRect, "Incident Preview..."))
                 {
-                    var fakeSchedule = ChronosPointer.RimWorld.ChronosRimWorldCompat.GetScheduleTabWindow();
+                    var fakeSchedule = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault((MainButtonDef button) => button.TabWindow is MainTabWindow_Schedule)?.TabWindow;
                     if (fakeSchedule != null)
                     {
                         fakeSchedule.layer = WindowLayer.SubSuper;
@@ -584,13 +584,13 @@ namespace ChronosPointer
             if (listingStandard.ButtonText(buttonText))
             {
                 // If not in a game, or can't find schedule, show normal picker.
-                if (Current.Game == null || ChronosPointer.RimWorld.ChronosRimWorldCompat.CurrentMap() == null)
+                if (Current.Game == null || Find.CurrentMap == null)
                 {
                     Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
                     return;
                 }
 
-                var scheduleWindow = ChronosPointer.RimWorld.ChronosRimWorldCompat.GetScheduleTabWindow();
+                var scheduleWindow = Find.MainButtonsRoot.allButtonsInOrder.FirstOrDefault(b => b.TabWindow is MainTabWindow_Schedule)?.TabWindow;
                 if (scheduleWindow == null)
                 {
                     Find.WindowStack.Add(new Dialog_ColourPicker(color, colorChangeOperation));
