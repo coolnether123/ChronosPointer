@@ -198,10 +198,64 @@ namespace ChronosPointer.RimWorld
             return GenCelestial.CelestialSunGlow(map.Tile, ticksAbs);
 #elif V0_18U || V0_19U || V1_0U || V1_1U || V1_2U
             return GenCelestial.CelestialSunGlow(map, ticksAbs);
+#elif V0_17
+            return CelestialSunGlowPercentAtTick(map, ticksAbs);
 #else
             return GenCelestial.CurCelestialSunGlow(map);
 #endif
         }
+
+#if V0_17
+        private static float CelestialSunGlowPercentAtTick(Map map, int ticksAbs)
+        {
+            if (map == null || map.Tile < 0 || Find.WorldGrid == null)
+            {
+                return 0f;
+            }
+
+            Vector2 longLat = Find.WorldGrid.LongLatOf(map.Tile);
+            return CelestialSunGlowPercent(longLat.y, GenDate.DayOfYear(ticksAbs, longLat.x), GenDate.DayPercent(ticksAbs, longLat.x));
+        }
+
+        private static float CelestialSunGlowPercent(float latitude, int dayOfYear, float dayPercent)
+        {
+            Vector3 surfaceNormal = SurfaceNormal(latitude);
+            Vector3 sunPosition = SunPosition(latitude, dayOfYear, dayPercent);
+            float dot = Vector3.Dot(surfaceNormal.normalized, sunPosition);
+            return Mathf.Clamp01(Mathf.InverseLerp(0f, 0.7f, dot));
+        }
+
+        private static Vector3 SunPosition(float latitude, int dayOfYear, float dayPercent)
+        {
+            Vector3 target = SurfaceNormal(latitude);
+            Vector3 current = SunPositionUnmodified(dayOfYear, dayPercent, new Vector3(1f, 0f, 0f));
+            current = Vector3.RotateTowards(current, target, 19f * Mathf.PI / 180f, 9999999f);
+
+            float lowLatitudeSeasonalOffset = Mathf.InverseLerp(60f, 0f, Mathf.Abs(latitude));
+            if (lowLatitudeSeasonalOffset > 0f)
+            {
+                current = Vector3.RotateTowards(current, target, Mathf.PI * 2f * (17f * lowLatitudeSeasonalOffset / 360f), 9999999f);
+            }
+
+            return current.normalized;
+        }
+
+        private static Vector3 SunPositionUnmodified(float dayOfYear, float dayPercent, Vector3 initialSunPos)
+        {
+            Vector3 vector = initialSunPos * 100f;
+            float yearPercent = dayOfYear / 60f;
+            float seasonalAngle = yearPercent * Mathf.PI * 2f;
+            vector.y += -Mathf.Cos(seasonalAngle) * 20f;
+
+            float dayAngle = (dayPercent - 0.5f) * 360f;
+            return (Quaternion.AngleAxis(dayAngle, Vector3.up) * vector).normalized;
+        }
+
+        private static Vector3 SurfaceNormal(float latitude)
+        {
+            return Quaternion.AngleAxis(latitude, new Vector3(0f, 0f, 1f)) * new Vector3(1f, 0f, 0f);
+        }
+#endif
 
         public static int TicksAbs()
         {
