@@ -104,6 +104,7 @@ namespace ChronosPointer
         public ChronosPointerMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<ChronosPointerSettings>();
+            ChronosSharedSettingsStore.LoadAndSynchronize(Settings);
 
             if (ChronosRimWorldCompat.IsModActive("brrainz.harmony") || ChronosRimWorldCompat.IsModActive("Harmony"))
             {
@@ -136,6 +137,7 @@ namespace ChronosPointer
         public override void WriteSettings()
         {
             base.WriteSettings();
+            ChronosSharedSettingsStore.Save(Settings);
             Patch_ScheduleWindow.dayNightColorsCalculated = false;
             Patch_ScheduleWindow.overrideIsAurora = false;
             Patch_ScheduleWindow.overrideIsEclipse = false;
