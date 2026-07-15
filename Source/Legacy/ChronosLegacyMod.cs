@@ -12,6 +12,7 @@ namespace ChronosPointer
 
         static ChronosPointerMod()
         {
+            ChronosSharedSettingsStore.LoadAndSynchronize(Settings);
 #if VALPHA4
             Log.Message("[ChronosPointer] Alpha4 settings store initialized.");
 #else
