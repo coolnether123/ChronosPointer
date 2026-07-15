@@ -95,6 +95,7 @@ namespace ChronosPointer
 
         public void Write()
         {
+            ChronosSharedSettingsStore.Save(this);
         }
     }
 }
