@@ -404,6 +404,7 @@
     <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
     <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
+    <Compile Include="Settings\ChronosSharedSettingsStore.cs" />
     <Compile Include="ChronosPointerMod.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == '0.17' Or '$(Configuration)' == '0.18' Or '$(Configuration)' == '0.19'">
@@ -448,6 +449,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
     <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
+    <Compile Include="Settings\ChronosSharedSettingsStore.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer">
