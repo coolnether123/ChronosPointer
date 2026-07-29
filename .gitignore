@@ -1,1 +1,6 @@
 .vs/
+Source/bin/
+Source/obj/
+*.user
+*.suo
+*.bak

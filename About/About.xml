@@ -26,6 +26,9 @@ This mod provides an intuitive and visually appealing way to track time in RimWo
   
 All features can be toggled and customized in the mod settings, allowing you to tailor the experience to your liking.
 
+Integration:
+- Other mods can reuse Chronos Pointer through its public API.
+
 Any issues or have some ideas? Come by my discord at: https://discord.gg/QYBBaRkKWs
   </description>
   <url>https://github.com/coolnether123/chronosPointer</url>
