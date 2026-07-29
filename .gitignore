@@ -1,1 +1,11 @@
 .vs/
+**/obj/
+/Source/MigrationBackup/
+/Source/UpgradeLog.htm
+**/bin/Debug/
+**/bin/Release/
+**/__pycache__/
+*.user
+*.suo
+Thumbs.db
+.DS_Store
