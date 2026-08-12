@@ -13,6 +13,8 @@
     <RootNamespace>ChronosPointer</RootNamespace>
     <AssemblyName>ChronosPointer</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <SpineMode Condition="'$(SpineMode)' == ''">Embedded</SpineMode>
+    <UseStandaloneSpine Condition="'$(SpineMode)' == 'External'">true</UseStandaloneSpine>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -59,6 +61,10 @@
     <OutputPath>..\1.6\Assemblies\</OutputPath>
     <DefineConstants>TRACE;V1_6; V1_6U; V1_5U; V1_4U; V1_3U;</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(UseStandaloneSpine)' == 'true'">
+    <OutputPath>..\1.6\ExternalSpine\Assemblies\</OutputPath>
+    <DefineConstants>$(DefineConstants);CHRONOS_POINTER_USE_SPINE</DefineConstants>
+  </PropertyGroup>
   <ItemGroup Condition="Exists('$(RimWorldManagedPath)\Assembly-CSharp.dll')">
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -93,6 +99,12 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup Condition="'$(UseStandaloneSpine)' == 'true'">
+    <Reference Include="Spine">
+      <HintPath>$(SpineAssemblyPath)</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\ChronosPointerApi.cs" />
     <Compile Include="Api\ChronosPointerContracts.cs" />
@@ -118,6 +130,7 @@
     <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
     <Compile Include="ChronosPointerMod.cs" />
+    <Compile Include="Spine\ChronosPointerSpineSettings.cs" Condition="'$(UseStandaloneSpine)' == 'true'" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Publicizer">
@@ -140,6 +153,11 @@
     <Publicize Include="Assembly-CSharp:RimWorld.MainButtonsRoot.allButtonsInOrder" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="RequireStandaloneSpineReference" BeforeTargets="ResolveReferences" Condition="'$(UseStandaloneSpine)' == 'true'">
+    <Error
+      Condition="'$(SpineAssemblyPath)' == '' or !Exists('$(SpineAssemblyPath)')"
+      Text="SpineMode=External requires SpineAssemblyPath to point to the standalone Spine.dll." />
+  </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>

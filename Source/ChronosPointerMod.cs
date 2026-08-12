@@ -5,6 +5,10 @@ using RimWorld;
 using System;
 using UnityEngine;
 using Verse;
+#if CHRONOS_POINTER_USE_SPINE
+using Spine.Api;
+using Spine.UI.SettingsFramework;
+#endif
 
 namespace ChronosPointer
 {
@@ -90,15 +94,37 @@ namespace ChronosPointer
         }
     }
 
+#if CHRONOS_POINTER_USE_SPINE
+    public class ChronosPointerMod : SpineMod<ChronosPointerSettings>
+#else
     public class ChronosPointerMod : Mod
+#endif
     {
+#if CHRONOS_POINTER_USE_SPINE
+        public new static ChronosPointerSettings Settings;
+#else
         public static ChronosPointerSettings Settings;
+#endif
         public static float cursorThickness = 2f; // Default thickness
         private Vector2 scrollPosition = Vector2.zero;
 
+#if CHRONOS_POINTER_USE_SPINE
+        public ChronosPointerMod(ModContentPack content)
+            : base(
+                content,
+                "CoolNether123.ChronosPointer",
+                new SemanticVersion(1, 1, 0),
+                ChronosPointerSpineSettings.Schema.Definitions,
+                SpineCapability.SettingsSchema)
+#else
         public ChronosPointerMod(ModContentPack content) : base(content)
+#endif
         {
+#if CHRONOS_POINTER_USE_SPINE
+            Settings = ManagedSettings;
+#else
             Settings = GetSettings<ChronosPointerSettings>();
+#endif
 
             if (ModsConfig.IsActive("brrainz.harmony"))
             {
@@ -119,6 +145,12 @@ namespace ChronosPointer
             ChronosPointerApi.NotifyReady();
         }
 
+#if CHRONOS_POINTER_USE_SPINE
+        protected override string SettingsCategoryLabel =>
+            "Chronos Pointer";
+#endif
+
+#if !CHRONOS_POINTER_USE_SPINE
         public override string SettingsCategory()
         {
             return "Chronos Pointer";
@@ -128,6 +160,7 @@ namespace ChronosPointer
         {
             Settings.DoWindowContents(inRect);
         }
+#endif
         public override void WriteSettings()
         {
             base.WriteSettings();

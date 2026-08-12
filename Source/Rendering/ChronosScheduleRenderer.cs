@@ -2,6 +2,9 @@ using ChronosPointer.Api;
 using ChronosPointer.Core;
 using UnityEngine;
 using Verse;
+#if CHRONOS_POINTER_USE_SPINE
+using Spine.UI.ContextualSettings;
+#endif
 
 namespace ChronosPointer.Rendering
 {
@@ -30,6 +33,14 @@ namespace ChronosPointer.Rendering
                 options = ChronosDrawOptions.Default();
             }
 
+            ChronosSettingsSnapshot settings = timeline.Settings;
+#if CHRONOS_POINTER_USE_SPINE
+            if (TryBindContextualSettings(timeline, geometry, options, settings))
+            {
+                return;
+            }
+#endif
+
             ChronosOverlayContext overlayContext = null;
             if (options.DrawOverlays)
             {
@@ -37,7 +48,6 @@ namespace ChronosPointer.Rendering
                 ChronosOverlayRegistry.DrawLayer(ChronosOverlayLayer.BehindChronos, overlayContext);
             }
 
-            ChronosSettingsSnapshot settings = timeline.Settings;
             if (settings.DrawHourBar && options.DrawHourBar)
             {
                 if (options.DrawRegularBar)
@@ -121,15 +131,7 @@ namespace ChronosPointer.Rendering
             }
 
             ChronosSettingsSnapshot settings = timeline.Settings;
-            Rect cursorRect = GetTimeCursorRect(timeline, geometry);
-            float arrowCenterX = cursorRect.x + cursorRect.width / 2f;
-            float barTopY = geometry.FillRect.y + geometry.BaseOffsetY + 4f;
-            Rect arrowRect = new Rect(
-                arrowCenterX - (ArrowWidth / 2f),
-                barTopY - ArrowHeight - (!settings.DrawHourBar ? -2f : 4f),
-                ArrowWidth,
-                ArrowHeight);
-            Rect drawRect = arrowRect.ScaledBy(!settings.DrawHourBar ? 2 : 1);
+            Rect drawRect = GetArrowDrawRect(timeline, geometry);
 
             Color oldColor = GUI.color;
             GUI.color = settings.ColorArrow;
@@ -146,12 +148,99 @@ namespace ChronosPointer.Rendering
         private static void DrawFullHeightCursor(ChronosTimelineSnapshot timeline, ChronosScheduleGeometrySnapshot geometry)
         {
             ChronosSettingsSnapshot settings = timeline.Settings;
+            Widgets.DrawBoxSolid(GetFullHeightCursorRect(timeline, geometry), settings.ColorMainCursor);
+        }
+
+#if CHRONOS_POINTER_USE_SPINE
+        private static bool TryBindContextualSettings(
+            ChronosTimelineSnapshot timeline,
+            ChronosScheduleGeometrySnapshot geometry,
+            ChronosDrawOptions options,
+            ChronosSettingsSnapshot settings)
+        {
+            bool handled = false;
+            bool hourBarVisible = settings.DrawHourBar &&
+                options.DrawHourBar &&
+                (options.DrawRegularBar ||
+                 (settings.DrawIncidentOverlay &&
+                  options.DrawIncidentOverlay &&
+                  timeline.Incidents.Any) ||
+                 (settings.DrawHoursBarCursor &&
+                  options.DrawHourBarCursor));
+            if (hourBarVisible)
+            {
+                handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
+                    geometry.HourBarRect,
+                    ChronosPointerSpineSettings.ShowHourBarId,
+                    ChronosPointerSpineSettings.VisibilityGroupId,
+                    priority: 0) == true;
+                if (settings.DrawHoursBarCursor && options.DrawHourBarCursor)
+                {
+                    handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
+                        GetTimeCursorRect(timeline, geometry),
+                        ChronosPointerSpineSettings.ShowHoursBarCursorId,
+                        ChronosPointerSpineSettings.VisibilityGroupId,
+                        priority: 10) == true;
+                }
+            }
+
+            if (settings.DrawArrow && options.DrawArrow &&
+                ChronosPointerTextures.DownArrowTexture != null)
+            {
+                handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
+                    GetArrowDrawRect(timeline, geometry),
+                    ChronosPointerSpineSettings.ShowArrowId,
+                    ChronosPointerSpineSettings.VisibilityGroupId,
+                    priority: 0) == true;
+            }
+
+            if (settings.DrawCurrentHourHighlight && options.DrawCurrentHourHighlight)
+            {
+                handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
+                    geometry.GetPawnHourRect(timeline.CurrentHour),
+                    ChronosPointerSpineSettings.ShowCurrentHourHighlightId,
+                    ChronosPointerSpineSettings.VisibilityGroupId,
+                    priority: 10) == true;
+            }
+
+            if (settings.DrawMainCursor && options.DrawMainCursor)
+            {
+                handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
+                    GetFullHeightCursorRect(timeline, geometry),
+                    ChronosPointerSpineSettings.ShowMainCursorId,
+                    ChronosPointerSpineSettings.VisibilityGroupId,
+                    priority: 0) == true;
+            }
+
+            return handled;
+        }
+#endif
+
+        private static Rect GetArrowDrawRect(
+            ChronosTimelineSnapshot timeline,
+            ChronosScheduleGeometrySnapshot geometry)
+        {
+            ChronosSettingsSnapshot settings = timeline.Settings;
+            Rect cursorRect = GetTimeCursorRect(timeline, geometry);
+            float arrowCenterX = cursorRect.x + cursorRect.width / 2f;
+            float barTopY = geometry.FillRect.y + geometry.BaseOffsetY + 4f;
+            Rect arrowRect = new Rect(
+                arrowCenterX - (ArrowWidth / 2f),
+                barTopY - ArrowHeight - (!settings.DrawHourBar ? -2f : 4f),
+                ArrowWidth,
+                ArrowHeight);
+            return arrowRect.ScaledBy(!settings.DrawHourBar ? 2 : 1);
+        }
+
+        private static Rect GetFullHeightCursorRect(
+            ChronosTimelineSnapshot timeline,
+            ChronosScheduleGeometrySnapshot geometry)
+        {
+            ChronosSettingsSnapshot settings = timeline.Settings;
             float cursorThickness = ChronosPointerSettings.ValidateCursorThickness(settings.CursorThickness);
             float cursorX = geometry.XAtLocalHour(timeline.LocalHour) + 1f - (cursorThickness / 2f);
             float cursorY = geometry.FillRect.y + geometry.BaseOffsetY + geometry.HourBoxHeight + geometry.PawnAreaTopOffset;
-
-            Rect cursorRect = new Rect(cursorX, cursorY, cursorThickness, geometry.WindowHeight);
-            Widgets.DrawBoxSolid(cursorRect, settings.ColorMainCursor);
+            return new Rect(cursorX, cursorY, cursorThickness, geometry.WindowHeight);
         }
 
         private static Rect GetTimeCursorRect(ChronosTimelineSnapshot timeline, ChronosScheduleGeometrySnapshot geometry)
