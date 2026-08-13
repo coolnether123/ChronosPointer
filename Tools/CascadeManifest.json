@@ -11,30 +11,19 @@
     "1.6/ExternalSpine/Assemblies",
     "1.5/Assemblies",
     "1.4/Assemblies",
-    "1.3/Assemblies",
-    "About",
-    "LoadFolders.xml",
-    "LICENSE"
+    "1.3/Assemblies"
   ],
   "additionalPayloadRootsByVersion": {
-    "1.6": [
-      "1.6/ExternalSpine/Assemblies",
-      "About",
-      "LoadFolders.xml",
-      "LICENSE"
-    ]
+    "1.6": ["1.6/ExternalSpine/Assemblies"]
   },
   "stagePayloadRootsByVersion": {
     "1.6": [
       "1.6/Assemblies",
-      "1.6/ExternalSpine/Assemblies",
-      "About",
-      "LoadFolders.xml",
-      "LICENSE"
+      "1.6/ExternalSpine/Assemblies"
     ],
-    "1.5": ["1.5/Assemblies", "About", "LoadFolders.xml", "LICENSE"],
-    "1.4": ["1.4/Assemblies", "About", "LoadFolders.xml", "LICENSE"],
-    "1.3": ["1.3/Assemblies", "About", "LoadFolders.xml", "LICENSE"]
+    "1.5": ["1.5/Assemblies"],
+    "1.4": ["1.4/Assemblies"],
+    "1.3": ["1.3/Assemblies"]
   },
   "copyBackPaths": [],
   "build": {
