@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "toolingRepository": "RimWorld-Tooling",
+  "resolver": "Resolve-RwtEnvironment",
+  "purpose": "Compile",
+  "rimWorldVersion": "1.6",
+  "project": "Source/ChronosPointer.csproj",
+  "configuration": "1.6",
+  "assemblyName": "ChronosPointer",
+  "packageId": "CoolNether123.ChronosPointer",
+  "releaseIncludePaths": [
+    "About",
+    "LoadFolders.xml",
+    "1.3/Assemblies/ChronosPointer.dll",
+    "1.4/Assemblies/ChronosPointer.dll",
+    "1.5/Assemblies/ChronosPointer.dll",
+    "1.6/Assemblies/ChronosPointer.dll",
+    "1.6/ExternalSpine/Assemblies/ChronosPointer.dll",
+    "LICENSE"
+  ],
+  "dependencies": ["harmony", "spine"]
+}

@@ -3,10 +3,12 @@ using ChronosPointer.Api;
 using HarmonyLib;
 using RimWorld;
 using System;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 #if CHRONOS_POINTER_USE_SPINE
 using Spine.Api;
+using Spine.Harmony;
 using Spine.UI.SettingsFramework;
 #endif
 
@@ -101,6 +103,15 @@ namespace ChronosPointer
 #endif
     {
 #if CHRONOS_POINTER_USE_SPINE
+        private const string HarmonyId = "com.coolnether123.ChronosPointer";
+        private static readonly IHarmonyPatchInstaller PatchInstaller =
+            SpineApi.Patching.CreateInstaller(
+                HarmonyId,
+                "[Chronos Pointer]");
+#else
+        private const string HarmonyId = "com.coolnether123.ChronosPointer";
+#endif
+#if CHRONOS_POINTER_USE_SPINE
         public new static ChronosPointerSettings Settings;
 #else
         public static ChronosPointerSettings Settings;
@@ -126,13 +137,11 @@ namespace ChronosPointer
             Settings = GetSettings<ChronosPointerSettings>();
 #endif
 
-            if (ModsConfig.IsActive("brrainz.harmony"))
-            {
-                // Harmony patch
-                var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
-                harmony.PatchAll();
-                Log.Message("[ChronosPointer] Harmony patches applied.");
-            }
+#if CHRONOS_POINTER_USE_SPINE
+            InstallSpinePatches();
+#else
+            InstallEmbeddedPatches();
+#endif
 
             // Subscribe to sunlight threshold changes
             ChronosPointerSettings.OnSunlightThresholdChanged += () =>
@@ -144,6 +153,48 @@ namespace ChronosPointer
 
             ChronosPointerApi.NotifyReady();
         }
+
+#if CHRONOS_POINTER_USE_SPINE
+        private static void InstallSpinePatches()
+        {
+            if (!ModsConfig.IsActive("brrainz.harmony"))
+            {
+                Log.Error(
+                    "[ChronosPointer] Harmony is unavailable; Spine patch " +
+                    "installation was not attempted.");
+                return;
+            }
+
+            if (!PatchInstaller.PatchAllOnce(Assembly.GetExecutingAssembly()))
+            {
+                Log.Error(
+                    "[ChronosPointer] Spine-owned Harmony installation failed; " +
+                    "Chronos patches are disabled for this load.");
+                return;
+            }
+
+            Log.Message(
+                "[ChronosPointer] Harmony patches applied through the Spine " +
+                "installer owner '" + HarmonyId + "'.");
+        }
+#else
+        private static void InstallEmbeddedPatches()
+        {
+            if (!ModsConfig.IsActive("brrainz.harmony"))
+            {
+                Log.Error(
+                    "[ChronosPointer] Harmony is unavailable; embedded/legacy " +
+                    "patch installation was not attempted.");
+                return;
+            }
+
+            var harmony = new HarmonyLib.Harmony(HarmonyId);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Log.Message(
+                "[ChronosPointer] Harmony patches applied through the " +
+                "embedded/legacy fallback owner '" + HarmonyId + "'.");
+        }
+#endif
 
 #if CHRONOS_POINTER_USE_SPINE
         protected override string SettingsCategoryLabel =>

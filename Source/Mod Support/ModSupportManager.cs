@@ -24,7 +24,13 @@ namespace ChronosPointer.ModSupport
             for (int i = 0; i < allModules.Count; i++)
             {
                 IModSupportModule module = allModules[i];
-                if (ModLister.GetActiveModWithIdentifier(module.PackageId, ignorePostfix: true) == null)
+                if (
+#if V1_3
+                    ModLister.GetActiveModWithIdentifier(module.PackageId) == null
+#else
+                    ModLister.GetActiveModWithIdentifier(module.PackageId, ignorePostfix: true) == null
+#endif
+                    )
                 {
                     continue;
                 }
