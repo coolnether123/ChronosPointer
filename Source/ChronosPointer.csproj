@@ -15,6 +15,7 @@
     <AssemblyName>ChronosPointer</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <SpineMode Condition="'$(SpineMode)' == ''">Embedded</SpineMode>
+    <SpineMode Condition="'$(Configuration)' == 'External1.6'">External</SpineMode>
     <UseStandaloneSpine Condition="'$(SpineMode)' == 'External'">true</UseStandaloneSpine>
     <SpineAssemblyPath Condition="'$(SpineAssemblyPath)' == ''">$(RwtDependencySpine)</SpineAssemblyPath>
     <FileAlignment>512</FileAlignment>
@@ -65,7 +66,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'External1.6|AnyCPU'">
     <OutputPath>..\1.6\ExternalSpine\Assemblies\</OutputPath>
-    <SpineMode>External</SpineMode>
     <DefineConstants>TRACE;V1_6; V1_6U; V1_5U; V1_4U; V1_3U;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseStandaloneSpine)' == 'true'">
