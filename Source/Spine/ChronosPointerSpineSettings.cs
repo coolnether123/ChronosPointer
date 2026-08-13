@@ -70,74 +70,73 @@ namespace ChronosPointer
         {
             var schema = new SettingsSchema<ChronosPointerSettings>();
 
-            var visibility = schema.Section(VisibilityGroupId, "Visibility");
+            var visibility = schema.Section(VisibilityGroupId, "Display");
             visibility.Toggle(
                 ShowArrowId,
                 settings => settings.DrawArrow,
-                "Show Arrow",
+                "Arrow",
                 tooltip: "Whether to draw the arrow above the schedule area.")
-                .DefaultTo(Defaults.DrawArrow)
-                .ControlsChildren();
+                .DefaultTo(Defaults.DrawArrow);
             visibility.Toggle(
                 ShowHourBarId,
                 settings => settings.DrawHourBar,
-                "Show Hours Bar",
+                "Hours Bar",
                 tooltip: "Whether to draw the Hours Bar.",
                 onChanged: settings => settings.DrawHourBarGetSet = settings.DrawHourBar)
-                .DefaultTo(Defaults.DrawHourBar)
-                .ControlsChildren();
-            schema.Under(ShowHourBarId).Toggle(
+                .DefaultTo(Defaults.DrawHourBar);
+            visibility.Toggle(
                 ShowHoursBarCursorId,
                 settings => settings.DrawHoursBarCursor,
-                "Show Hours Bar Cursor",
+                "Hours Bar Cursor",
                 tooltip: "Whether to draw the Hours Bar cursor.")
                 .DefaultTo(Defaults.DrawHoursBarCursor)
-                .ControlsChildren();
-            schema.Under(ShowHoursBarCursorId).Toggle(
+                .ShownWhen(value => ((ChronosPointerSettings)value).DrawHourBar);
+            visibility.Toggle(
                 DynamicHoursBarCursorId,
                 settings => settings.DoDynamicHoursBarLine,
-                "Dynamic Hours Bar Cursor Color",
+                "Dynamic Cursor Color",
                 tooltip: "Whether to dynamically change the Hours Bar cursor color based on daylight level.")
                 .DefaultTo(Defaults.DoDynamicHoursBarLine)
-                .ControlsChildren()
+                .ShownWhen(value =>
+                    ((ChronosPointerSettings)value).DrawHourBar &&
+                    ((ChronosPointerSettings)value).DrawHoursBarCursor)
                 .ScribeAs("DrawDynamicTimeTraceLine");
-            schema.Under(ShowHourBarId).Toggle(
+            visibility.Toggle(
                 IncidentOverlayId,
                 settings => settings.DrawIncidentOverlay,
-                "Do Incident Special Effects",
+                "Incident Effects",
                 tooltip: "Whether to display incident effects on the Hours Bar.")
                 .DefaultTo(Defaults.DrawIncidentOverlay)
-                .ControlsChildren();
+                .ShownWhen(value => ((ChronosPointerSettings)value).DrawHourBar);
             visibility.Toggle(
                 ShowMainCursorId,
                 settings => settings.DrawMainCursor,
-                "Show Main Cursor",
+                "Main Cursor",
                 tooltip: "Whether to show the Pawn Main Cursor.")
-                .DefaultTo(Defaults.DrawMainCursor)
-                .ControlsChildren();
+                .DefaultTo(Defaults.DrawMainCursor);
             visibility.Toggle(
                 ShowCurrentHourHighlightId,
                 settings => settings.DrawCurrentHourHighlight,
-                "Show Current Hour Highlight",
+                "Current Hour Highlight",
                 tooltip: "Whether to show the Current Hour highlight.",
                 onChanged: settings => settings.DrawCurrentHourHighlightGetSet = settings.DrawCurrentHourHighlight)
                 .DefaultTo(Defaults.DrawCurrentHourHighlight)
-                .ControlsChildren()
                 .ScribeAs("DrawHighlight");
-            schema.Under(ShowCurrentHourHighlightId).Toggle(
+            visibility.Toggle(
                 FillCurrentHourHighlightId,
                 settings => settings.DoFilledHourHighlight,
-                "Fill Current Hour Highlight",
+                "Filled Highlight",
                 tooltip: "Whether to fill the Current Hour highlight.")
-                .DefaultTo(Defaults.DoFilledHourHighlight);
+                .DefaultTo(Defaults.DoFilledHourHighlight)
+                .ShownWhen(value => ((ChronosPointerSettings)value).DrawCurrentHourHighlight);
             visibility.Toggle(
                 LoadWarningsId,
                 settings => settings.DoLoadWarnings,
-                "Show Warnings on Load",
+                "Conflict Warnings",
                 tooltip: "Whether to show mod conflict warnings on startup.")
                 .DefaultTo(Defaults.DoLoadWarnings);
 
-            var cursorThickness = schema.Section(CursorThicknessGroupId, "Cursor Thicknesses");
+            var cursorThickness = schema.Section(CursorThicknessGroupId, "Line Thickness");
             cursorThickness.Slider(
                 CursorThicknessId,
                 settings => settings.CursorThickness,
@@ -170,7 +169,11 @@ namespace ChronosPointer
                 .Step(2f);
 #endif
 
-            var sunlight = schema.Section(SunlightThresholdsGroupId, "Sunlight Thresholds");
+            var sunlight = schema.Section(
+                SunlightThresholdsGroupId,
+                "Daylight Transitions",
+                labelKey: null,
+                configure: definition => definition.AdvancedOnly());
             sunlight.Slider(
                 SunlightThresholdNightId,
                 SunlightThresholdNightField,
@@ -180,6 +183,7 @@ namespace ChronosPointer
                     settings.SunlightThreshold_Night)
                 .DefaultTo(Defaults.SunlightThreshold_Night)
                 .Range(0f, 1f)
+                .AdvancedOnly()
                 .ScribeAs("SunlightThreshold_Night");
             sunlight.Slider(
                 SunlightThresholdDawnDuskId,
@@ -190,6 +194,7 @@ namespace ChronosPointer
                     settings.SunlightThreshold_DawnDusk)
                 .DefaultTo(Defaults.SunlightThreshold_DawnDusk)
                 .Range(0f, 1f)
+                .AdvancedOnly()
                 .ScribeAs("SunlightThreshold_DawnDusk");
             sunlight.Slider(
                 SunlightThresholdSunriseSunsetId,
@@ -200,23 +205,30 @@ namespace ChronosPointer
                     settings.SunlightThreshold_SunriseSunset)
                 .DefaultTo(Defaults.SunlightThreshold_SunriseSunset)
                 .Range(0f, 1f)
+                .AdvancedOnly()
                 .ScribeAs("SunlightThreshold_SunriseSunset");
 
-            var auroraOpacity = schema.Section(AuroraOpacityGroupId, "Aurora Opacity");
+            var auroraOpacity = schema.Section(
+                AuroraOpacityGroupId,
+                "Aurora Opacity",
+                labelKey: null,
+                configure: definition => definition.AdvancedOnly());
             auroraOpacity.Slider(
                 AuroraMinOpacityId,
                 settings => settings.AuroraMinOpacity,
                 "Aurora Min Opacity",
                 tooltip: "The minimum transparency the aurora effect gets.")
                 .DefaultTo(Defaults.AuroraMinOpacity)
-                .Range(0f, 1f);
+                .Range(0f, 1f)
+                .AdvancedOnly();
             auroraOpacity.Slider(
                 AuroraMaxOpacityId,
                 settings => settings.AuroraMaxOpacity,
                 "Aurora Max Opacity",
                 tooltip: "The maximum transparency the aurora effect gets.")
                 .DefaultTo(Defaults.AuroraMaxOpacity)
-                .Range(0f, 1f);
+                .Range(0f, 1f)
+                .AdvancedOnly();
 
             var mainColors = schema.Section(MainColorsGroupId, "Main Colors");
             mainColors.Colour(
@@ -281,26 +293,33 @@ namespace ChronosPointer
                 tooltip: "Base Hours Bar color for day.")
                 .DefaultTo(Defaults.Color_Day);
 
-            var incidentColors = schema.Section(IncidentColorsGroupId, "Incident Overlay Colors");
+            var incidentColors = schema.Section(
+                IncidentColorsGroupId,
+                "Incident Overlay Colors",
+                labelKey: null,
+                configure: definition => definition.AdvancedOnly());
             incidentColors.Colour(
                 ToxicFalloutColorId,
                 settings => settings.Color_ToxicFallout,
                 "Toxic Fallout Color",
                 tooltip: "Overlay color used during Toxic Fallout.")
                 .DefaultTo(Defaults.Color_ToxicFallout)
+                .AdvancedOnly()
                 .ScribeAs("ToxicFalloutColor");
             incidentColors.Colour(
                 VolcanicWinterColorId,
                 settings => settings.Color_VolcanicWinter,
                 "Volcanic Winter Color",
                 tooltip: "Overlay color used during Volcanic Winter.")
-                .DefaultTo(Defaults.Color_VolcanicWinter);
+                .DefaultTo(Defaults.Color_VolcanicWinter)
+                .AdvancedOnly();
             incidentColors.Colour(
                 AuroraColor1Id,
                 settings => settings.Color_Aurora1,
                 "Aurora Color 1",
                 tooltip: "First color used by the aurora overlay.")
                 .DefaultTo(Defaults.Color_Aurora1)
+                .AdvancedOnly()
                 .ScribeAs("AuroraColor1");
             incidentColors.Colour(
                 AuroraColor2Id,
@@ -308,6 +327,7 @@ namespace ChronosPointer
                 "Aurora Color 2",
                 tooltip: "Second color used by the aurora overlay.")
                 .DefaultTo(Defaults.Color_Aurora2)
+                .AdvancedOnly()
                 .ScribeAs("AuroraColor2");
 
             Schema = schema;

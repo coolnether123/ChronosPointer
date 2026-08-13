@@ -37,7 +37,6 @@ namespace ChronosPointer.RimWorld
 
             Rect adjustedFillRect = fillRect;
             float hourBoxWidth = DefaultHourBoxWidth;
-            float baseOffsetX = DefaultBaseOffsetX;
 
             for (int i = 0; i < columns.Count; i++)
             {
@@ -45,7 +44,6 @@ namespace ChronosPointer.RimWorld
                 if (IsTimetableColumn(columns[i].workerClass))
                 {
                     hourBoxWidth = (width / 24f) - HourBoxGap;
-                    baseOffsetX = columns[i].width + 1f;
                     break;
                 }
 
@@ -56,7 +54,7 @@ namespace ChronosPointer.RimWorld
             float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PawnAreaBottomTrim, 0f);
             geometry = new ChronosScheduleGeometrySnapshot(
                 adjustedFillRect,
-                baseOffsetX,
+                DefaultBaseOffsetX,
                 BaseOffsetY,
                 hourBoxWidth,
                 HourBoxGap,

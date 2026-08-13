@@ -12,6 +12,7 @@ namespace ChronosPointer.Rendering
     {
         private const float ArrowWidth = 8f;
         private const float ArrowHeight = 8f;
+        private const float HighlightBorderWidth = 2f;
 
         public static void DrawSchedule(ChronosTimelineSnapshot timeline, ChronosScheduleGeometrySnapshot geometry, bool drawRegularBar, bool drawIncidentOverlay)
         {
@@ -112,7 +113,11 @@ namespace ChronosPointer.Rendering
             }
             else
             {
-                Widgets.DrawBoxSolidWithOutline(highlightRect, settings.HighlightInteriorColor, settings.ColorHourHighlight, 2);
+                Widgets.DrawBoxSolidWithOutline(
+                    highlightRect,
+                    settings.HighlightInteriorColor,
+                    settings.ColorHourHighlight,
+                    (int)HighlightBorderWidth);
             }
         }
 
@@ -173,14 +178,14 @@ namespace ChronosPointer.Rendering
                     geometry.HourBarRect,
                     ChronosPointerSpineSettings.ShowHourBarId,
                     ChronosPointerSpineSettings.VisibilityGroupId,
-                    priority: 0) == true;
+                    priority: 20) == true;
                 if (settings.DrawHoursBarCursor && options.DrawHourBarCursor)
                 {
                     handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
                         GetTimeCursorRect(timeline, geometry),
                         ChronosPointerSpineSettings.ShowHoursBarCursorId,
                         ChronosPointerSpineSettings.VisibilityGroupId,
-                        priority: 10) == true;
+                        priority: 30) == true;
                 }
             }
 
@@ -196,11 +201,34 @@ namespace ChronosPointer.Rendering
 
             if (settings.DrawCurrentHourHighlight && options.DrawCurrentHourHighlight)
             {
-                handled |= ChronosPointerMod.ContextualSettings?.BindSetting(
-                    geometry.GetPawnHourRect(timeline.CurrentHour),
-                    ChronosPointerSpineSettings.ShowCurrentHourHighlightId,
-                    ChronosPointerSpineSettings.VisibilityGroupId,
-                    priority: 10) == true;
+                Rect highlightRect = geometry.GetPawnHourRect(timeline.CurrentHour);
+                if (settings.DoFilledHourHighlight)
+                {
+                    handled |= BindHighlightSetting(highlightRect);
+                }
+                else
+                {
+                    handled |= BindHighlightSetting(new Rect(
+                        highlightRect.x,
+                        highlightRect.y,
+                        highlightRect.width,
+                        HighlightBorderWidth));
+                    handled |= BindHighlightSetting(new Rect(
+                        highlightRect.x,
+                        highlightRect.yMax - HighlightBorderWidth,
+                        highlightRect.width,
+                        HighlightBorderWidth));
+                    handled |= BindHighlightSetting(new Rect(
+                        highlightRect.x,
+                        highlightRect.y + HighlightBorderWidth,
+                        HighlightBorderWidth,
+                        highlightRect.height - HighlightBorderWidth * 2f));
+                    handled |= BindHighlightSetting(new Rect(
+                        highlightRect.xMax - HighlightBorderWidth,
+                        highlightRect.y + HighlightBorderWidth,
+                        HighlightBorderWidth,
+                        highlightRect.height - HighlightBorderWidth * 2f));
+                }
             }
 
             if (settings.DrawMainCursor && options.DrawMainCursor)
@@ -213,6 +241,15 @@ namespace ChronosPointer.Rendering
             }
 
             return handled;
+        }
+
+        private static bool BindHighlightSetting(Rect rect)
+        {
+            return ChronosPointerMod.ContextualSettings?.BindSetting(
+                rect,
+                ChronosPointerSpineSettings.ShowCurrentHourHighlightId,
+                ChronosPointerSpineSettings.VisibilityGroupId,
+                priority: 10) == true;
         }
 #endif
 

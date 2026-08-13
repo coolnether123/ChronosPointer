@@ -93,7 +93,7 @@ namespace ChronosPointer
         }
 
         public bool DrawCurrentHourHighlight = true;
-        public bool DoFilledHourHighlight = true;
+        public bool DoFilledHourHighlight = Defaults.DoFilledHourHighlight;
 
         public bool DrawCurrentHourHighlightGetSet
         {

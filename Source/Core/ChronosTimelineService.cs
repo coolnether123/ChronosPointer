@@ -11,6 +11,8 @@ namespace ChronosPointer.Core
     internal static class ChronosTimelineService
     {
         private static readonly GameConditionDef SolarFlareDef = DefDatabase<GameConditionDef>.GetNamedSilentFail("SolarFlare");
+        private static IReadOnlyList<ChronosHourSegment> cachedDaylightHours;
+        private static long cachedTicksPerHour = -1;
 
         public static bool TryCreateTimeline(Map map, ChronosPointerSettings settings, out ChronosTimelineSnapshot snapshot, bool syncLegacyPatchState = false)
         {
@@ -30,17 +32,36 @@ namespace ChronosPointer.Core
             long ticksPerDay = ModSupportManager.GetTicksPerDay();
             long ticksPerHour = ModSupportManager.GetTicksPerHour();
 
-            List<ChronosHourSegment> hours = new List<ChronosHourSegment>(24);
             long startOfCurrentLocalDayAbsTick = GetStartOfCurrentLocalDayTick(absoluteTick, dayPercent, ticksPerDay);
-
-            for (int hour = 0; hour < 24; hour++)
+            bool useCachedDaylight = !incidents.Any &&
+                Patch_ScheduleWindow.dayNightColorsCalculated &&
+                Patch_ScheduleWindow._cachedMap == map &&
+                Patch_ScheduleWindow._cachedSeason == season &&
+                cachedTicksPerHour == ticksPerHour &&
+                cachedDaylightHours != null;
+            IReadOnlyList<ChronosHourSegment> hours = cachedDaylightHours;
+            if (!useCachedDaylight)
             {
-                long absTickForHour = startOfCurrentLocalDayAbsTick + (long)hour * ticksPerHour;
-                float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForHour);
-                ChronosLightBand band = GetLightBand(sunlight, settingsSnapshot);
-                Color baseColor = GetBaseColorForSunlight(sunlight, settingsSnapshot, incidents);
-                Color overlayColor = GetIncidentOverlayColor(hour, settingsSnapshot, incidents);
-                hours.Add(new ChronosHourSegment(hour, sunlight, band, baseColor, overlayColor));
+                var rebuiltHours = new List<ChronosHourSegment>(24);
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    long absTickForHour = startOfCurrentLocalDayAbsTick + (long)hour * ticksPerHour;
+                    float sunlight = GenCelestial.CelestialSunGlow(map.Tile, (int)absTickForHour);
+                    ChronosLightBand band = GetLightBand(sunlight, settingsSnapshot);
+                    Color baseColor = GetBaseColorForSunlight(sunlight, settingsSnapshot, incidents);
+                    Color overlayColor = GetIncidentOverlayColor(hour, settingsSnapshot, incidents);
+                    rebuiltHours.Add(new ChronosHourSegment(hour, sunlight, band, baseColor, overlayColor));
+                }
+
+                hours = rebuiltHours;
+                if (!incidents.Any)
+                {
+                    cachedDaylightHours = rebuiltHours;
+                    cachedTicksPerHour = ticksPerHour;
+                    Patch_ScheduleWindow._cachedMap = map;
+                    Patch_ScheduleWindow._cachedSeason = season;
+                    Patch_ScheduleWindow.dayNightColorsCalculated = true;
+                }
             }
 
             snapshot = new ChronosTimelineSnapshot(
