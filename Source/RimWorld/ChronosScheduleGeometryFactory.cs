@@ -1,7 +1,5 @@
 using ChronosPointer.Api;
-using HarmonyLib;
 using RimWorld;
-using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -18,16 +16,16 @@ namespace ChronosPointer.RimWorld
         private const float PawnAreaBottomTrim = 2f;
         private const float DefaultHourBoxWidth = ChronosScheduleGeometryDefaults.HourBoxWidth;
 
-        public static bool TryCreate(MainTabWindow_PawnTable scheduleWindow, Rect fillRect, out ChronosScheduleGeometrySnapshot geometry)
+        public static bool TryCreate(MainTabWindow_Schedule scheduleWindow, Rect fillRect, out ChronosScheduleGeometrySnapshot geometry)
         {
             geometry = null;
-            PawnTable table = GetPawnTable(scheduleWindow);
-            if (scheduleWindow == null || table == null)
+            if (scheduleWindow == null || scheduleWindow.table == null)
             {
                 return false;
             }
 
-#if !V1_4U
+            PawnTable table = scheduleWindow.table;
+#if V1_3
             var columns = table.ColumnsListForReading;
 #else
             var columns = table.Columns;
@@ -39,7 +37,6 @@ namespace ChronosPointer.RimWorld
 
             Rect adjustedFillRect = fillRect;
             float hourBoxWidth = DefaultHourBoxWidth;
-            float baseOffsetX = DefaultBaseOffsetX;
 
             for (int i = 0; i < columns.Count; i++)
             {
@@ -47,7 +44,6 @@ namespace ChronosPointer.RimWorld
                 if (IsTimetableColumn(columns[i].workerClass))
                 {
                     hourBoxWidth = (width / 24f) - HourBoxGap;
-                    baseOffsetX = DefaultBaseOffsetX;
                     break;
                 }
 
@@ -55,18 +51,17 @@ namespace ChronosPointer.RimWorld
                 adjustedFillRect.width -= width;
             }
 
-            float headerHeight = GetHeaderHeight(table);
-            float windowHeight = Mathf.Max(GetTableHeight(table) - headerHeight - PawnAreaBottomTrim, 0f);
+            float windowHeight = Mathf.Max(table.cachedSize.y - table.cachedHeaderHeight - PawnAreaBottomTrim, 0f);
             geometry = new ChronosScheduleGeometrySnapshot(
                 adjustedFillRect,
-                baseOffsetX,
+                DefaultBaseOffsetX,
                 BaseOffsetY,
                 hourBoxWidth,
                 HourBoxGap,
                 HourBoxHeight,
                 PawnAreaTopOffset,
                 windowHeight,
-                headerHeight,
+                table.cachedHeaderHeight,
                 Time.frameCount,
                 true);
 
@@ -78,83 +73,14 @@ namespace ChronosPointer.RimWorld
             return workerClass != null && typeof(PawnColumnWorker_Timetable).IsAssignableFrom(workerClass);
         }
 
-        private static PawnTable GetPawnTable(MainTabWindow_PawnTable scheduleWindow)
-        {
-            if (scheduleWindow == null)
-            {
-                return null;
-            }
-
-#if V1_2U
-            return scheduleWindow.table;
-#else
-            return AccessTools.Field(scheduleWindow.GetType(), "table")?.GetValue(scheduleWindow) as PawnTable
-                ?? AccessTools.Field(typeof(MainTabWindow_PawnTable), "table")?.GetValue(scheduleWindow) as PawnTable;
-#endif
-        }
-
-        private static float GetTableHeight(PawnTable table)
-        {
-#if V1_2U
-            return table.cachedSize.y;
-#else
-            return table.Size.y;
-#endif
-        }
-
-        private static float GetHeaderHeight(PawnTable table)
-        {
-#if V1_2U
-            return table.cachedHeaderHeight;
-#else
-            return table.HeaderHeight;
-#endif
-        }
-
         private static float GetColumnWidth(PawnTable table, PawnColumnDef column, int index)
         {
-            float cachedWidth = GetCachedColumnWidth(table, index);
-            if (cachedWidth > 0f)
-            {
-                return cachedWidth;
-            }
-
-            if (column == null)
-            {
-                return 0f;
-            }
-
-#if V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
-            if (column.width > 0f)
-            {
-                return column.width;
-            }
-#endif
-
-            return column.Worker.GetOptimalWidth(table);
-        }
-
-        private static float GetCachedColumnWidth(PawnTable table, int index)
-        {
-            if (table == null || index < 0)
-            {
-                return 0f;
-            }
-
-#if V1_2U
             if (table.cachedColumnWidths != null && index >= 0 && index < table.cachedColumnWidths.Count)
             {
                 return table.cachedColumnWidths[index];
             }
-#else
-            List<float> cachedColumnWidths = AccessTools.Field(typeof(PawnTable), "cachedColumnWidths")?.GetValue(table) as List<float>;
-            if (cachedColumnWidths != null && index < cachedColumnWidths.Count)
-            {
-                return cachedColumnWidths[index];
-            }
-#endif
 
-            return 0f;
+            return column != null ? column.width : 0f;
         }
     }
 }

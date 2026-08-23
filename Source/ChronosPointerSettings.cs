@@ -93,7 +93,7 @@ namespace ChronosPointer
         }
 
         public bool DrawCurrentHourHighlight = true;
-        public bool DoFilledHourHighlight = true;
+        public bool DoFilledHourHighlight = Defaults.DoFilledHourHighlight;
 
         public bool DrawCurrentHourHighlightGetSet
         {
@@ -342,33 +342,33 @@ namespace ChronosPointer
 
             var listL = new Listing_Standard();
             listL.Begin(left);
-            listL.CheckboxLabeled("Show Arrow", ref DrawArrow, tooltip: "Whether to draw the arrow above the schedule area.");
-            listL.CheckboxLabeled("Show Hours Bar", ref DrawHourBar, tooltip: "Whether to draw the Hours Bar.");
+            listL.CheckboxLabeled("Show Arrow", ref DrawArrow, tooltip: "Draw the arrow above the schedule.");
+            listL.CheckboxLabeled("Show Hours Bar", ref DrawHourBar, tooltip: "Draw the Hours Bar above the schedule.");
             DrawHourBarGetSet = DrawHourBar;
 
             GrayIfInactive(DrawHourBar);
             Text.Font = GameFont.Tiny;
-            listL.CheckboxLabeled("- Show Hours Bar Cursor", ref DrawHoursBarCursor, tooltip: "Whether to draw the Hours Bar cursor.");
-            listL.CheckboxLabeled("- Dynamic Hours Bar Cursor Color", ref DoDynamicHoursBarLine, tooltip: "Whether to dynamically change the Hours Bar cursor color based on daylight level.");
-            listL.CheckboxLabeled("- Do Incident Special Effects", ref DrawIncidentOverlay, tooltip: "Whether to display incident effects. The Hours Bar has special effects during certain incidents.)");
+            listL.CheckboxLabeled("- Show Hours Bar Cursor", ref DrawHoursBarCursor, tooltip: "Draw a cursor across the Hours Bar.");
+            listL.CheckboxLabeled("- Match Cursor Color to Daylight", ref DoDynamicHoursBarLine, tooltip: "Change the Hours Bar cursor color with the daylight level.");
+            listL.CheckboxLabeled("- Show Incident Effects", ref DrawIncidentOverlay, tooltip: "Change the Hours Bar during supported incidents.");
 
             Text.Font = GameFont.Small;
             GUI.color = Color.white;
-            listL.CheckboxLabeled("Show Main Cursor", ref DrawMainCursor, tooltip: "Whether to show the Pawn Main Cursor.");
-            listL.CheckboxLabeled("Show Current Hour Highlight", ref DrawCurrentHourHighlight, tooltip: "Whether to show the Current Hour highlight.");
+            listL.CheckboxLabeled("Show Main Cursor", ref DrawMainCursor, tooltip: "Draw the main cursor through every pawn's schedule.");
+            listL.CheckboxLabeled("Show Current Hour Highlight", ref DrawCurrentHourHighlight, tooltip: "Highlight the current hour.");
             DrawCurrentHourHighlightGetSet = DrawCurrentHourHighlight;
 
             GrayIfInactive(DrawCurrentHourHighlight);
             Text.Font = GameFont.Tiny;
-            listL.CheckboxLabeled("- Fill Current Hour Highlight", ref DoFilledHourHighlight, tooltip: "Whether to fill the Current Hour highlight.");
+            listL.CheckboxLabeled("- Fill Current Hour Highlight", ref DoFilledHourHighlight, tooltip: "Fill the current-hour highlight instead of drawing only its border.");
             Text.Font = GameFont.Small;
             GUI.color = Color.white;
-            listL.CheckboxLabeled("Show Warnings on Load", ref DoLoadWarnings, tooltip: "Whether to show mod conflict warnins on startup.");
+            listL.CheckboxLabeled("Show Warnings on Load", ref DoLoadWarnings, tooltip: "Show mod conflict warnings during startup.");
             GUI.color = Color.white;
 
             listL.Gap();
             GrayIfInactive(DrawMainCursor || DrawHoursBarCursor || DrawCurrentHourHighlight);
-            listL.Label($"Cursor thicknesses:");
+            listL.Label("Cursor thicknesses:");
             Text.Font = GameFont.Tiny;
             GrayIfInactive(DrawMainCursor);
 #if !V1_3

@@ -3,36 +3,29 @@ Portions of the materials used to create this content/mod are trademarks and/or 
 ![ChronosPointerModCover](About/Preview.png)
 <h1>Chronos Pointer - Schedule Menu Enhancement</h1>
 
-Enhances the schedule panel with dynamic time indicators for improved colony management and time tracking.
+Chronos Pointer adds several current-time indicators to RimWorld's Schedule tab.
 
-  Features:<br>
-    - Day/Night Tracker: A bar above the hour numbers in the schedule window, visually representing day and night cycles.<br>
-    - Dynamic Arrow: Moves in real-time, precisely indicating the current hour and minute.<br>
-    - Day/Night Indicator: A small line at the arrow’s tip, spanning the width of the day/night tracker, tracing the passage of time.<br>
-    - Full-Height Time Indicator: A vertical line spanning all pawns' schedules, moving in sync with the arrow to show the current time for all colonists at once.<br>
-    - Customizable Colors: Adjust colors for the arrow, highlight, cursors, and bars to suit your preference.<br>
-    - Incident Interactions: The Day/Night Tracker updates its color based on the map state for current events such as Solar Flare/Eclipse, and Auroras.<br>
-<br>
-  This mod provides an intuitive and visually appealing way to track time in RimWorld, making it easier to manage colonist schedules and activities throughout the day and night cycle.
+## Features
 
-  All features can be toggled and customized in the mod settings, allowing you to tailor the experience to your liking.
+- An hours bar above the schedule shows the day and night cycle.
+- A moving arrow marks the current hour and minute.
+- A cursor across the hours bar tracks the same time at a smaller scale.
+- A full-height line carries the current time through every pawn's schedule row.
+- Separate color controls cover the arrow, highlight, cursors, and bar segments.
+- The hours bar can react to solar flares, eclipses, toxic fallout, volcanic winter, and auroras.
+
+You can enable each indicator separately and adjust its appearance in the mod settings.
   
 This mod requires [Harmony](https://steamcommunity.com/workshop/filedetails/?id=2009463077). It is safe to add to existing saves.
 
-<h2>DLC/Mods Compatibility</h2>
+<h2>DLC and mod compatibility</h2>
 
 <h3>DLC</h3>
 
-[Royalty](https://rimworldgame.com/royalty/) - Supported<br>
-[Ideology](https://rimworldgame.com/ideology/) - Supported<br>
-[Biotech](https://rimworldgame.com/biotech/) - Supported<br>
-[Anomaly](https://rimworldgame.com/anomaly/) - Supported<br>
+[Royalty](https://rimworldgame.com/royalty/), [Ideology](https://rimworldgame.com/ideology/), [Biotech](https://rimworldgame.com/biotech/), and [Anomaly](https://rimworldgame.com/anomaly/) are supported.<br>
 
 <h3>Mods</h3>
 
-[Reading Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=3367570241&searchtext=Schedule+cursor) - Native<br>
-[Zone To Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=2436086611&searchtext=Zone+to+schedule) - Native<br>
-[1trickPwnyta's Defaults](https://steamcommunity.com/sharedfiles/filedetails/?id=3285178686) - Native<br>
-[Schedule Clock](https://steamcommunity.com/sharedfiles/filedetails/?id=3012379410) - Native. Line overlaps, can turn off Chronos Pointer's line to fix.<br>
-[Grouped Pawns List](https://steamcommunity.com/sharedfiles/filedetails/?id=2340773428) - Native<br>
-[Custom Schedules](https://steamcommunity.com/sharedfiles/filedetails/?id=2717694491) - UI Overlap; buttons still work.<br>
+[Reading Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=3367570241&searchtext=Schedule+cursor), [Zone To Schedule](https://steamcommunity.com/sharedfiles/filedetails/?id=2436086611&searchtext=Zone+to+schedule), [1trickPwnyta's Defaults](https://steamcommunity.com/sharedfiles/filedetails/?id=3285178686), and [Grouped Pawns List](https://steamcommunity.com/sharedfiles/filedetails/?id=2340773428) are compatible.<br>
+[Schedule Clock](https://steamcommunity.com/sharedfiles/filedetails/?id=3012379410) draws an overlapping line. Disable either mod's line to remove the overlap.<br>
+[Custom Schedules](https://steamcommunity.com/sharedfiles/filedetails/?id=2717694491) overlaps part of the interface, but its buttons still work.<br>

@@ -1,25 +1,28 @@
 using ColourPicker;
 using ChronosPointer.Api;
-using ChronosPointer.RimWorld;
 using HarmonyLib;
 using RimWorld;
 using System;
+using System.Reflection;
 using UnityEngine;
 using Verse;
+#if CHRONOS_POINTER_USE_SPINE
+using Spine.Api;
+using Spine.Harmony;
+using Spine.UI.SettingsFramework;
+#endif
 
 namespace ChronosPointer
 {
 
     class Dialog_ModWarning : Dialog_MessageBox
     {
-        public Dialog_ModWarning(string title, string text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title)
+        public Dialog_ModWarning(string title, TaggedString text, Action fixAction = null, string fixActionText = "Disable Overlap", WindowLayer layer = WindowLayer.Dialog) : base(text, fixActionText, fixAction, title: title, layer: layer)
         {
             if (fixAction != null)
             {
-#if V0_18U || V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
                 buttonCAction = fixAction;
                 buttonCText = fixActionText;
-#endif
             }
             buttonAText = "OK";
             buttonAAction = null;
@@ -44,12 +47,12 @@ namespace ChronosPointer
             if (!ChronosPointerMod.Settings.DoLoadWarnings || playerWarned)
                 return;
 
-            if (ChronosRimWorldCompat.IsModActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
+            if (ModsConfig.IsActive("Mysterius.CustomSchedules") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawHourBar : true))
                 ApplyFixForMysteriusCustomSchedules();
-            if (ChronosRimWorldCompat.IsModActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
+            if (ModsConfig.IsActive("rswallen.scheduleclock") && (ChronosPointerMod.Settings != null ? ChronosPointerMod.Settings.DrawMainCursor : true))
                 ApplyFixForScheduleClock();
             //Sumarbrander to CoolNether123: When you do your lining up, please make this so it only appears if grouped pawns has "Restrict" enabled. Probably check something like CustomSchedulesMod.Settings.Restrict.
-            if (ChronosRimWorldCompat.IsModActive("name.krypt.rimworld.pawntablegrouped"))
+            if (ModsConfig.IsActive("name.krypt.rimworld.pawntablegrouped"))
                 ApplyFixForGroupedPawnsList();
             playerWarned = true;
         }
@@ -75,14 +78,12 @@ namespace ChronosPointer
                 ChronosPointerMod.Settings.DoLoadWarnings = false;
                 ChronosPointerMod.Settings?.Write();
             }, title: "ScheduleClock is Active");
-#if V0_18U || V0_19U || V1_0U || V1_1U || V1_2U || V1_3U || V1_4U || V1_5U || V1_6U
             message.buttonCText = "Disable Overlap";
             message.buttonCAction = () =>
             {
                 ChronosPointerMod.Settings.DrawMainCursor = false;
                 ChronosPointerMod.Settings?.Write();
             };
-#endif
             Find.WindowStack?.Add(message);
 
         }
@@ -95,24 +96,52 @@ namespace ChronosPointer
         }
     }
 
+#if CHRONOS_POINTER_USE_SPINE
+    public class ChronosPointerMod : SpineMod<ChronosPointerSettings>
+#else
     public class ChronosPointerMod : Mod
+#endif
     {
+#if CHRONOS_POINTER_USE_SPINE
+        private const string HarmonyId = "com.coolnether123.ChronosPointer";
+        private static readonly IHarmonyPatchInstaller PatchInstaller =
+            SpineApi.Patching.CreateInstaller(
+                HarmonyId,
+                "[Chronos Pointer]");
+#else
+        private const string HarmonyId = "com.coolnether123.ChronosPointer";
+#endif
+#if CHRONOS_POINTER_USE_SPINE
+        public new static ChronosPointerSettings Settings;
+#else
         public static ChronosPointerSettings Settings;
+#endif
         public static float cursorThickness = 2f; // Default thickness
         private Vector2 scrollPosition = Vector2.zero;
 
+#if CHRONOS_POINTER_USE_SPINE
+        public ChronosPointerMod(ModContentPack content)
+            : base(
+                content,
+                "CoolNether123.ChronosPointer",
+                new SemanticVersion(1, 1, 0),
+                ChronosPointerSpineSettings.Schema.Definitions,
+                SpineCapability.SettingsSchema)
+#else
         public ChronosPointerMod(ModContentPack content) : base(content)
+#endif
         {
+#if CHRONOS_POINTER_USE_SPINE
+            Settings = ManagedSettings;
+#else
             Settings = GetSettings<ChronosPointerSettings>();
-            ChronosSharedSettingsStore.LoadAndSynchronize(Settings);
+#endif
 
-            if (ChronosRimWorldCompat.IsModActive("brrainz.harmony") || ChronosRimWorldCompat.IsModActive("Harmony"))
-            {
-                // Harmony patch
-                var harmony = new HarmonyLib.Harmony("com.coolnether123.ChronosPointer");
-                harmony.PatchAll();
-                Log.Message("[ChronosPointer] Harmony patches applied.");
-            }
+#if CHRONOS_POINTER_USE_SPINE
+            InstallSpinePatches();
+#else
+            InstallEmbeddedPatches();
+#endif
 
             // Subscribe to sunlight threshold changes
             ChronosPointerSettings.OnSunlightThresholdChanged += () =>
@@ -125,6 +154,54 @@ namespace ChronosPointer
             ChronosPointerApi.NotifyReady();
         }
 
+#if CHRONOS_POINTER_USE_SPINE
+        private static void InstallSpinePatches()
+        {
+            if (!ModsConfig.IsActive("brrainz.harmony"))
+            {
+                Log.Error(
+                    "[ChronosPointer] Harmony is unavailable; Spine patch " +
+                    "installation was not attempted.");
+                return;
+            }
+
+            if (!PatchInstaller.PatchAllOnce(Assembly.GetExecutingAssembly()))
+            {
+                Log.Error(
+                    "[ChronosPointer] Spine-owned Harmony installation failed; " +
+                    "Chronos patches are disabled for this load.");
+                return;
+            }
+
+            Log.Message(
+                "[ChronosPointer] Harmony patches applied through the Spine " +
+                "installer owner '" + HarmonyId + "'.");
+        }
+#else
+        private static void InstallEmbeddedPatches()
+        {
+            if (!ModsConfig.IsActive("brrainz.harmony"))
+            {
+                Log.Error(
+                    "[ChronosPointer] Harmony is unavailable; embedded/legacy " +
+                    "patch installation was not attempted.");
+                return;
+            }
+
+            var harmony = new HarmonyLib.Harmony(HarmonyId);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Log.Message(
+                "[ChronosPointer] Harmony patches applied through the " +
+                "embedded/legacy fallback owner '" + HarmonyId + "'.");
+        }
+#endif
+
+#if CHRONOS_POINTER_USE_SPINE
+        protected override string SettingsCategoryLabel =>
+            "Chronos Pointer";
+#endif
+
+#if !CHRONOS_POINTER_USE_SPINE
         public override string SettingsCategory()
         {
             return "Chronos Pointer";
@@ -134,10 +211,10 @@ namespace ChronosPointer
         {
             Settings.DoWindowContents(inRect);
         }
+#endif
         public override void WriteSettings()
         {
             base.WriteSettings();
-            ChronosSharedSettingsStore.Save(Settings);
             Patch_ScheduleWindow.dayNightColorsCalculated = false;
             Patch_ScheduleWindow.overrideIsAurora = false;
             Patch_ScheduleWindow.overrideIsEclipse = false;
