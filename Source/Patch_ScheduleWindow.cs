@@ -45,7 +45,7 @@ namespace ChronosPointer
         public static bool overrideDrawRegularBar = true;
 
         [HarmonyPostfix]
-        public static void Postfix(MainTabWindow_PawnTable __instance, Rect fillRect)
+        public static void Postfix(MainTabWindow_Schedule __instance, Rect fillRect)
         {
             if (!IsInTestMode && Find.MainTabsRoot.OpenTab != __instance.def)
             {

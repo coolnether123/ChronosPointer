@@ -136,6 +136,7 @@ namespace ChronosPointer
 #else
             Settings = GetSettings<ChronosPointerSettings>();
 #endif
+            ChronosSharedSettingsStore.LoadAndSynchronize(Settings);
 
 #if CHRONOS_POINTER_USE_SPINE
             InstallSpinePatches();
@@ -215,6 +216,7 @@ namespace ChronosPointer
         public override void WriteSettings()
         {
             base.WriteSettings();
+            ChronosSharedSettingsStore.Save(Settings);
             Patch_ScheduleWindow.dayNightColorsCalculated = false;
             Patch_ScheduleWindow.overrideIsAurora = false;
             Patch_ScheduleWindow.overrideIsEclipse = false;

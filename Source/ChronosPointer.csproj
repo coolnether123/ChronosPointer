@@ -75,6 +75,7 @@
   <ItemGroup Condition="Exists('$(RimWorldManagedPath)\Assembly-CSharp.dll')">
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
     <Reference Include="Assembly-CSharp">
       <HintPath>$(RimWorldManagedPath)\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -135,7 +136,9 @@
     <Compile Include="Patch_ScheduleWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\ChronosScheduleRenderer.cs" />
+    <Compile Include="RimWorld\ChronosRimWorldCompat.cs" />
     <Compile Include="RimWorld\ChronosScheduleGeometryFactory.cs" />
+    <Compile Include="Settings\ChronosSharedSettingsStore.cs" />
     <Compile Include="ChronosPointerMod.cs" />
     <Compile Include="Spine\ChronosPointerSpineSettings.cs" Condition="'$(UseStandaloneSpine)' == 'true'" />
   </ItemGroup>
