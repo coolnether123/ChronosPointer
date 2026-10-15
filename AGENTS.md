@@ -10,5 +10,5 @@ explicit migration of generalized facilities; do not create an incidental
 runtime dependency.
 
 Derive build and test entrypoints from the current project and use the shared
-runtime/package workflow in `A:\Dev\RimWorld\AGENTS.md`. UI changes require an
+runtime/package workflow in `H:\Dev\RimWorld\AGENTS.md`. UI changes require an
 isolated game lane with its owned logs and captures.
